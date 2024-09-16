@@ -1,0 +1,31 @@
+[build-system]
+requires = [ "setuptools",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dsit_taxonomy"
+readme = "README.md"
+dynamic = [ "dependencies", "version",]
+
+[project.scripts]
+dsit-taxonomy = "dsit_taxonomy.__main__:main"
+
+[tool.kedro]
+package_name = "dsit_taxonomy"
+project_name = "dsit-taxonomy"
+kedro_init_version = "0.19.6"
+tools = [ "Custom Logging",]
+example_pipeline = "False"
+source_dir = "src"
+
+[project.entry-points."kedro.hooks"]
+
+[tool.setuptools.dynamic.dependencies]
+file = "requirements.txt"
+
+[tool.setuptools.dynamic.version]
+attr = "dsit_taxonomy.__version__"
+
+[tool.setuptools.packages.find]
+where = [ "src",]
+namespaces = false

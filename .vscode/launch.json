@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Kedro Run",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "module": "kedro",
+            // "args": ["run", "--tags", "oa_depth_mesh_tagging"]
+            // "args": ["run", "--pipeline", "data_analysis_lab_productivity", "-e", "base"], //"-e", "base", "--tags", "s2.levels"] 
+            // "args": ["run", "--tags", "applied_lab_productivity", "-e", "base"]
+            "args": [
+                "run",
+                "--pipeline",
+                "data_collection_gtr",
+                "-e",
+                "base"
+            ]
+            // "args": ["ipython", "--debug"]
+            // Any other arguments should be passed as a comma-seperated-list
+            // e.g "args": ["run", "--pipeline", "pipeline_name"]
+        }
+    ]
+}

@@ -1,0 +1,34 @@
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.6/configuration/parameters.html
+
+gtr:
+  # Data collection parameters
+  data_collection:
+
+    # Common request parameters
+    _param_requests:
+      gtr_config:
+        base_url: https://gtr.ukri.org/gtr/api/
+        headers:
+          Accept: application/vnd.rcuk.gtr.json-v7
+        page_size: 100
+      max_retries: 5
+      backoff_factor: 0.3
+
+    # Specific data endpoints
+    publications:
+      param_requests: ${.._param_requests}
+      label: outcomes/publications
+      test_mode: ${test._false}
+    organisations:
+      param_requests: ${.._param_requests}
+      label: organisations
+      test_mode: ${test._false}
+    funds:
+      param_requests: ${.._param_requests}
+      label: funds
+      test_mode: ${test._false}
+    projects:
+      param_requests: ${.._param_requests}
+      label: projects
+      test_mode: ${test._false}

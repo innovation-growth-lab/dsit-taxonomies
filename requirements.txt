@@ -1,0 +1,11 @@
+ipython>=8.10
+jupyterlab_server>=2.11.1
+jupyterlab~=3.0
+jupyter~=1.0
+kedro~=0.19.6
+kedro-telemetry>=0.3.1
+notebook
+kedro-datasets[pandas.CSVDataset, pandas.ExcelDataset, pandas.ParquetDataset, plotly.PlotlyDataset, plotly.JSONDataset, matplotlib.MatplotlibWriter]>=1.0
+joblib~=1.4.2
+pandas~=2.2.2
+numpy~=1.26.4
