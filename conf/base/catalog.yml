@@ -65,3 +65,19 @@ gtr.data_collection.projects.raw:
 gtr.data_collection.projects.intermediate: &gtr_input_projects
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/main.parquet
+
+dbp.gtr_data.annotated:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/dbp.parquet
+
+rake.gtr_data.annotated:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/rake.parquet
+
+yake.gtr_data.annotated:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/yake.parquet
+
+keybert.gtr_data.annotated:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet

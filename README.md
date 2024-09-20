@@ -30,3 +30,7 @@ The project utilises two taxonomies:
 #### 4. Integration and Validation
 - **Dataset Integration**: Outputs from both methodologies will be integrated to assign accurate labels across multiple levels of the two taxonomies for each UKRI-funded project.
 - **Consensus Ruling and Tiebreaking**: The RAG pipeline will be used to validate the combined approaches, enhance consensus ruling, and address tiebreaking.
+
+# Requisites
+nltk.download('punkt_tab')
+python -m spacy download en_core_web_sm
