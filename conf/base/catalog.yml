@@ -79,5 +79,5 @@ yake.gtr_data.annotated:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/yake.parquet
 
 keybert.gtr_data.annotated:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet
+  <<: *_pq_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert/
