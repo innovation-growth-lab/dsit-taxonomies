@@ -5,6 +5,7 @@ generated using Kedro 0.19.6
 
 import logging
 import pandas as pd
+from typing import Generator
 from keybert import KeyBERT
 from joblib import Parallel, delayed
 from .utils import (
@@ -74,7 +75,7 @@ def yake_keywords(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe[["project_id", "yake_keywords"]]
 
 
-def keybert_keywords(dataframe: pd.DataFrame) -> pd.DataFrame:
+def keybert_keywords(dataframe: pd.DataFrame) -> Generator[pd.DataFrame, None, None]:
     """
     Annotates the text data with KeyBERT keywords.
 
