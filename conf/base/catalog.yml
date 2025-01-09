@@ -4,13 +4,10 @@
 # Link: https://docs.kedro.org/en/stable/data/data_catalog.html
 
 # -> 0. Global catalog variables:
-_js: &_js
-  type: json.JSONDataset
-  credentials: s3_credentials
-
 _pq: &_pq
   type: pandas.ParquetDataset
   credentials: s3_credentials
+  filepath: None
   load_args:
     engine: pyarrow
 
@@ -25,36 +22,10 @@ _pq_ptd: &_pq_ptd
   filename_suffix: '.parquet'
   credentials: s3_credentials
 
-_csv: &_csv
-  type: pandas.CSVDataset
-  credentials: s3_credentials
-
-_txt: &_txt
-  type: text.TextDataset
-  credentials: s3_credentials
-
-_image: &_image
-  type: pillow.ImageDataset
-  credentials: s3_credentials
-
-_pkl: &_pkl
-  type: pickle.PickleDataset
-  credentials: s3_credentials
-  backend: pickle
-
 _js_ptd: &_js_ptd
   type: partitions.PartitionedDataset
   dataset: json.JSONDataset
   filename_suffix: ".json"
-  credentials: s3_credentials
-
-_csv_ptd: &_csv_ptd
-  type: partitions.PartitionedDataset
-  dataset:
-    type: pandas.CSVDataset
-    save_args:
-      index: False
-  filename_suffix: '.csv'
   credentials: s3_credentials
 
 # -> 1. GTR Data Collection:

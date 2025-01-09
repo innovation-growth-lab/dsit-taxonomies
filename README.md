@@ -34,3 +34,8 @@ The project utilises two taxonomies:
 # Requisites
 nltk.download('punkt_tab')
 python -m spacy download en_core_web_sm
+
+# Todo list
+- [] Control for continuation of other projcets, ie. REF (ID).
+- [] Consider teachnical abstracts or impact summaries when these are substantially larger than abstracts.
+- [] Plan in-person session on Monday 11 (aim for afternoon).

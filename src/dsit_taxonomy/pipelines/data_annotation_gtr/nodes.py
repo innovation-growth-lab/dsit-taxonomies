@@ -4,8 +4,8 @@ generated using Kedro 0.19.6
 """
 
 import logging
-import pandas as pd
 from typing import Generator
+import pandas as pd
 from keybert import KeyBERT
 from joblib import Parallel, delayed
 from .utils import (
