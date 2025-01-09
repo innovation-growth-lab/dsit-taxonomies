@@ -11,6 +11,7 @@ _pq: &_pq
   load_args:
     engine: pyarrow
 
+
 _pq_ptd: &_pq_ptd
   type: partitions.PartitionedDataset
   dataset: 
@@ -28,7 +29,7 @@ _js_ptd: &_js_ptd
   filename_suffix: ".json"
   credentials: s3_credentials
 
-# -> 1. GTR Data Collection:
+# -> 1a. GTR Data Collection:
 gtr.data_collection.projects.raw:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/
@@ -37,6 +38,9 @@ gtr.data_collection.projects.intermediate: &gtr_input_projects
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/main.parquet
 
+# -> 1b. Taxonomies
+
+# -> 2. GTR Data Annotations:
 dbp.gtr_data.annotated:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/dbp.parquet
@@ -49,6 +53,10 @@ yake.gtr_data.annotated:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/yake.parquet
 
-keybert.gtr_data.annotated:
+keybert.gtr_data.annotated.ptd:
   <<: *_pq_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert/
+
+keybert.gtr_data.annotated:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet
