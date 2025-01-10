@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+import pyarrow as pa
 from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -78,6 +79,14 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
         show_progress_bar=True,
         convert_to_tensor=False,
     )
+    
     logger.info("Generated embeddings for %s keywords", len(embeddings))
     keyword_dataframe["embedding"] = embeddings.tolist()
+
+    # convert the dataframe to a pyarrow table
+    keyword_dataframe = pa.Table.from_pandas(keyword_dataframe, schema=pa.schema([
+        ("label", pa.string()),
+        ("embedding", pa.list_(pa.float32()))
+    ]))
+
     return keyword_dataframe

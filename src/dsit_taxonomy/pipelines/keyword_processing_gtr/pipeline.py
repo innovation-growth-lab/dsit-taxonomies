@@ -55,8 +55,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
             node(
                 func=generate_embeddings,
                 inputs="keywords.gtr_data.preprocessed",
-                outputs="keywords.gtr_data.processed",
-                name="generate_embeddings",
+                outputs="keywords.gtr_data.embeddings",
+                name="generate_keyword_embeddings",
             ),
         ]
     )
