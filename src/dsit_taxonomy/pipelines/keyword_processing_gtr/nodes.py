@@ -10,18 +10,17 @@ logger = logging.getLogger(__name__)
 
 def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
     """
-    Aggregate the number of distinct annotator classes each keyword appears in and the list of project IDs.
+    Aggregate the number of distinct annotator classes each keyword appears in.
 
     Args:
         dataframes (pd.DataFrame): The dataframes to process.
 
     Returns:
-        pd.DataFrame: A dataframe with three columns:
-            - 'keyword': The unique keyword.
+        pd.DataFrame: A dataframe with two columns:
+            - 'label': The unique keyword.
             - 'num_annotators': The number of distinct annotator classes the keyword appears in.
-            - 'project_ids': The list of project IDs in which the keyword appears.
     """
-    keyword_to_info = {}
+    keyword_to_annotators = {}
 
     for df in dataframes:
         logger.info("Processing dataframe with columns: %s", df.columns)
@@ -34,24 +33,16 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         # preprocess the keywords
         exploded[keyword_column] = _preprocess_keywords(exploded[keyword_column])
 
-        # aggregate the keywords with annotator classes and project IDs
-        for keyword, project_id in zip(
-            exploded[keyword_column], exploded["project_id"]
-        ):
-            if keyword not in keyword_to_info:
-                keyword_to_info[keyword] = {"annotators": set(), "project_ids": set()}
-            keyword_to_info[keyword]["annotators"].add(annotator_class)
-            keyword_to_info[keyword]["project_ids"].add(project_id)
+        # aggregate the keywords with annotator classes
+        for keyword in exploded[keyword_column].unique():
+            keyword_to_annotators.setdefault(keyword, set()).add(annotator_class)
 
     # prepare the output dataframe
     output_df = pd.DataFrame(
         {
-            "keyword": keyword_to_info.keys(),
+            "keyword": keyword_to_annotators.keys(),
             "num_annotators": [
-                len(info["annotators"]) for info in keyword_to_info.values()
-            ],
-            "project_ids": [
-                list(info["project_ids"]) for info in keyword_to_info.values()
+                len(annotators) for annotators in keyword_to_annotators.values()
             ],
         }
     )
@@ -61,9 +52,11 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         by=["num_annotators", "keyword"], ascending=[False, True]
     )
 
+
 def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
     """Preprocess the keywords by lowercasing and removing trailing spaces."""
     return keywords.str.lower().str.strip()
+
 
 def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
     """
@@ -77,6 +70,12 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
             - 'keyword': The unique keyword.
             - 'embedding': The corresponding embedding as a list of float32 values.
     """
+    # filter out keywords that appear in only one annotator class
+    keyword_dataframe = keyword_dataframe[
+        keyword_dataframe["num_annotators"] > 1
+    ].copy()
+
+    # generate embeddings for the keywords
     embeddings = model.encode(
         keyword_dataframe["keyword"].tolist(),
         show_progress_bar=True,
