@@ -83,4 +83,4 @@ keywords.gtr_data.processed:
 
 keywords.gtr_data.embeddings:
   <<: *_pq
-  path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet

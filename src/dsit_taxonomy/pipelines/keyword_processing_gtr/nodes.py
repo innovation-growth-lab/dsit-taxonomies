@@ -1,8 +1,4 @@
 import logging
-import string
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import word_tokenize
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
