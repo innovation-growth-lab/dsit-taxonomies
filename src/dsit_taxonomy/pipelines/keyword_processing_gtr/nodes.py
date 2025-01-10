@@ -1,11 +1,10 @@
 import logging
 import string
-from typing import Dict, List
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 import pandas as pd
-import pyarrow as pa
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -22,7 +21,7 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A dataframe with three columns:
-            - 'label': The unique keyword.
+            - 'keyword': The unique keyword.
             - 'num_annotators': The number of distinct annotator classes the keyword appears in.
             - 'project_ids': The list of project IDs in which the keyword appears.
     """
@@ -51,7 +50,7 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
     # prepare the output dataframe
     output_df = pd.DataFrame(
         {
-            "label": keyword_to_info.keys(),
+            "keyword": keyword_to_info.keys(),
             "num_annotators": [
                 len(info["annotators"]) for info in keyword_to_info.values()
             ],
@@ -66,26 +65,11 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         by=["num_annotators", "label"], ascending=[False, True]
     )
 
-
 def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
-    """
-    Preprocess the keywords by lowercasing, removing trailing spaces,
-    punctuation, stopwords, and stemming
-    """
-    stop_words = set(stopwords.words("english"))
-    stemmer = PorterStemmer()
+    """Preprocess the keywords by lowercasing and removing trailing spaces."""
+    return keywords.str.lower().str.strip()
 
-    def preprocess(text):
-        text = text.lower().strip()
-        text = text.translate(str.maketrans("", "", string.punctuation))
-        words = word_tokenize(text)
-        words = [stemmer.stem(word) for word in words if word not in stop_words]
-        return " ".join(words)
-
-    return keywords.apply(preprocess)
-
-
-def generate_embeddings(keyword_dataframe: pd.DataFrame) -> Dict[str, List[float]]:
+def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Generate embeddings for each keyword in the dataframe.
 
@@ -93,24 +77,26 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> Dict[str, List[float
         keyword_dataframe: The dataframe containing the keywords.
 
     Returns:
-        Dict[str, List[float]]: A dictionary with keywords as keys and their embeddings as values.
+        pd.DataFrame: A dataframe with two columns:
+            - 'keyword': The unique keyword.
+            - 'embedding': The corresponding embedding as a list of float32 values.
     """
-    # keyword_dataframe = keyword_dataframe[keyword_dataframe["num_annotators"] > 1].copy()
     embeddings = model.encode(
         keyword_dataframe["label"].tolist(),
         show_progress_bar=True,
         convert_to_tensor=False,
     )
 
+    # convert embeddings to float32
+    embeddings = np.array(embeddings, dtype=np.float32)
+
     logger.info("Generated embeddings for %s keywords", len(embeddings))
     keyword_dataframe["embedding"] = embeddings.tolist()
 
-    # create a dictionary with keywords as keys and embeddings as values
-    keyword_embeddings = {
-        keyword: embedding
-        for keyword, embedding in zip(
-            keyword_dataframe["label"], keyword_dataframe["embedding"]
-        )
-    }
+    # rename the 'label' column to 'keyword'
+    keyword_dataframe.rename(columns={"label": "keyword"}, inplace=True)
 
-    return keyword_embeddings
+    # select only the 'keyword' and 'embedding' columns
+    result_df = keyword_dataframe[["keyword", "embedding"]]
+
+    return result_df
