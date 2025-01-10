@@ -32,13 +32,7 @@ _js_ptd: &_js_ptd
   dataset: json.JSONDataset
   filename_suffix: ".json"
   credentials: s3_credentials
-
-_hd5: &_hd5
-  type: pandas.HDFDataset
-  filepath: None
-  credentials: s3_credentials
-  key: data
-
+  
 # -> 1a. GTR Data Collection:
 gtr.data_collection.projects.raw:
   <<: *_js_ptd
@@ -88,5 +82,5 @@ keywords.gtr_data.processed:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/keywords/processed.parquet
 
 keywords.gtr_data.embeddings:
-  <<: *_hd5
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/keywords/embeddings.h5
+  <<: *_js_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings/
