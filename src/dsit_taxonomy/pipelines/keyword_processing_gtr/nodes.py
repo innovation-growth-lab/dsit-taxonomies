@@ -56,9 +56,9 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         }
     )
 
-    # sort the dataframe by num_annotators in descending order, then by label alphabetically
+    # sort the dataframe by num_annotators in descending order, then by keyword alphabetically
     return output_df.sort_values(
-        by=["num_annotators", "label"], ascending=[False, True]
+        by=["num_annotators", "keyword"], ascending=[False, True]
     )
 
 def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
@@ -78,7 +78,7 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
             - 'embedding': The corresponding embedding as a list of float32 values.
     """
     embeddings = model.encode(
-        keyword_dataframe["label"].tolist(),
+        keyword_dataframe["keyword"].tolist(),
         show_progress_bar=True,
         convert_to_tensor=False,
     )
@@ -88,9 +88,6 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     logger.info("Generated embeddings for %s keywords", len(embeddings))
     keyword_dataframe["embedding"] = embeddings.tolist()
-
-    # rename the 'label' column to 'keyword'
-    keyword_dataframe.rename(columns={"label": "keyword"}, inplace=True)
 
     # select only the 'keyword' and 'embedding' columns
     result_df = keyword_dataframe[["keyword", "embedding"]]
