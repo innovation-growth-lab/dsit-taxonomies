@@ -50,5 +50,5 @@ GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
 # src/<your_project>/settings.py
 from .hooks import LanceDBHook
 
-HOOKS = (LanceDBHook(target_node_name="test_hook", lancedb_path="/tmp"),)
+HOOKS = (LanceDBHook(target_node_name="compute_matches_cwts", lancedb_path="/tmp"),)
 

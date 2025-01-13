@@ -50,8 +50,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                     "keywords": "keywords.gtr_data.db",
                     "batch_size": "params:batch_size"
                 },
-                outputs="ttt",
-                name="test_hook",
+                outputs="keywords.gtr_data.cwts_matches.intermediate",
+                name="compute_matches_cwts",
             ),
         ]
     )
