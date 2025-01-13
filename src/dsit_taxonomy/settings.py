@@ -46,3 +46,9 @@ GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
 # Class that manages the Data Catalog.
 # from kedro.io import DataCatalog
 # DATA_CATALOG_CLASS = DataCatalog
+
+# src/<your_project>/settings.py
+from .hooks import LanceDBHook
+
+HOOKS = (LanceDBHook(target_node_name="test_hook", lancedb_path="/tmp"),)
+

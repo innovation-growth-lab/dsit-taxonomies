@@ -30,7 +30,7 @@ Note:
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import aggregate_keyword_annotators, generate_embeddings
+from .nodes import aggregate_keyword_annotators, generate_keyword_embeddings
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
@@ -53,7 +53,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 name="aggregate_keyword_annotators",
             ),
             node(
-                func=generate_embeddings,
+                func=generate_keyword_embeddings,
                 inputs="keywords.gtr_data.preprocessed",
                 outputs="keywords.gtr_data.embeddings",
                 name="generate_keyword_embeddings",

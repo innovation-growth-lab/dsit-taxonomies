@@ -38,4 +38,147 @@ python -m spacy download en_core_web_sm
 # Todo list
 - [] Control for continuation of other projcets, ie. REF (ID).
 - [] Consider teachnical abstracts or impact summaries when these are substantially larger than abstracts.
-- [] Plan in-person session on Monday 11 (aim for afternoon).
+
+
+### **Revised Pipeline for Assigning and Validating Taxonomy Labels**
+
+---
+
+#### **Step 1: Input Data Preparation**
+1. **Data Inputs:**
+   - Project abstracts or descriptions.
+   - Extracted keywords (from DBPedia, RAKE, YAKE, KeyBERT, etc.).
+   - Taxonomy labels, including hierarchical structure.
+
+2. **Hierarchical Concatenation of Taxonomy Labels:**
+   - Transform the taxonomy into **hierarchically concatenated labels** for similarity scoring:
+     - For each bottom-level node $ l_j $, concatenate its parent labels to create a hierarchical path:
+       $$
+       l_j = \text{"Parent > Child > Bottom Level"}
+       $$
+     - Example: `Physics > Quantum Mechanics > Quantum Optics`.
+
+3. **Embeddings:**
+   - Compute or retrieve precomputed embeddings for:
+     - Keywords (from project abstracts).
+     - Hierarchical taxonomy labels $ l_j $ (concatenated paths).
+   - Use a pretrained model like OpenAI embeddings, SPECTER, or Sentence-BERT.
+
+---
+
+#### **Step 2: Keyword-Taxonomy Similarity**
+1. **Keyword-Taxonomy Similarity:**
+   - For each keyword $ k_i $, compute its similarity to all concatenated hierarchical labels $ l_j $:
+     $$
+     S(k_i, l_j) = \text{cosine\_similarity}(\text{embedding}(k_i), \text{embedding}(l_j))
+     $$
+   - Store the similarity matrix for all projects.
+
+---
+
+#### **Step 3: Entropy and Weight Calculation**
+1. **Keyword Entropy:**
+   - For each keyword $ k_i $, calculate Shannon entropy $ H(k_i) $ across the concatenated hierarchical labels:
+     $$
+     H(k_i) = -\sum_{j=1}^{L} p_{ij} \log p_{ij}, \quad p_{ij} = \frac{\exp(S(k_i, l_j))}{\sum_{j=1}^{L} \exp(S(k_i, l_j))}
+     $$
+
+2. **Keyword Weighting:**
+   - Assign a weight $ w(k_i) $ to each keyword based on its entropy:
+     $$
+     w(k_i) = 1 - \frac{H(k_i)}{H_\text{max}}
+     $$
+   - Low-entropy keywords get higher weights, reflecting their stronger alignment to specific hierarchical labels.
+
+---
+
+#### **Step 4: Aggregate Keyword Scores to Hierarchical Labels**
+1. **Label Relevance Scores:**
+   - For each hierarchical taxonomy label $ l_j $, compute its relevance score $ R(l_j) $ as the weighted sum of similarity scores for all associated keywords:
+     $$
+     R(l_j) = \sum_{i=1}^{N} w(k_i) \cdot S(k_i, l_j)
+     $$
+
+2. **Normalise Relevance Scores:**
+   - Normalise $ R(l_j) $ across all labels for the project:
+     $$
+     R_{\text{normalised}}(l_j) = \frac{R(l_j)}{\max(R(l))}
+     $$
+
+---
+
+#### **Step 5: Final Label Selection Using Relevance Drop-Off**
+1. **Sort Labels:**
+   - Sort concatenated hierarchical labels $ l_j $ by $ R_{\text{normalised}}(l_j) $ in descending order.
+
+2. **Find the Drop-Off Point (Elbow):**
+   - Compute differences between consecutive sorted scores:
+     $$
+     \Delta R_j = R_{\text{normalised}}(l_j) - R_{\text{normalised}}(l_{j+1})
+     $$
+   - Identify the largest $ \Delta R_j $, which indicates the "elbow" or sharp drop in relevance.
+
+3. **Select Labels:**
+   - Include all hierarchical labels up to the elbow point in the sorted list.
+
+---
+
+#### **Step 6: OpenAI API Validation**
+1. **Define Validation Level:**
+   - Select a **sufficiently high level** of the taxonomy for validation (e.g., parent categories such as "Physics," "Engineering," "Biology").
+   - Extract all parent-level labels from the taxonomy.
+
+2. **Construct OpenAI API Prompt:**
+   - Provide the project abstract, top-ranked hierarchical labels from the previous step, and the list of high-level taxonomy labels.
+   - Example prompt:
+     ```
+     Abstract: {Project Abstract}
+     
+     Based on the project abstract, select the most appropriate high-level taxonomy labels from the following list:
+     - Physics
+     - Biology
+     - Engineering
+     - Computer Science
+     - Social Sciences
+     - Medicine
+     
+     Provide a ranked list of the most relevant labels, and explain why they are appropriate.
+     ```
+
+3. **Query OpenAI API:**
+   - Use the OpenAI API to generate the validation results:
+     - High-level taxonomy labels with explanations.
+     - Comparison of selected labels to ensure consistency with bottom-level assignments.
+
+4. **Adjust and Validate Final Labels:**
+   - Use the OpenAI-generated high-level labels to validate the bottom-level selections:
+     - If high-level labels conflict with bottom-level labels, re-examine similarity scores and rerun Step 5.
+
+---
+
+#### **Step 7: Validation and Quality Control**
+1. **Consistency Check:**
+   - Ensure that the high-level labels from OpenAI align with the selected bottom-level labels.
+   - Example: If the project is labeled "Quantum Optics" (bottom-level), the high-level label should be "Physics."
+
+2. **Manual Review (Subset):**
+   - Review a small sample of projects to ensure that both bottom-level and high-level labels make sense.
+
+3. **Statistical Analysis:**
+   - Analyse:
+     - Distribution of high-level labels across projects.
+     - Agreement rates between bottom-level and high-level labels.
+     - Average number of labels per project.
+
+---
+
+#### **Step 8: Deployment**
+1. **Batch Processing:**
+   - Apply the entire pipeline to all 500K+ projects in parallel.
+
+2. **Output Format:**
+   - For each project, output:
+     - Project ID.
+     - Selected bottom-level taxonomy labels (with hierarchical paths).
+     - Validated high-level taxonomy labels from OpenAI.
+     - Explanations for label selection.

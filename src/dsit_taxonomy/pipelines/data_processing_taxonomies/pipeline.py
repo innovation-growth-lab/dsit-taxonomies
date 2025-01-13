@@ -30,7 +30,11 @@ Note:
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import preprocess_cwts
+from .nodes import (
+    preprocess_cwts_topics,
+    preprocess_goscience_taxonomy,
+    preprocess_oa_concepts,
+)
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
@@ -42,17 +46,26 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
     taxonomy_keywords_pipeline = pipeline(
         [
             node(
-                func=preprocess_cwts,
+                func=preprocess_cwts_topics,
                 inputs="taxonomy.cwts.raw",
-                outputs="test",
-                name="preprocess_cwts",
+                outputs=["taxonomy.cwts.full.db", "taxonomy.cwts.bottom.db"],
+                name="preprocess_cwts_topics",
             ),
-            # node(
-            #     func=generate_embeddings,
-            #     inputs="keywords.gtr_data.preprocessed",
-            #     outputs="keywords.gtr_data.processed",
-            #     name="generate_embeddings",
-            # ),
+            node(
+                func=preprocess_goscience_taxonomy,
+                inputs="taxonomy.goscience.raw",
+                outputs=["taxonomy.goscience.full.db", "taxonomy.goscience.bottom.db"],
+                name="preprocess_goscience_taxonomy",
+            ),
+            node(
+                func=preprocess_oa_concepts,
+                inputs="taxonomy.oa_concepts.raw",
+                outputs=[
+                    "taxonomy.oa_concepts.full.db",
+                    "taxonomy.oa_concepts.bottom.db",
+                ],
+                name="preprocess_oa_concepts",
+            ),
         ]
     )
 

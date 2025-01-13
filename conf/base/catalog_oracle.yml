@@ -6,18 +6,18 @@ _dpq: &_dpq
     engine: pyarrow
 
 # -> 2. GTR Data Annotations:
-dbp.gtr_data.annotated.oracle: &dbp_oracle
+dbp.gtr_data.annotated.oracle:
   <<: *_dpq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/dbp.parquet
 
-rake.gtr_data.annotated.oracle: &rake_oracle
+rake.gtr_data.annotated.oracle:
   <<: *_dpq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/rake.parquet
 
-yake.gtr_data.annotated.oracle: &yake_oracle
+yake.gtr_data.annotated.oracle:
   <<: *_dpq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/yake.parquet
 
-keybert.gtr_data.annotated.oracle: &keybert_oracle
+keybert.gtr_data.annotated.oracle:
   <<: *_dpq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet

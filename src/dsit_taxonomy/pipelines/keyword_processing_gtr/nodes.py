@@ -47,6 +47,9 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         }
     )
 
+    # filter out keywords that appear in only one annotator class
+    output_df = output_df[output_df["num_annotators"] > 1].reset_index(drop=True)
+
     # sort the dataframe by num_annotators in descending order, then by keyword alphabetically
     return output_df.sort_values(
         by=["num_annotators", "keyword"], ascending=[False, True]
@@ -58,7 +61,7 @@ def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
     return keywords.str.lower().str.strip()
 
 
-def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
+def generate_keyword_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Generate embeddings for each keyword in the dataframe.
 
@@ -70,10 +73,6 @@ def generate_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
             - 'keyword': The unique keyword.
             - 'embedding': The corresponding embedding as a list of float32 values.
     """
-    # filter out keywords that appear in only one annotator class
-    keyword_dataframe = keyword_dataframe[
-        keyword_dataframe["num_annotators"] > 1
-    ].copy()
 
     # generate embeddings for the keywords
     embeddings = model.encode(
