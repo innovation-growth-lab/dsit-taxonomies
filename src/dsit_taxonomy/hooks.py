@@ -48,31 +48,40 @@ class LanceDBHook:
         if node.name != self.target_node_name:
             return
 
-        # Initialise LanceDB connection
+        # initialise LanceDB connection
         db = lancedb.connect(self.lancedb_path)
 
-        # Load parameters to find the embeddings model
+        # load parameters to find the embeddings model
         parameters = catalog.load("parameters")
         model = SentenceTransformer(parameters["embeddings_model_name"])
 
-        # Process all input datasets containing ".db"
+        # process all input datasets containing ".db"
         db_tables = {}
-        for input_name, documents in inputs.items():
-            if ".db" in input_name:
-                logger.info("Processing table '%s'...", input_name)
-                # Extract texts
-                texts = self._extract_texts(documents)
+        for input_name, input_object in inputs.items():
+            if input_name.endswith(".db"):
+                logger.info("Processing table '%s' as a vector table.", input_name)
 
-                # Convert texts to embeddings
+                assert isinstance(input_object, pd.DataFrame), (
+                    f"Expected input '{input_name}' to be a DataFrame, "
+                    f"but got {type(input_object).__name__}."
+                )
+
+                # extract texts
+                texts = self._extract_texts(input_object)
+
+                # convert texts to embeddings
                 embeddings = model.encode(texts, show_progress_bar=True)
 
-                # Prepare data for LanceDB
+                # extract the column uuid (only accept 1)
+                uuids = input_object["uuid"].tolist()
+
+                # prepare data for LanceDB
                 data_to_insert = [
-                    {"text": text, "embedding": embedding.tolist()}
-                    for text, embedding in zip(texts, embeddings)
+                    {"id": uuid, "text": text, "vector": embedding.tolist()}
+                    for uuid, text, embedding in zip(uuids, texts, embeddings)
                 ]
 
-                # Create or overwrite table in LanceDB
+                # create or overwrite table in LanceDB
                 self._store_embeddings_in_lancedb(db, input_name, data_to_insert)
                 db_tables[input_name] = db[input_name]
 

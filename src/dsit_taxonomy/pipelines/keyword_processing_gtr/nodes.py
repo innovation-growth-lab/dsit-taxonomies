@@ -1,4 +1,5 @@
 import logging
+import uuid
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -49,6 +50,11 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
 
     # filter out keywords that appear in only one annotator class
     output_df = output_df[output_df["num_annotators"] > 1].reset_index(drop=True)
+
+    # add uuids
+    output_df["uuid"] = output_df["keyword"].apply(
+        lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
+    )
 
     # sort the dataframe by num_annotators in descending order, then by keyword alphabetically
     return output_df.sort_values(

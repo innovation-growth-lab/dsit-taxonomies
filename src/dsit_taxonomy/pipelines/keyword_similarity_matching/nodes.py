@@ -1,11 +1,7 @@
 import logging
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from tqdm import tqdm
 import lancedb
 import pandas as pd
-import numpy as np
 from scipy.stats import entropy
-from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +12,7 @@ def compute_similarity(taxonomy, keywords):
 
 
 def _search_batch(keyword_batch, taxonomy_table):
-    """ """
+    """Perform similarity search for a batch of keywords."""
     results = []
     for keyword in keyword_batch:
         embedding = keyword["embedding"]
@@ -30,56 +26,52 @@ def _search_batch(keyword_batch, taxonomy_table):
 
     return results
 
+
 def _compute_shannon_entropy(similarity_scores):
     """Compute the Shannon entropy for a given list of similarity scores."""
     return entropy(similarity_scores, base=2)
 
+
 def compute_similarities_and_entropy(
     taxonomy: lancedb, keywords: lancedb, batch_size: int = 1000
 ):
-    # Convert LanceDB table to a list of dicts for batch processing
+    # convert LanceDB table to a list of dicts for batch processing
     keywords_dict = keywords.to_pandas().to_dict(orient="records")
 
-    # Divide keywords into batches
+    # divide keywords into batches
     keyword_batches = [
         keywords_dict[i : i + batch_size]
         for i in range(0, len(keywords_dict), batch_size)
     ]
 
-    # Use ProcessPoolExecutor for parallel processing
+    # process each batch sequentially
     results = []
-    with ProcessPoolExecutor() as executor:
-        futures = [
-            executor.submit(_search_batch, batch, taxonomy) for batch in keyword_batches
-        ]
-        for future in tqdm(
-            as_completed(futures), total=len(futures), desc="Processing batches"
-        ):
-            results.extend(future.result())
+    for i, batch in enumerate(keyword_batches):
+        logger.info("Processing batch %d / %d", i + 1, len(keyword_batches))
+        batch_results = _search_batch(batch, taxonomy)
+        results.extend(batch_results)
 
-    # Flatten results into a DataFrame
-    flat_results = []
-    for result in results:
-        for similarity in result["taxonomy_similarities"].itertuples():
-            flat_results.append(
-                {
-                    "keyword_id": result["keyword_id"],
-                    "taxonomy_label_id": similarity.id,
-                    "similarity_score": similarity.similarity_score,
-                }
-            )
+    # flatten results into a DataFrame
+    flat_results = [
+        {
+            "keyword_id": result["keyword_id"],
+            "taxonomy_label_id": similarity.id,
+            "similarity_score": similarity.similarity_score,
+        }
+        for result in results
+        for similarity in result["taxonomy_similarities"].itertuples()
+    ]
 
     df = pd.DataFrame(flat_results)
 
-    # Compute Shannon entropy for each keyword
+    # compute Shannon entropy for each keyword
     entropy_results = (
         df.groupby("keyword_id")["similarity_score"]
         .apply(_compute_shannon_entropy)
-        .reset_index()
+        .reset_index(name="shannon_entropy")
     )
-    entropy_results.columns = ["keyword_id", "shannon_entropy"]
 
-    # Merge entropy results with the flattened results
+    # merge entropy results with the flattened results
     final_results = df.merge(entropy_results, on="keyword_id")
 
     return final_results

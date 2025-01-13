@@ -1,4 +1,5 @@
 import logging
+import uuid
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -43,11 +44,9 @@ def preprocess_cwts_topics(cwts_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     result_df = pd.DataFrame({"label": labels, "id_path": id_paths, "level": levels})
     result_df.drop_duplicates(subset=["label", "id_path"], inplace=True)
+    taxonomy, bottom_level = _before_return(result_df)
 
-    # output also the bottom level of the hierarchy
-    bottom_level = result_df[result_df["level"] == result_df["level"].max()]
-
-    return result_df, bottom_level
+    return taxonomy, bottom_level
 
 
 def preprocess_goscience_taxonomy(goscience_dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -101,11 +100,9 @@ def preprocess_goscience_taxonomy(goscience_dataframe: pd.DataFrame) -> pd.DataF
     )
 
     result_df.drop_duplicates(subset=["label", "level_path"], inplace=True)
+    taxonomy, bottom_level = _before_return(result_df)
 
-    # output also the bottom level of the hierarchy
-    bottom_level = result_df[result_df["level"] == result_df["level"].max()]
-
-    return result_df, bottom_level
+    return taxonomy, bottom_level
 
 
 def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -165,11 +162,9 @@ def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     # drop duplicates
     result_df.drop_duplicates(subset=["label", "id_path"], inplace=True)
+    taxonomy, bottom_level = _before_return(result_df)
 
-    # output also the bottom level of the hierarchy
-    bottom_level = result_df[result_df["level"] == result_df["level"].max()]
-
-    return result_df, bottom_level
+    return taxonomy, bottom_level
 
 
 def _preprocess_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -210,3 +205,16 @@ def _preprocess_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
             .str.lower(),
         )
     )
+
+
+def _before_return(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Preprocess the keywords data."""
+    # add uuids
+    dataframe["uuid"] = dataframe["label"].apply(
+        lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
+    )
+
+    # output also the bottom level of the hierarchy
+    bottom_level = dataframe[dataframe["level"] == dataframe["level"].max()]
+
+    return dataframe, bottom_level
