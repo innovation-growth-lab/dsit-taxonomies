@@ -1,0 +1,115 @@
+"""
+A Kedro hook to process documents into embeddings using SentenceTransformers
+and store them in LanceDB before a specified node runs.
+"""
+
+import logging
+from typing import Any
+from kedro.framework.hooks import hook_impl
+from kedro.io import DataCatalog
+import lancedb
+import pandas as pd
+from sentence_transformers import SentenceTransformer
+
+logger = logging.getLogger(__name__)
+
+
+class LanceDBHook:
+    """
+    A Kedro hook to process documents into embeddings using SentenceTransformers
+    and store them in LanceDB before a specified node runs.
+    """
+
+    def __init__(
+        self,
+        target_node_name: str,
+        lancedb_path: str,
+    ):
+        """
+        Start the hook.
+
+        Args:
+            target_node_name (str): The name of the node before which the hook will execute.
+            lancedb_path (str): Path to the LanceDB database.
+        """
+        self.target_node_name = target_node_name
+        self.lancedb_path = lancedb_path
+
+    @hook_impl
+    def before_node_run(self, node, catalog: DataCatalog, inputs: dict) -> None:
+        """
+        Hook implementation to process documents into embeddings and store them in LanceDB.
+
+        Args:
+            node: The node that is about to run.
+            catalog (DataCatalog): Kedro's DataCatalog to load datasets and parameters.
+            inputs (dict): The inputs to the node.
+        """
+        if node.name != self.target_node_name:
+            return
+
+        # Initialise LanceDB connection
+        db = lancedb.connect(self.lancedb_path)
+
+        # Load parameters to find the embeddings model
+        parameters = catalog.load("parameters")
+        model = SentenceTransformer(parameters["embeddings_model_name"])
+
+        # Process all input datasets containing ".db"
+        db_tables = {}
+        for input_name, documents in inputs.items():
+            if ".db" in input_name:
+                logger.info("Processing table '%s'...", input_name)
+                # Extract texts
+                texts = self._extract_texts(documents)
+
+                # Convert texts to embeddings
+                embeddings = model.encode(texts, show_progress_bar=True)
+
+                # Prepare data for LanceDB
+                data_to_insert = [
+                    {"text": text, "embedding": embedding.tolist()}
+                    for text, embedding in zip(texts, embeddings)
+                ]
+
+                # Create or overwrite table in LanceDB
+                self._store_embeddings_in_lancedb(db, input_name, data_to_insert)
+                db_tables[input_name] = db[input_name]
+
+        return db_tables
+
+    def _extract_texts(self, documents: Any) -> list:
+        """
+        Extract a list of text strings from the provided dataset.
+
+        Args:
+            documents (Any): The dataset to extract texts from (e.g., list or DataFrame).
+
+        Returns:
+            list: A list of text strings.
+        """
+        if isinstance(documents, list):
+            return documents
+        elif isinstance(documents, pd.DataFrame):
+            for column in ["label", "text", "keyword"]:
+                if column in documents.columns:
+                    return documents[column].dropna().tolist()
+            raise ValueError("No suitable text column found in the DataFrame.")
+        else:
+            raise ValueError("Unsupported document format. Expected list or DataFrame.")
+
+    def _store_embeddings_in_lancedb(
+        self, db: lancedb, table_name: str, data: list
+    ) -> None:
+        """
+        Store embeddings in LanceDB.
+
+        Args:
+            db (lancedb.LanceDB): The LanceDB instance.
+            table_name (str): Name of the table to create or overwrite.
+            data (list): List of dictionaries containing 'text' and 'embedding'.
+        """
+        if table_name in db.table_names():
+            db.drop_table(table_name)
+        db.create_table(table_name, data=data)
+        logger.info("Embeddings successfully stored in LanceDB table '%s'.", table_name)
