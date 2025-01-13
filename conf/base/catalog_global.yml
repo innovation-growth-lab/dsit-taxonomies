@@ -51,7 +51,7 @@ taxonomy.cwts.full.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/cwts_oa_topics.parquet
 
-taxonomy.cwts.bottom_level.db:
+taxonomy.cwts.bottom.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/cwts_oa_topics_bottom_level.parquet
 
@@ -80,7 +80,7 @@ taxonomy.goscience.full.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/go_science_topics.parquet
 
-taxonomy.goscience.bottom_level.db:
+taxonomy.goscience.bottom.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/go_science_topics_bottom_level.parquet
 
@@ -92,7 +92,7 @@ taxonomy.oa_concepts.full.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/oa_concepts.parquet
 
-taxonomy.oa_concepts.bottom_level.db:
+taxonomy.oa_concepts.bottom.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/oa_concepts_bottom_level.parquet
 
