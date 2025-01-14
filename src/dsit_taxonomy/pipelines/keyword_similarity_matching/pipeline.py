@@ -30,9 +30,7 @@ Note:
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import (
-    compute_similarities_and_entropy
-)
+from .nodes import compute_similarities_and_entropy
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
@@ -46,13 +44,14 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
             node(
                 func=compute_similarities_and_entropy,
                 inputs={
-                    "taxonomy": "taxonomy.cwts.bottom.db", 
+                    "taxonomy": f"taxonomy.{tax}.bottom.db",
                     "keywords": "keywords.gtr_data.db",
-                    "batch_size": "params:batch_size"
+                    "batch_size": "params:batch_size",
                 },
-                outputs="keywords.gtr_data.cwts_matches.intermediate",
-                name="compute_matches_cwts",
-            ),
+                outputs=f"keywords.gtr_data.{tax}_matches.intermediate",
+                name=f"compute_matches_{tax}",
+            )
+            for tax in ["cwts", "oa_concepts", "goscience"]
         ]
     )
 

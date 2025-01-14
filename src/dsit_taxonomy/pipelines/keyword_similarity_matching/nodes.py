@@ -1,4 +1,5 @@
 import logging
+from typing import List, Dict
 import lancedb
 import pandas as pd
 from scipy.stats import entropy
@@ -6,22 +7,22 @@ from scipy.stats import entropy
 logger = logging.getLogger(__name__)
 
 
-def compute_similarity(taxonomy, keywords):
-    logger.info("Hook test: %s", taxonomy)
-    return keywords
-
-
-def _search_batch(keyword_batch, taxonomy_table, top_n=10, number_returns=5000):
+def _search_batch(
+    keyword_batch: List[Dict[str, str]],
+    taxonomy_table: lancedb,
+    top_n=10,
+    number_returns=5000,
+) -> pd.DataFrame:
     """
     Perform similarity search for a batch of keywords, computing entropy over a larger number
-    of matches (entropy_limit) but only retaining the top N matches for output.
+    of matches (entropy_limit) but only retaining the top N matches for output. It also
+    computes the Shannon entropy over the similarity scores of the expanded matches.
+
     Args:
-        keyword_batch: List of keyword embeddings and IDs.
-        taxonomy_table: LanceDB table for taxonomy embeddings.
-        top_n: Number of top matches to retain for final output.
-        number_returns: Number of matches to use for Shannon entropy calculation.
-    Returns:
-        List of results for the batch.
+        keyword_batch (List[Dict[str, str]]): List of keyword embeddings.
+        taxonomy_table (lancedb): LanceDB table for taxonomy embeddings.
+        top_n (int): Number of top matches to retain for final output.
+        number_returns (int): Number of matches to use for Shannon entropy calculation.
     """
     results = []
 
@@ -37,7 +38,7 @@ def _search_batch(keyword_batch, taxonomy_table, top_n=10, number_returns=5000):
             .to_pandas()
         )
 
-        # normalise similarity as 1 - 1/2*_distance. 
+        # normalise similarity as 1 - 1/2*_distance.
         # See https://lancedb.github.io/lancedb/python/python/#lancedb.index.IvfPq
         expanded_labels["similarity_score"] = (2 - expanded_labels["_distance"]) / 2
 
@@ -76,7 +77,22 @@ def compute_similarities_and_entropy(
     batch_size: int = 1000,
     top_n: int = 10,
     number_returns: int = 1000,
-):
+) -> pd.DataFrame:
+    """
+    Compute similarity scores and Shannon entropy for a set of keywords against a
+    taxonomy of labels.
+
+    Args:
+        taxonomy: LanceDB table for taxonomy embeddings.
+        keywords: LanceDB table for keyword embeddings.
+        batch_size: Number of keywords to process in each batch.
+        top_n: Number of top matches to retain for final output.
+        number_returns: Number of matches to use for Shannon entropy calculation.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns "keyword_id", "taxonomy_label_id",
+        "similarity_score", and "shannon_entropy".
+    """
     # convert LanceDB table to a list of dicts for batch processing
     keywords_dict = keywords.to_pandas().to_dict(orient="records")
 
@@ -93,18 +109,8 @@ def compute_similarities_and_entropy(
         batch_results = _search_batch(
             batch, taxonomy, top_n=top_n, number_returns=number_returns
         )
-        results.extend(batch_results)
+        results.append(batch_results)
 
+    # Concatenate results into a single DataFrame
     logger.info("Flattening results")
-    flat_results = [
-        {
-            "keyword_id": result["keyword_id"],
-            "taxonomy_label_id": match.id,
-            "similarity_score": match.similarity_score,
-            "shannon_entropy": result["shannon_entropy"],
-        }
-        for result in results
-        for match in result["top_matches"].itertuples()
-    ]
-
-    return pd.DataFrame(flat_results)
+    return pd.concat(results, ignore_index=True)

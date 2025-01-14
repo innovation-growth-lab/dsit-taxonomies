@@ -32,9 +32,9 @@ CONFIG_LOADER_ARGS = {
     "base_env": "base",
     "default_run_env": "local",
     "config_patterns": {
-    #     "spark" : ["spark*/"],
+        #     "spark" : ["spark*/"],
         "parameters": ["parameters*", "parameters*/**", "**/parameters*"],
-    }
+    },
 }
 
 GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
@@ -50,5 +50,7 @@ GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
 # src/<your_project>/settings.py
 from .hooks import LanceDBHook
 
-HOOKS = (LanceDBHook(target_node_name="compute_matches_cwts", lancedb_path="/tmp"),)
-
+HOOKS = (
+    LanceDBHook(target_node_name=f"compute_matches_{tax}", lancedb_path="/tmp")
+    for tax in ["cwts", "oa_concepts", "goscience"]
+)
