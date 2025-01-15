@@ -68,19 +68,21 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 inputs="gtr.projects.documents",
                 outputs="sentences.gtr_data.db",
                 name="document_preprocessing",
-            ),
+            )
+        ] +
+        [
             node(
                 func=compute_similarities_and_entropy,
                 inputs={
-                    "taxonomy": "taxonomy.cwts.bottom.db",
+                    "taxonomy": f"taxonomy.{tax}.bottom.db",
                     "documents": "sentences.gtr_data.db",
                     "batch_size": "params:batch_size",
                     "top_n": "params:top_n",
                     "number_returns": "params:number_returns",
                 },
-                outputs="sentences.gtr_data.cwts_matches.intermediate",
-                name="compute_document_matches_cwts",
-            ),
+                outputs=f"sentences.gtr_data.{tax}_matches.intermediate",
+                name=f"compute_document_matches_{tax}",
+            ) for tax in ["cwts", "oa_concepts", "goscience"]
         ],
         tags=["compute_document_weights"],
     )

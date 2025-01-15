@@ -5,6 +5,7 @@ import lancedb
 import pandas as pd
 from scipy.stats import entropy
 from spacy.lang.en import English
+from joblib import Parallel, delayed
 
 logger = logging.getLogger(__name__)
 
@@ -104,14 +105,14 @@ def compute_similarities_and_entropy(
         for i in range(0, len(documents_dict), batch_size)
     ]
 
-    # Process each batch sequentially
-    results = []
-    for i, batch in enumerate(document_batches):
-        logger.info("Processing batch %d / %d", i + 1, len(document_batches))
-        batch_results = _search_batch(
+    # Process each batch in parallel
+    logger.info("Processing batches in parallel")
+    results = Parallel(n_jobs=-1, verbose=10)(
+        delayed(_search_batch)(
             batch, taxonomy, top_n=top_n, number_returns=number_returns
         )
-        results.append(batch_results)
+        for batch in document_batches
+    )
 
     # Concatenate results into a single DataFrame
     logger.info("Flattening results")

@@ -156,3 +156,14 @@ keywords.gtr_data.oa_concepts_matches.intermediate:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/oa_concepts.parquet
 
+sentences.gtr_data.cwts_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/cwts.parquet
+
+sentences.gtr_data.goscience_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/goscience.parquet
+
+sentences.gtr_data.oa_concepts_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/oa_concepts.parquet
