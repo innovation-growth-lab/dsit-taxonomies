@@ -33,7 +33,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     compute_similarities_and_entropy,
     document_preprocessing,
-    compute_document_similarity,
+    compute_document_similarity_and_weights,
 )
 
 
@@ -83,6 +83,16 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 outputs=f"sentences.gtr_data.{tax}_matches.intermediate",
                 name=f"compute_document_matches_{tax}",
             ) for tax in ["cwts", "oa_concepts", "goscience"]
+        ] + [
+            node(
+                func=compute_document_similarity_and_weights,
+                inputs={
+                    "documents": "sentences.gtr_data.db",
+                    "document_matches": "sentences.gtr_data.cwts_matches.intermediate",
+                },
+                outputs="sentences.gtr_data.weightsss",
+                name="compute_document_similarity_and_weights",
+            )
         ],
         tags=["compute_document_weights"],
     )

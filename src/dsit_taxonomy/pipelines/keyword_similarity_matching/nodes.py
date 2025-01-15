@@ -156,76 +156,27 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
         lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
     )
 
+    # [HACK] drop duplicate rows to avoid non-informational matches
+    # This of course has the downside that it may remove some valid matches.
+    documents = documents.drop_duplicates(subset=["text"], keep=False)
+
     return documents[["project_id", "uuid", "text"]]
 
 
-def compute_document_similarity(
-    documents: pd.DataFrame, taxonomy: pd.DataFrame
+def compute_document_similarity_and_weights(
+    documents: pd.DataFrame, document_matches: pd.DataFrame
 ) -> pd.DataFrame:
-    """
-    Compute similarity scores between documents and taxonomy labels.
-
-    Args:
-        documents: DataFrame containing document embeddings.
-        taxonomy: DataFrame containing taxonomy embeddings.
-
-    Returns:
-        pd.DataFrame: DataFrame with columns "document_id", "taxonomy_label_id", and "similarity_score".
-    """
-    return "hello"
-
-    batch_size = 1_000
-    top_n = 10
-    number_returns = 1_000
-
-    sentences_dict = documents.to_pandas().to_dict(orient="records")
-
-    # Divide documents into batches
-    sentence_batches = [
-        sentences_dict[i : i + batch_size]
-        for i in range(0, len(sentences_dict), batch_size)
-    ]
-
-    # Process each batch sequentially
-    results = []
-    for i, batch in enumerate(sentence_batches):
-        logger.info("Processing batch %d / %d", i + 1, len(sentence_batches))
-        batch_results = _search_batch(
-            batch, taxonomy, top_n=top_n, number_returns=number_returns
-        )
-        results.append(batch_results)
-
-    # Concatenate results into a single DataFrame
-    logger.info("Flattening results")
-    sentence_matches = pd.concat(results, ignore_index=True)
+    
+    document_dataframe = pd.merge(documents[["project_id", "uuid"]], document_matches, left_on="uuid", right_on="document_id", how="right")
 
     # groupby project_id, taxonomy_id and extract highest similarity score for all unique labels in the project
     document_matches = (
-        sentence_matches.groupby(["project_id", "taxonomy_label_id"])
+        document_dataframe.groupby(["project_id", "taxonomy_label_id"])
         .agg({"similarity_score": "max"})
         .reset_index()
     )
 
     return document_matches
-
-
-#     # compute similarity scores
-#     similarity_scores = documents.apply(
-#         lambda row: taxonomy.apply(
-#             lambda label: 1 - cosine(row["vector"], label["vector"]), axis=1
-#         ),
-#         axis=1,
-#     )
-
-#     # convert to DataFrame
-#     similarity_scores_df = similarity_scores.stack().reset_index()
-#     similarity_scores_df.columns = [
-#         "document_id",
-#         "taxonomy_label_id",
-#         "similarity_score",
-#     ]
-
-#     return similarity_scores_df
 
 
 def _split_sentences(document: str, nlp: English) -> List[str]:
