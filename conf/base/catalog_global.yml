@@ -132,12 +132,9 @@ keybert.gtr_data.annotated:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet
 
 # -> 3. GTR Processed Annotations:
-keywords.gtr_data.preprocessed: &_gtr_keywords
+keywords.gtr_data.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/preprocessed.parquet
-
-keywords.gtr_data.db:
-  <<: *_gtr_keywords
 
 keywords.gtr_data.embeddings:
   <<: *_pq
@@ -167,3 +164,27 @@ sentences.gtr_data.goscience_matches.intermediate:
 sentences.gtr_data.oa_concepts_matches.intermediate:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/oa_concepts.parquet
+
+projects.gtr_data.cwts_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/matches/cwts.parquet
+
+projects.gtr_data.goscience_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/matches/goscience.parquet
+
+projects.gtr_data.oa_concepts_matches.intermediate:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/matches/oa_concepts.parquet
+
+projects.gtr_data.cwts_scores:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/cwts.parquet
+
+projects.gtr_data.goscience_scores:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/goscience.parquet
+
+projects.gtr_data.oa_concepts_scores:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/oa_concepts.parquet

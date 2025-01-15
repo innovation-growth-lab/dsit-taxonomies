@@ -33,7 +33,8 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     compute_similarities_and_entropy,
     document_preprocessing,
-    compute_document_similarity_and_weights,
+    compute_document_scores,
+    aggregate_scores_to_labels,
 )
 
 
@@ -69,8 +70,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 outputs="sentences.gtr_data.db",
                 name="document_preprocessing",
             )
-        ] +
-        [
+        ]
+        + [
             node(
                 func=compute_similarities_and_entropy,
                 inputs={
@@ -82,17 +83,33 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 },
                 outputs=f"sentences.gtr_data.{tax}_matches.intermediate",
                 name=f"compute_document_matches_{tax}",
-            ) for tax in ["cwts", "oa_concepts", "goscience"]
-        ] + [
+            )
+            for tax in ["cwts", "oa_concepts", "goscience"]
+        ]
+        + [
             node(
-                func=compute_document_similarity_and_weights,
+                func=compute_document_scores,
                 inputs={
                     "documents": "sentences.gtr_data.db",
-                    "document_matches": "sentences.gtr_data.cwts_matches.intermediate",
+                    "document_matches": f"sentences.gtr_data.{tax}_matches.intermediate",
                 },
-                outputs="sentences.gtr_data.weightsss",
-                name="compute_document_similarity_and_weights",
+                outputs=f"projects.gtr_data.{tax}_matches.intermediate",
+                name=f"compute_document_scores_{tax}",
             )
+            for tax in ["cwts", "oa_concepts", "goscience"]
+        ]
+        + [
+            node(
+                func=aggregate_scores_to_labels,
+                inputs={
+                    "document_scores": f"projects.gtr_data.{tax}_matches.intermediate",
+                    "keyword_scores": f"keywords.gtr_data.{tax}_matches.intermediate",
+                    "keyword_data": "keywords.gtr_data.db",
+                },
+                outputs=f"projects.gtr_data.{tax}_scores",
+                name=f"aggregate_scores_to_labels_{tax}",
+            )
+            for tax in ["cwts", "oa_concepts", "goscience"]
         ],
         tags=["compute_document_weights"],
     )

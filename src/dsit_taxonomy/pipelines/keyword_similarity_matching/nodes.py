@@ -9,70 +9,6 @@ from spacy.lang.en import English
 logger = logging.getLogger(__name__)
 
 
-def _search_batch(
-    document_batch: List[Dict[str, str]],
-    taxonomy_table: lancedb,
-    top_n=10,
-    number_returns=5000,
-) -> pd.DataFrame:
-    """
-    Perform similarity search for a batch of strings, computing entropy over a larger number
-    of matches (entropy_limit) but only retaining the top N matches for output. It also
-    computes the Shannon entropy over the similarity scores of the expanded matches.
-
-    Args:
-        document_batch (List[Dict[str, str]]): List of document embeddings.
-        taxonomy_table (lancedb): LanceDB table for taxonomy embeddings.
-        top_n (int): Number of top matches to retain for final output.
-        number_returns (int): Number of matches to use for Shannon entropy calculation.
-    """
-    results = []
-
-    for document in document_batch:
-        embedding = document["vector"]
-        document_id = document["id"]
-
-        # perform similarity search, retrieving a larger number of matches for entropy
-        expanded_labels = (
-            taxonomy_table.search(embedding)
-            .metric("cosine")
-            .limit(number_returns)
-            .to_pandas()
-        )
-
-        # normalise similarity as 1 - 1/2*_distance.
-        # See https://lancedb.github.io/lancedb/python/python/#lancedb.index.IvfPq
-        expanded_labels["similarity_score"] = (2 - expanded_labels["_distance"]) / 2
-
-        # compute Shannon entropy over expanded matches
-        entropy_value = _compute_shannon_entropy(
-            expanded_labels["similarity_score"].values
-        )
-
-        # reduce to top N matches for final output
-        top_matches = expanded_labels.nlargest(top_n, "similarity_score")
-
-        # Append results as a DataFrame
-        results.append(
-            pd.DataFrame(
-                {
-                    "document_id": document_id,
-                    "taxonomy_label_id": top_matches["id"].values,
-                    "similarity_score": top_matches["similarity_score"].values,
-                    "shannon_entropy": entropy_value,
-                }
-            )
-        )
-
-    # concatenate all DataFrames into a single DataFrame
-    return pd.concat(results, ignore_index=True)
-
-
-def _compute_shannon_entropy(similarity_scores):
-    """Compute the Shannon entropy for a given list of similarity scores."""
-    return entropy(similarity_scores, base=2)
-
-
 def compute_similarities_and_entropy(
     taxonomy: lancedb,
     documents: lancedb,
@@ -163,20 +99,181 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
     return documents[["project_id", "uuid", "text"]]
 
 
-def compute_document_similarity_and_weights(
+def compute_document_scores(
     documents: pd.DataFrame, document_matches: pd.DataFrame
 ) -> pd.DataFrame:
-    
-    document_dataframe = pd.merge(documents[["project_id", "uuid"]], document_matches, left_on="uuid", right_on="document_id", how="right")
+    """
+    Compute the similarity scores for the top 3 matches for each document and sum them
+    for each project and taxonomy label.
 
-    # groupby project_id, taxonomy_id and extract highest similarity score for all unique labels in the project
-    document_matches = (
-        document_dataframe.groupby(["project_id", "taxonomy_label_id"])
-        .agg({"similarity_score": "max"})
-        .reset_index()
+    Args:
+        documents (pd.DataFrame): DataFrame containing the GtR documents.
+        document_matches (pd.DataFrame): DataFrame containing the document matches.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the project_id, taxonomy_label_id, and
+        similarity_score.
+    """
+    # merge documents with their matches
+    merged_documents = pd.merge(
+        documents[["project_id", "uuid"]],
+        document_matches,
+        left_on="uuid",
+        right_on="document_id",
+        how="right",
     )
 
-    return document_matches
+    # get top 3 similarity scores for each document
+    top_3_scores = (
+        merged_documents.sort_values(
+            by=["project_id", "uuid", "similarity_score"], ascending=[True, True, False]
+        )
+        .groupby(["project_id", "uuid"], as_index=False)
+        .head(3)
+    )
+
+    # sum the top 3 scores for each project and taxonomy label
+    aggregated_scores = top_3_scores.groupby(
+        ["project_id", "taxonomy_label_id"], as_index=False
+    ).agg(similarity_score=("similarity_score", "sum"))
+
+    # normalise the scores
+    aggregated_scores["similarity_score"] = (
+        aggregated_scores["similarity_score"]
+        - aggregated_scores["similarity_score"].min()
+    ) / (
+        aggregated_scores["similarity_score"].max()
+        - aggregated_scores["similarity_score"].min()
+    )
+
+    return aggregated_scores
+
+
+def aggregate_scores_to_labels(
+    document_scores: pd.DataFrame,
+    keyword_scores: pd.DataFrame,
+    keyword_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Merge the document scores with the keyword scores and compute the relevance scores.
+
+    Args:
+        document_scores (pd.DataFrame): DataFrame containing the document scores.
+        keyword_scores (pd.DataFrame): DataFrame containing the keyword scores.
+        keyword_data (pd.DataFrame): DataFrame containing the keyword data.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the project_id, keyword_id, taxonomy_label_id,
+    """
+
+    # merge the document scores with the keyword scores
+    project_keyword_map = (
+        keyword_data[["project_ids", "uuid"]]
+        .explode("project_ids")
+        .rename(columns={"project_ids": "project_id", "uuid": "keyword_id"})
+    )
+
+    # merge the keyword scores with the project ids
+    project_keywords = pd.merge(
+        project_keyword_map,
+        keyword_scores[["keyword_id", "taxonomy_label_id"]],
+        on="keyword_id",
+        how="left",
+    )
+
+    # merge the keyword_ids to the documents
+    documents = pd.merge(
+        document_scores,
+        project_keywords,
+        on=["project_id", "taxonomy_label_id"],
+        how="inner",
+    )
+
+    # rename documents' similarity_score to "weight"
+    documents.rename(columns={"similarity_score": "weight"}, inplace=True)
+
+    # merge back the keyword similarity and entropy
+    relevance_scores = pd.merge(
+        documents,
+        keyword_scores,
+        on=["keyword_id", "taxonomy_label_id"],
+        how="left",
+    )
+
+    return relevance_scores[
+        [
+            "project_id",
+            "keyword_id",
+            "taxonomy_label_id",
+            "weight",
+            "similarity_score",
+            "shannon_entropy",
+        ]
+    ]
+
+
+def _search_batch(
+    document_batch: List[Dict[str, str]],
+    taxonomy_table: lancedb,
+    top_n=10,
+    number_returns=5000,
+) -> pd.DataFrame:
+    """
+    Perform similarity search for a batch of strings, computing entropy over a larger number
+    of matches (entropy_limit) but only retaining the top N matches for output. It also
+    computes the Shannon entropy over the similarity scores of the expanded matches.
+
+    Args:
+        document_batch (List[Dict[str, str]]): List of document embeddings.
+        taxonomy_table (lancedb): LanceDB table for taxonomy embeddings.
+        top_n (int): Number of top matches to retain for final output.
+        number_returns (int): Number of matches to use for Shannon entropy calculation.
+    """
+    results = []
+
+    for document in document_batch:
+        embedding = document["vector"]
+        document_id = document["id"]
+
+        # perform similarity search, retrieving a larger number of matches for entropy
+        expanded_labels = (
+            taxonomy_table.search(embedding)
+            .metric("cosine")
+            .limit(number_returns)
+            .to_pandas()
+        )
+
+        # normalise similarity as 1 - 1/2*_distance.
+        # See https://lancedb.github.io/lancedb/python/python/#lancedb.index.IvfPq
+        expanded_labels["similarity_score"] = (2 - expanded_labels["_distance"]) / 2
+
+        # compute Shannon entropy over expanded matches
+        entropy_value = _compute_shannon_entropy(
+            expanded_labels["similarity_score"].values
+        )
+
+        # reduce to top N matches for final output
+        top_matches = expanded_labels.nlargest(top_n, "similarity_score")
+
+        # Append results as a DataFrame
+        results.append(
+            pd.DataFrame(
+                {
+                    "document_id": document_id,
+                    "taxonomy_label_id": top_matches["id"].values,
+                    "similarity_score": top_matches["similarity_score"].values,
+                    "shannon_entropy": entropy_value,
+                }
+            )
+        )
+
+    # concatenate all DataFrames into a single DataFrame
+    return pd.concat(results, ignore_index=True)
+
+
+def _compute_shannon_entropy(similarity_scores):
+    """Compute the Shannon entropy for a given list of similarity scores."""
+    return entropy(similarity_scores, base=2)
 
 
 def _split_sentences(document: str, nlp: English) -> List[str]:

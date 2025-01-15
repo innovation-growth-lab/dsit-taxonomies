@@ -17,11 +17,13 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         dataframes (pd.DataFrame): The dataframes to process.
 
     Returns:
-        pd.DataFrame: A dataframe with two columns:
+        pd.DataFrame: A dataframe with three columns:
             - 'label': The unique keyword.
             - 'num_annotators': The number of distinct annotator classes the keyword appears in.
+            - 'project_ids': A list of project_ids each keyword appears in.
     """
     keyword_to_annotators = {}
+    keyword_to_projects = {}
 
     for df in dataframes:
         logger.info("Processing dataframe with columns: %s", df.columns)
@@ -34,9 +36,12 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
         # preprocess the keywords
         exploded[keyword_column] = _preprocess_keywords(exploded[keyword_column])
 
-        # aggregate the keywords with annotator classes
-        for keyword in exploded[keyword_column].unique():
+        # aggregate the keywords with annotator classes and project_ids
+        for keyword, project_id in zip(
+            exploded[keyword_column], exploded["project_id"]
+        ):
             keyword_to_annotators.setdefault(keyword, set()).add(annotator_class)
+            keyword_to_projects.setdefault(keyword, set()).add(project_id)
 
     # prepare the output dataframe
     output_df = pd.DataFrame(
@@ -44,6 +49,9 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
             "keyword": keyword_to_annotators.keys(),
             "num_annotators": [
                 len(annotators) for annotators in keyword_to_annotators.values()
+            ],
+            "project_ids": [
+                list(project_ids) for project_ids in keyword_to_projects.values()
             ],
         }
     )
@@ -97,3 +105,8 @@ def generate_keyword_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame
     result_df = keyword_dataframe[["keyword", "embedding"]]
 
     return result_df
+
+
+def _preprocess_keywords(keywords):
+    # Assuming this function is defined elsewhere in your code
+    return keywords
