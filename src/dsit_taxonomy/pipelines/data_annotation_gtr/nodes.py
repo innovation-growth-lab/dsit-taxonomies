@@ -36,7 +36,15 @@ def dbp_keywords(
 
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
-    dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
+    dataframe["input_text"] = (
+        dataframe["title"].fillna("")
+        + ". "
+        + dataframe["abstract_text"].fillna("")
+        + ". "
+        + dataframe["tech_abstract_text"].fillna("")
+        + ". "
+        + dataframe["potential_impact"].fillna("")
+    )
     dataframe["dbp_keywords"] = Parallel(n_jobs=8, verbose=10)(
         delayed(get_dbp_annotation)(text) for text in dataframe["input_text"]
     )

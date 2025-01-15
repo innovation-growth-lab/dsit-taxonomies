@@ -42,6 +42,20 @@ gtr.data_collection.projects.intermediate: &gtr_input_projects
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/main.parquet
 
+gtr.projects.documents:
+  <<: *gtr_input_projects
+  load_args:
+    columns:
+      - project_id
+      - title
+      - abstract_text
+      - tech_abstract_text
+      - potential_impact
+
+sentences.gtr_data.db:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/main.parquet
+
 # -> 1b. Taxonomies
 taxonomy.cwts.raw:
   <<: *_xlsx
@@ -141,3 +155,4 @@ keywords.gtr_data.goscience_matches.intermediate:
 keywords.gtr_data.oa_concepts_matches.intermediate:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/oa_concepts.parquet
+

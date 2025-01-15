@@ -30,7 +30,11 @@ Note:
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import compute_similarities_and_entropy
+from .nodes import (
+    compute_similarities_and_entropy,
+    document_preprocessing,
+    compute_document_similarity,
+)
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
@@ -45,14 +49,40 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 func=compute_similarities_and_entropy,
                 inputs={
                     "taxonomy": f"taxonomy.{tax}.bottom.db",
-                    "keywords": "keywords.gtr_data.db",
+                    "documents": "keywords.gtr_data.db",
                     "batch_size": "params:batch_size",
+                    "top_n": "params:top_n",
+                    "number_returns": "params:number_returns",
                 },
                 outputs=f"keywords.gtr_data.{tax}_matches.intermediate",
-                name=f"compute_matches_{tax}",
+                name=f"compute_keyword_matches_{tax}",
             )
             for tax in ["cwts", "oa_concepts", "goscience"]
         ]
     )
 
-    return taxonomy_keywords_pipeline
+    document_weights_pipeline = pipeline(
+        [
+            node(
+                func=document_preprocessing,
+                inputs="gtr.projects.documents",
+                outputs="sentences.gtr_data.db",
+                name="document_preprocessing",
+            ),
+            node(
+                func=compute_similarities_and_entropy,
+                inputs={
+                    "taxonomy": "taxonomy.cwts.bottom.db",
+                    "documents": "sentences.gtr_data.db",
+                    "batch_size": "params:batch_size",
+                    "top_n": "params:top_n",
+                    "number_returns": "params:number_returns",
+                },
+                outputs="sentences.gtr_data.cwts_matches.intermediate",
+                name="compute_document_matches_cwts",
+            ),
+        ],
+        tags=["compute_document_weights"],
+    )
+
+    return taxonomy_keywords_pipeline + document_weights_pipeline

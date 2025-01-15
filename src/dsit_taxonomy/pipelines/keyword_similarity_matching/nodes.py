@@ -1,34 +1,36 @@
 import logging
+import uuid
 from typing import List, Dict
 import lancedb
 import pandas as pd
 from scipy.stats import entropy
+from spacy.lang.en import English
 
 logger = logging.getLogger(__name__)
 
 
 def _search_batch(
-    keyword_batch: List[Dict[str, str]],
+    document_batch: List[Dict[str, str]],
     taxonomy_table: lancedb,
     top_n=10,
     number_returns=5000,
 ) -> pd.DataFrame:
     """
-    Perform similarity search for a batch of keywords, computing entropy over a larger number
+    Perform similarity search for a batch of strings, computing entropy over a larger number
     of matches (entropy_limit) but only retaining the top N matches for output. It also
     computes the Shannon entropy over the similarity scores of the expanded matches.
 
     Args:
-        keyword_batch (List[Dict[str, str]]): List of keyword embeddings.
+        document_batch (List[Dict[str, str]]): List of document embeddings.
         taxonomy_table (lancedb): LanceDB table for taxonomy embeddings.
         top_n (int): Number of top matches to retain for final output.
         number_returns (int): Number of matches to use for Shannon entropy calculation.
     """
     results = []
 
-    for keyword in keyword_batch:
-        embedding = keyword["vector"]
-        keyword_id = keyword["id"]
+    for document in document_batch:
+        embedding = document["vector"]
+        document_id = document["id"]
 
         # perform similarity search, retrieving a larger number of matches for entropy
         expanded_labels = (
@@ -54,7 +56,7 @@ def _search_batch(
         results.append(
             pd.DataFrame(
                 {
-                    "keyword_id": keyword_id,
+                    "document_id": document_id,
                     "taxonomy_label_id": top_matches["id"].values,
                     "similarity_score": top_matches["similarity_score"].values,
                     "shannon_entropy": entropy_value,
@@ -73,39 +75,39 @@ def _compute_shannon_entropy(similarity_scores):
 
 def compute_similarities_and_entropy(
     taxonomy: lancedb,
-    keywords: lancedb,
+    documents: lancedb,
     batch_size: int = 1000,
     top_n: int = 10,
     number_returns: int = 1000,
 ) -> pd.DataFrame:
     """
-    Compute similarity scores and Shannon entropy for a set of keywords against a
+    Compute similarity scores and Shannon entropy for a set of documents against a
     taxonomy of labels.
 
     Args:
         taxonomy: LanceDB table for taxonomy embeddings.
-        keywords: LanceDB table for keyword embeddings.
-        batch_size: Number of keywords to process in each batch.
+        documents: LanceDB table for document embeddings.
+        batch_size: Number of documents to process in each batch.
         top_n: Number of top matches to retain for final output.
         number_returns: Number of matches to use for Shannon entropy calculation.
 
     Returns:
-        pd.DataFrame: DataFrame with columns "keyword_id", "taxonomy_label_id",
+        pd.DataFrame: DataFrame with columns "documents_id", "taxonomy_label_id",
         "similarity_score", and "shannon_entropy".
     """
     # convert LanceDB table to a list of dicts for batch processing
-    keywords_dict = keywords.to_pandas().to_dict(orient="records")
+    documents_dict = documents.to_pandas().to_dict(orient="records")
 
-    # Divide keywords into batches
-    keyword_batches = [
-        keywords_dict[i : i + batch_size]
-        for i in range(0, len(keywords_dict), batch_size)
+    # Divide documents into batches
+    document_batches = [
+        documents_dict[i : i + batch_size]
+        for i in range(0, len(documents_dict), batch_size)
     ]
 
     # Process each batch sequentially
     results = []
-    for i, batch in enumerate(keyword_batches):
-        logger.info("Processing batch %d / %d", i + 1, len(keyword_batches))
+    for i, batch in enumerate(document_batches):
+        logger.info("Processing batch %d / %d", i + 1, len(document_batches))
         batch_results = _search_batch(
             batch, taxonomy, top_n=top_n, number_returns=number_returns
         )
@@ -114,3 +116,119 @@ def compute_similarities_and_entropy(
     # Concatenate results into a single DataFrame
     logger.info("Flattening results")
     return pd.concat(results, ignore_index=True)
+
+
+def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
+    """
+    Preprocess a DataFrame of documents.
+
+    Args:
+        documents: DataFrame containing the GtR documents.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the preprocessed text column.
+    """
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+
+    # create a unique column combining all text columns
+    documents["text"] = documents.apply(
+        lambda row: ". ".join(
+            row[col] if row[col] is not None else ""
+            for col in [
+                "title",
+                "abstract_text",
+                "tech_abstract_text",
+                "potential_impact",
+            ]
+        ),
+        axis=1,
+    )
+
+    # split documents into sentences
+    documents["text"] = documents["text"].apply(_split_sentences, nlp=nlp)
+
+    # explode sentences into separate rows
+    documents = documents.explode("text")
+
+    # add uuids
+    documents["uuid"] = documents["text"].apply(
+        lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
+    )
+
+    return documents[["project_id", "uuid", "text"]]
+
+
+def compute_document_similarity(
+    documents: pd.DataFrame, taxonomy: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Compute similarity scores between documents and taxonomy labels.
+
+    Args:
+        documents: DataFrame containing document embeddings.
+        taxonomy: DataFrame containing taxonomy embeddings.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns "document_id", "taxonomy_label_id", and "similarity_score".
+    """
+    return "hello"
+
+    batch_size = 1_000
+    top_n = 10
+    number_returns = 1_000
+
+    sentences_dict = documents.to_pandas().to_dict(orient="records")
+
+    # Divide documents into batches
+    sentence_batches = [
+        sentences_dict[i : i + batch_size]
+        for i in range(0, len(sentences_dict), batch_size)
+    ]
+
+    # Process each batch sequentially
+    results = []
+    for i, batch in enumerate(sentence_batches):
+        logger.info("Processing batch %d / %d", i + 1, len(sentence_batches))
+        batch_results = _search_batch(
+            batch, taxonomy, top_n=top_n, number_returns=number_returns
+        )
+        results.append(batch_results)
+
+    # Concatenate results into a single DataFrame
+    logger.info("Flattening results")
+    sentence_matches = pd.concat(results, ignore_index=True)
+
+    # groupby project_id, taxonomy_id and extract highest similarity score for all unique labels in the project
+    document_matches = (
+        sentence_matches.groupby(["project_id", "taxonomy_label_id"])
+        .agg({"similarity_score": "max"})
+        .reset_index()
+    )
+
+    return document_matches
+
+
+#     # compute similarity scores
+#     similarity_scores = documents.apply(
+#         lambda row: taxonomy.apply(
+#             lambda label: 1 - cosine(row["vector"], label["vector"]), axis=1
+#         ),
+#         axis=1,
+#     )
+
+#     # convert to DataFrame
+#     similarity_scores_df = similarity_scores.stack().reset_index()
+#     similarity_scores_df.columns = [
+#         "document_id",
+#         "taxonomy_label_id",
+#         "similarity_score",
+#     ]
+
+#     return similarity_scores_df
+
+
+def _split_sentences(document: str, nlp: English) -> List[str]:
+    """Split a document into sentences."""
+    doc = nlp(document)
+    return [sent.text for sent in doc.sents]

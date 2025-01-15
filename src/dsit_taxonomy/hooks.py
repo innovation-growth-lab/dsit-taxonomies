@@ -75,11 +75,24 @@ class LanceDBHook:
                 # extract the column uuid (only accept 1)
                 uuids = input_object["uuid"].tolist()
 
-                # prepare data for LanceDB
-                data_to_insert = [
-                    {"id": uuid, "text": text, "vector": embedding.tolist()}
-                    for uuid, text, embedding in zip(uuids, texts, embeddings)
-                ]
+                if "project_id" in input_object.columns:
+                    project_ids = input_object["project_id"].tolist()
+                    data_to_insert = [
+                        {
+                            "project_id": project_id,
+                            "id": uuid,
+                            "text": text,
+                            "vector": embedding.tolist(),
+                        }
+                        for project_id, uuid, text, embedding in zip(
+                            project_ids, uuids, texts, embeddings
+                        )
+                    ]
+                else:
+                    data_to_insert = [
+                        {"id": uuid, "text": text, "vector": embedding.tolist()}
+                        for uuid, text, embedding in zip(uuids, texts, embeddings)
+                    ]
 
                 # create or overwrite table in LanceDB
                 self._store_embeddings_in_lancedb(db, input_name, data_to_insert)
