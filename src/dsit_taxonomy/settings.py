@@ -51,10 +51,10 @@ GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
 from .hooks import LanceDBHook
 
 HOOKS = (
-    LanceDBHook(target_node_name="compute_matches_cwts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_matches_oa_concepts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_matches_goscience", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_document_weights_cwts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_document_weights_oa_concepts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_document_weights_goscience", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_keyword_matches_cwts", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_keyword_matches_oa_concepts", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_keyword_matches_goscience", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_document_matches_cwts", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_document_matches_oa_concepts", lancedb_path="/tmp"),
+    LanceDBHook(target_node_name="compute_document_matches_goscience", lancedb_path="/tmp"),
 )
