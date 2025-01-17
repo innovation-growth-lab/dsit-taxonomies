@@ -132,21 +132,24 @@ def compute_document_scores(
         .head(3)
     )
 
+    # [HACK] Limit the number of non-informational matches
+    # by filtering out scores in the bottom quantile
+    top_3_scores = top_3_scores[
+        top_3_scores["similarity_score"]
+        >= top_3_scores["similarity_score"].quantile(0.25)
+    ]
+
     # sum the top 3 scores for each project and taxonomy label
-    aggregated_scores = top_3_scores.groupby(
+    output_scores = top_3_scores.groupby(
         ["project_id", "taxonomy_label_id"], as_index=False
     ).agg(similarity_score=("similarity_score", "sum"))
 
-    # normalise the scores
-    aggregated_scores["similarity_score"] = (
-        aggregated_scores["similarity_score"]
-        - aggregated_scores["similarity_score"].min()
-    ) / (
-        aggregated_scores["similarity_score"].max()
-        - aggregated_scores["similarity_score"].min()
-    )
+    logger.info("Normalising scores")
+    normalised_output_scores = output_scores.groupby(
+        "project_id", group_keys=False
+    ).apply(_normalise_project_scores)
 
-    return aggregated_scores
+    return normalised_output_scores
 
 
 def aggregate_scores_to_labels(
@@ -200,6 +203,11 @@ def aggregate_scores_to_labels(
         how="left",
     )
 
+    # create relevance score
+    relevance_scores["relevance_score"] = (
+        relevance_scores["weight"] * relevance_scores["similarity_score"]
+    )
+
     return relevance_scores[
         [
             "project_id",
@@ -208,6 +216,7 @@ def aggregate_scores_to_labels(
             "weight",
             "similarity_score",
             "shannon_entropy",
+            "relevance_score",
         ]
     ]
 
@@ -274,6 +283,25 @@ def _search_batch(
 def _compute_shannon_entropy(similarity_scores):
     """Compute the Shannon entropy for a given list of similarity scores."""
     return entropy(similarity_scores, base=2)
+
+
+def _normalise_project_scores(group):
+    """Normalise similarity scores for a project."""
+    if len(group) == 1:
+        # single label case: assign normalised score of 1.0
+        group["similarity_score"] = 1.0
+    else:
+        max_score = group["similarity_score"].max()
+        min_score = group["similarity_score"].min()
+        if max_score == min_score:
+            # assign equal normalised scores if max == min
+            group["similarity_score"] = 1.0
+        else:
+            # normalise scores normally
+            group["similarity_score"] = (group["similarity_score"] - min_score) / (
+                max_score - min_score
+            )
+    return group
 
 
 def _split_sentences(document: str, nlp: English) -> List[str]:
