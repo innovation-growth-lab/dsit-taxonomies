@@ -34,6 +34,7 @@ from .nodes import (
     compute_similarities_and_entropy,
     document_preprocessing,
     compute_document_scores,
+    create_project_score_data,
     aggregate_scores_to_labels,
 )
 
@@ -98,7 +99,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                     name=f"compute_document_scores_{tax}",
                 ),
                 node(
-                    func=aggregate_scores_to_labels,
+                    func=create_project_score_data,
                     inputs={
                         "document_scores": f"projects.gtr_data.{tax}_matches.intermediate",
                         "keyword_scores": f"keywords.gtr_data.{tax}_matches.intermediate",
@@ -106,6 +107,12 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                         "taxonomy": f"taxonomy.{tax}.full.db",
                     },
                     outputs=f"projects.gtr_data.{tax}_scores",
+                    name=f"create_project_score_data_{tax}",
+                ),
+                node(
+                    func=aggregate_scores_to_labels,
+                    inputs=f"projects.gtr_data.{tax}_scores",
+                    outputs=f"projects.gtr_data.{tax}.aggregated",
                     name=f"aggregate_scores_to_labels_{tax}",
                 ),
             ]

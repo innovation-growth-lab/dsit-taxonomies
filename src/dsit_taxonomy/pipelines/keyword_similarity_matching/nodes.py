@@ -152,7 +152,7 @@ def compute_document_scores(
     return normalised_output_scores
 
 
-def aggregate_scores_to_labels(
+def create_project_score_data(
     document_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
@@ -197,7 +197,7 @@ def aggregate_scores_to_labels(
     documents.rename(columns={"similarity_score": "weight"}, inplace=True)
 
     # merge back the keyword similarity and entropy
-    relevance_scores = pd.merge(
+    project_data = pd.merge(
         documents,
         keyword_scores,
         on=["keyword_id", "taxonomy_label_id"],
@@ -205,34 +205,29 @@ def aggregate_scores_to_labels(
     )
 
     # create relevance score
-    relevance_scores["relevance_score"] = (
-        relevance_scores["weight"] * relevance_scores["similarity_score"]
+    project_data["relevance_score"] = (
+        project_data["weight"] * project_data["similarity_score"]
     )
 
     # merge with keywords and taxonomy labels
-    relevance_scores = relevance_scores.merge(
+    project_data = project_data.merge(
         keyword_data[["uuid", "keyword"]],
         left_on="keyword_id",
         right_on="uuid",
         how="left",
     )
-    relevance_scores = relevance_scores.merge(
+    project_data = project_data.merge(
         taxonomy[["uuid", "label"]],
         left_on="taxonomy_label_id",
         right_on="uuid",
         how="left",
     )
-    relevance_scores.drop(columns=["uuid_x", "uuid_y"], inplace=True)
+    project_data.drop(columns=["uuid_x", "uuid_y"], inplace=True)
 
     # groupby project_id, taxonomy_label_id to sum the relevance scores
-    # relevance_scores = relevance_scores.groupby(
-    #     ["project_id", "taxonomy_label_id"], as_index=False
-    # ).agg(
-    #     weight=("weight", "first"),
-    #     relevance_score=("relevance_score", "sum"),
-    # )
 
-    return relevance_scores[
+
+    return project_data[
         [
             "project_id",
             "keyword_id",
@@ -244,6 +239,17 @@ def aggregate_scores_to_labels(
             "relevance_score",
         ]
     ]
+
+def aggregate_scores_to_labels(
+        keyword_scores: pd.DataFrame,
+):
+    return keyword_scores.groupby(
+        ["project_id", "taxonomy_label_id"], as_index=False
+    ).agg(
+        weight=("weight", "first"),
+        relevance_score=("relevance_score", "sum"),
+    ).reset_index(drop=True)
+    
 
 
 def _search_batch(
