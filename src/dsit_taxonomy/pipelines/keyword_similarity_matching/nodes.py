@@ -156,6 +156,7 @@ def aggregate_scores_to_labels(
     document_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
+    taxonomy: lancedb,
 ) -> pd.DataFrame:
     """
     Merge the document scores with the keyword scores and compute the relevance scores.
@@ -208,12 +209,36 @@ def aggregate_scores_to_labels(
         relevance_scores["weight"] * relevance_scores["similarity_score"]
     )
 
+    # merge with keywords and taxonomy labels
+    relevance_scores = relevance_scores.merge(
+        keyword_data[["uuid", "keyword"]],
+        left_on="keyword_id",
+        right_on="uuid",
+        how="left",
+    )
+    relevance_scores = relevance_scores.merge(
+        taxonomy[["uuid", "label"]],
+        left_on="taxonomy_label_id",
+        right_on="uuid",
+        how="left",
+    )
+    relevance_scores.drop(columns=["uuid_x", "uuid_y"], inplace=True)
+
+    # groupby project_id, taxonomy_label_id to sum the relevance scores
+    # relevance_scores = relevance_scores.groupby(
+    #     ["project_id", "taxonomy_label_id"], as_index=False
+    # ).agg(
+    #     weight=("weight", "first"),
+    #     relevance_score=("relevance_score", "sum"),
+    # )
+
     return relevance_scores[
         [
             "project_id",
             "keyword_id",
             "taxonomy_label_id",
-            "weight",
+            "keyword",
+            "label" "weight",
             "similarity_score",
             "shannon_entropy",
             "relevance_score",
@@ -229,7 +254,7 @@ def _search_batch(
 ) -> pd.DataFrame:
     """
     Perform similarity search for a batch of strings, computing entropy over a larger number
-    of matches (entropy_limit) but only retaining the top N matches for output. It also
+    of matches (number_returns) but only retaining the top N matches for output. It also
     computes the Shannon entropy over the similarity scores of the expanded matches.
 
     Args:
@@ -285,7 +310,7 @@ def _compute_shannon_entropy(similarity_scores):
     return entropy(similarity_scores, base=2)
 
 
-def _normalise_project_scores(group):
+def _normalise_project_scores(group):  #
     """Normalise similarity scores for a project."""
     if len(group) == 1:
         # single label case: assign normalised score of 1.0

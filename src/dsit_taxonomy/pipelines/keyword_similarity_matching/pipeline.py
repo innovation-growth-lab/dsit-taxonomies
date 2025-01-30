@@ -103,6 +103,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                         "document_scores": f"projects.gtr_data.{tax}_matches.intermediate",
                         "keyword_scores": f"keywords.gtr_data.{tax}_matches.intermediate",
                         "keyword_data": "keywords.gtr_data.db",
+                        "taxonomy": f"taxonomy.{tax}.full.db",
                     },
                     outputs=f"projects.gtr_data.{tax}_scores",
                     name=f"aggregate_scores_to_labels_{tax}",
