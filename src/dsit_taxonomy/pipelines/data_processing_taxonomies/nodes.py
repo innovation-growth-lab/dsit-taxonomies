@@ -100,9 +100,19 @@ def preprocess_goscience_taxonomy(goscience_dataframe: pd.DataFrame) -> pd.DataF
     )
 
     result_df.drop_duplicates(subset=["label", "level_path"], inplace=True)
-    taxonomy, bottom_level = _before_return(result_df)
 
-    return taxonomy, bottom_level
+    # add uuid
+    result_df["uuid"] = result_df["label"].apply(
+        lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
+    )
+
+    # create bottom level
+    parent_nodes = set(goscience_dataframe["parent_name"].dropna())
+    terminal_nodes = result_df[
+        ~result_df["label"].str.split(" > ").str[-1].isin(parent_nodes)
+    ]
+
+    return result_df, terminal_nodes
 
 
 def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -125,8 +135,7 @@ def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
         pd.isnull(concepts_dataframe["parent_ids"]) & (concepts_dataframe["level"] == 0)
     ]
 
-    labels, id_paths, levels = [], [], []
-
+    labels, id_paths, levels, is_terminal = [], [], [], []
     def _build_path(concept_name, current_path, current_id_path, current_level):
         row = concepts_dataframe[
             concepts_dataframe["display_name"] == concept_name
@@ -139,15 +148,21 @@ def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
         id_paths.append(" > ".join(current_id_path))
         levels.append(current_level[-1])
 
-        for _, child in concepts_dataframe[
+        children = concepts_dataframe[
             concepts_dataframe["parent_display_names"] == concept_name
-        ].iterrows():
-            _build_path(
-                child["display_name"],
-                current_path.copy(),
-                current_id_path.copy(),
-                current_level.copy(),
-            )
+        ]
+
+        if children.empty:
+            is_terminal.append(True)
+        else:
+            is_terminal.append(False)
+            for _, child in children.iterrows():
+                _build_path(
+                    child["display_name"],
+                    current_path.copy(),
+                    current_id_path.copy(),
+                    current_level.copy(),
+                )
 
     # start with root nodes (nodes with no parent)
     for _, root in root_nodes.iterrows():
@@ -158,13 +173,23 @@ def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
         )
         _build_path(root["display_name"], [], [], [])
 
-    result_df = pd.DataFrame({"label": labels, "id_path": id_paths, "level": levels})
+    result_df = pd.DataFrame({
+        "label": labels,
+        "id_path": id_paths,
+        "level": levels,
+        "is_terminal": is_terminal
+    })
 
     # drop duplicates
     result_df.drop_duplicates(subset=["label", "id_path"], inplace=True)
-    taxonomy, bottom_level = _before_return(result_df)
 
-    return taxonomy, bottom_level
+    bottom_level = result_df[result_df["is_terminal"]]
+
+    # drop the is_terminal column
+    result_df.drop(columns=["is_terminal"], inplace=True)
+    bottom_level.drop(columns=["is_terminal"], inplace=True)
+
+    return result_df, bottom_level
 
 
 def _preprocess_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:

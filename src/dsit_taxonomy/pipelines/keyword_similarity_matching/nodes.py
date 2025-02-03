@@ -226,7 +226,6 @@ def create_project_score_data(
 
     # groupby project_id, taxonomy_label_id to sum the relevance scores
 
-
     return project_data[
         [
             "project_id",
@@ -241,16 +240,19 @@ def create_project_score_data(
         ]
     ]
 
+
 def aggregate_scores_to_labels(
-        keyword_scores: pd.DataFrame,
+    keyword_scores: pd.DataFrame,
 ):
-    return keyword_scores.groupby(
-        ["project_id", "taxonomy_label_id"], as_index=False
-    ).agg(
-        weight=("weight", "first"),
-        relevance_score=("relevance_score", "sum"),
-    ).reset_index(drop=True)
-    
+    """Aggregate keyword scores to the project label level."""
+    return (
+        keyword_scores.groupby(["project_id", "taxonomy_label_id"], as_index=False)
+        .agg(
+            weight=("weight", "first"),
+            relevance_score=("relevance_score", "sum"),
+        )
+        .reset_index(drop=True)
+    )
 
 
 def _search_batch(
