@@ -15,3 +15,5 @@ git+https://github.com/LIAAD/yake
 keybert~=0.8.5
 transformers~=4.47.1
 accelerate~=1.2.1
+# langchain-openai 
+# langchain-community
