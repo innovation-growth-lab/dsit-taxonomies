@@ -183,6 +183,11 @@ def preprocess_oa_concepts(concepts_dataframe: pd.DataFrame) -> pd.DataFrame:
     # drop duplicates
     result_df.drop_duplicates(subset=["label", "id_path"], inplace=True)
 
+    # add uuid
+    result_df["uuid"] = result_df["label"].apply(
+        lambda x: str(uuid.uuid5(uuid.NAMESPACE_DNS, x))
+    )
+
     bottom_level = result_df[result_df["is_terminal"]]
 
     # drop the is_terminal column
