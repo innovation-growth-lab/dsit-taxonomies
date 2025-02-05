@@ -204,3 +204,11 @@ projects.gtr_data.oa_concepts_scores.aggregated:
 gtr.projects.sample.expert_labels:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/
+
+gtr.projects.sample.expert_labels.goscience:
+  <<: *_js_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/goscience/
+
+gtr.projects.sample.expert_labels.cwts:
+  <<: *_js_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/cwts/

@@ -8,11 +8,15 @@ from .nodes import select_sample_projects, get_expert_labels
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
-    sample_selection_pipeline = pipeline(
+    return pipeline(
         [
             node(
                 func=select_sample_projects,
-                inputs="gtr.projects.documents",
+                inputs={
+                    "data": "gtr.projects.documents",
+                    "sample_size": "params:expert_validation.sample_size",
+                    "sample_random_state": "params:expert_validation.sample_random_state"
+                },
                 outputs="gtr.projects.sample",
                 name="select_sample_projects",
             ),
@@ -21,10 +25,30 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 inputs={
                     "taxonomy": "taxonomy.goscience.bottom.db",
                     "data": "gtr.projects.sample",
+                    "llm_model": "params:expert_validation.llm_model",
+                    "embedding_model": "params:expert_validation.embedding_model",
+                    "retriever_k": "params:expert_validation.retriever_k",
+                    "max_retries": "params:expert_validation.max_retries",
+                    "system_prompt": "params:expert_validation.system_prompt",
+                    "question_prompt": "params:expert_validation.question_prompt"
                 },
-                outputs="gtr.projects.sample.expert_labels",
-                name="get_expert_labels",
+                outputs="gtr.projects.sample.expert_labels.goscience",
+                name="get_expert_labels_goscience",
+            ),
+            node(
+                func=get_expert_labels,
+                inputs={
+                    "taxonomy": "taxonomy.cwts.bottom.db",
+                    "data": "gtr.projects.sample",
+                    "llm_model": "params:expert_validation.llm_model",
+                    "embedding_model": "params:expert_validation.embedding_model",
+                    "retriever_k": "params:expert_validation.retriever_k",
+                    "max_retries": "params:expert_validation.max_retries",
+                    "system_prompt": "params:expert_validation.system_prompt",
+                    "question_prompt": "params:expert_validation.question_prompt"
+                },
+                outputs="gtr.projects.sample.expert_labels.cwts",
+                name="get_expert_labels_cwts",
             ),
         ]
     )
-    return sample_selection_pipeline
