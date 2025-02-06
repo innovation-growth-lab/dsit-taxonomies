@@ -214,6 +214,7 @@ def combine_sentence_and_keyword_scores(
         sentence_scores,
         on=["project_id", "taxonomy_label_id"],
         how="inner",
+        suffixes=("_key", "_sent"),
     )
 
     # Apply weights
