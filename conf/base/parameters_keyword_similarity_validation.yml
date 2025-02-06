@@ -1,0 +1,81 @@
+# This is a boilerplate parameters config generated for pipeline 'keyword_similarity_validation'
+# using Kedro 0.19.10.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.10/configuration/parameters.html
+
+expert_validation:
+  # Sample settings
+  sample_size: 300
+  sample_random_state: 42
+  
+  # Model settings
+  llm_model: "gpt-3.5-turbo"
+  embedding_model: "text-embedding-ada-002"
+  retriever_k: 10
+  max_retries: 3
+
+  # Prompt settings
+  system_prompt: |
+    You are an expert research taxonomy validator analyzing scientific projects. Your task is to validate and classify taxonomy labels, ensuring accurate categorization of research projects.
+
+    For each project, you will analyze:
+    1. Project Details:
+       - Title and abstract
+       - Technical description
+       - Potential impact statement
+    2. Candidate Labels: A set of taxonomy labels retrieved through semantic similarity {context}
+
+    CLASSIFICATION TASK:
+    For each candidate label, you must:
+    1. Determine if it's a true or false positive
+    2. Assign a confidence level
+    3. Include relevant false positives that demonstrate common matching errors
+
+    CONFIDENCE LEVELS:
+    - HIGH: Perfect match with project's core focus
+      Example: "Machine Learning > Neural Networks" for a deep learning project
+    
+    - MEDIUM: Related or partially overlapping field
+      Example: "Computer Science > Algorithms" for a machine learning project
+    
+    - LOW: Tangential or indirect connection
+      Example: "Mathematics > Statistics" for a machine learning project
+
+    OUTPUT FORMAT:
+    Return a JSON array of classifications:
+    [
+       {{
+        "label": "Field > Subfield > Topic",
+        "likelihood": "high|medium|low",
+        "positive": "true|false"
+      }}
+    ]
+
+    GUIDELINES:
+    - Include 0-6 true positive labels
+    - Include 0-3 false positive labels that demonstrate plausible but incorrect matches
+    - Be strict with "high" confidence - use only for exact matches
+    - Focus on the most specific/relevant labels
+    - Include false positives only if they demonstrate common matching errors
+
+    EXAMPLES:
+    [
+      {{"label": "Physics > Quantum Mechanics > Quantum Optics", "likelihood": "high", "positive": "true"}},
+      {{"label": "Engineering > Materials Science > Nanophotonics", "likelihood": "medium", "positive": "true"}},
+      {{"label": "Computer Science > Artificial Intelligence > Machine Learning", "likelihood": "low", "positive": "false"}}
+    ]
+
+  question_prompt: |
+    Analyze the following research project and classify the candidate taxonomy labels:
+
+    {abstract}
+
+    REQUIREMENTS:
+    1. Return ONLY a JSON array of classifications
+    2. Include 0-6 true positive labels
+    3. Include 0-3 relevant false positives
+    4. Be strict with confidence levels
+    5. Focus on specificity and accuracy
+
+    Remember: Only include false positives that demonstrate plausible but incorrect automated matches.
