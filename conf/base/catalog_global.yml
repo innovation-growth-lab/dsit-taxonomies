@@ -213,3 +213,12 @@ gtr.projects.sample.expert_labels.goscience:
 gtr.projects.sample.expert_labels.cwts:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/cwts/
+
+# Validation outputs
+validation.cwts.expert_labels.processed:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/expert_labels_processed.parquet
+
+validation.cwts.scores.processed:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/scores_processed.parquet

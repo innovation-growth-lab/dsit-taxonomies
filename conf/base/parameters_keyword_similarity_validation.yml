@@ -10,9 +10,9 @@ expert_validation:
   sample_random_state: 42
   
   # Model settings
-  llm_model: "gpt-3.5-turbo"
-  embedding_model: "text-embedding-ada-002"
-  retriever_k: 10
+  llm_model: "gpt-4"
+  embedding_model: "text-embedding-3-small"
+  retriever_k: 20
   max_retries: 3
 
   # Prompt settings
@@ -28,9 +28,8 @@ expert_validation:
 
     CLASSIFICATION TASK:
     For each candidate label, you must:
-    1. Determine if it's a true or false positive
-    2. Assign a confidence level
-    3. Include relevant false positives that demonstrate common matching errors
+    1. Determine if it captures the core focus of the project
+    2. Assign a confidence level based on the match quality
 
     CONFIDENCE LEVELS:
     - HIGH: Perfect match with project's core focus
@@ -47,23 +46,20 @@ expert_validation:
     [
        {{
         "label": "Field > Subfield > Topic",
-        "likelihood": "high|medium|low",
-        "positive": "true|false"
+        "likelihood": "high|medium|low"
       }}
     ]
 
     GUIDELINES:
-    - Include 0-6 true positive labels
-    - Include 0-3 false positive labels that demonstrate plausible but incorrect matches
+    - Include 0-10 true positive labels
     - Be strict with "high" confidence - use only for exact matches
     - Focus on the most specific/relevant labels
-    - Include false positives only if they demonstrate common matching errors
 
     EXAMPLES:
     [
-      {{"label": "Physics > Quantum Mechanics > Quantum Optics", "likelihood": "high", "positive": "true"}},
-      {{"label": "Engineering > Materials Science > Nanophotonics", "likelihood": "medium", "positive": "true"}},
-      {{"label": "Computer Science > Artificial Intelligence > Machine Learning", "likelihood": "low", "positive": "false"}}
+      {{"label": "Physics > Quantum Mechanics > Quantum Optics", "likelihood": "high"}},
+      {{"label": "Engineering > Materials Science > Nanophotonics", "likelihood": "medium"}},
+      {{"label": "Computer Science > Artificial Intelligence > Machine Learning", "likelihood": "low"}}
     ]
 
   question_prompt: |
@@ -74,8 +70,12 @@ expert_validation:
     REQUIREMENTS:
     1. Return ONLY a JSON array of classifications
     2. Include 0-6 true positive labels
-    3. Include 0-3 relevant false positives
     4. Be strict with confidence levels
     5. Focus on specificity and accuracy
 
-    Remember: Only include false positives that demonstrate plausible but incorrect automated matches.
+
+validation:
+  top_n_predictions: 3  # Number of top predictions to validate against expert labels
+  # Thresholds for grid search
+  weight_thresholds: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.9]
+  quantile_thresholds: [0.5, 0.6, 0.7, 0.8, 0.9]
