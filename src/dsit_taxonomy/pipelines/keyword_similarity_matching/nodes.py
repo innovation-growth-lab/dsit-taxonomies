@@ -200,18 +200,20 @@ def combine_sentence_and_keyword_scores(
         keyword_data[["project_ids", "uuid"]]
         .explode("project_ids")
         .rename(columns={"project_ids": "project_id", "uuid": "keyword_id"})
+    ).merge(
+        keyword_scores[["document_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]].rename(
+            columns={"document_id": "keyword_id"}
+        ),
+        on="keyword_id",
+        how="left",
     )
 
-    # Merge document scores with keywords
+    # Merge keyword and sentence scores
     combined_scores = pd.merge(
-        sentence_scores, project_keywords, on="project_id", how="left"
-    ).merge(
-        keyword_scores[
-            ["keyword_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]
-        ],
-        on=["keyword_id", "taxonomy_label_id"],
+        project_keywords,
+        sentence_scores,
+        on=["project_id", "taxonomy_label_id"],
         how="left",
-        suffixes=("_sent", "_key"),
     )
 
     # Apply weights
@@ -269,8 +271,7 @@ def add_metadata(
             "similarity_score_sent",
             "similarity_score_key",
             "relevance_score",
-            "shannon_entropy_sent",
-            "shannon_entropy_key",
+            "shannon_entropy",
         ]
     ]
 
@@ -290,8 +291,7 @@ def aggregate_scores_to_labels(
                 "relevance_score": "sum",
                 "similarity_score_sent": "mean",
                 "similarity_score_key": "mean",
-                "shannon_entropy_sent": "mean",
-                "shannon_entropy_key": "mean",
+                "shannon_entropy": "mean",
                 "keyword_id": "nunique",
             }
         )
