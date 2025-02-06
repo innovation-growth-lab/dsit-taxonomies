@@ -66,10 +66,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_sentence_matches_{taxonomy_name}",
-                    tags=[
-                        f"raw_matches_{taxonomy_name}",
-                        f"similarity_matching_{taxonomy_name}",
-                    ],
                 ),
                 # Compute keyword matches
                 node(
@@ -83,12 +79,12 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"compute_keyword_matches_{taxonomy_name}",
-                    tags=[
-                        f"raw_matches_{taxonomy_name}",
-                        f"similarity_matching_{taxonomy_name}",
-                    ],
                 ),
-            ]
+            ],
+            tags=[
+                f"raw_matches_{taxonomy_name}",
+                f"similarity_matching_{taxonomy_name}",
+            ],
         )
 
     def scoring_pipeline(taxonomy_name: str) -> Pipeline:
@@ -108,7 +104,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"aggregate_sentence_matches_{taxonomy_name}",
                     tags=[
                         f"sentence_matches_{taxonomy_name}",
-                        f"similarity_matching_{taxonomy_name}",
                     ],
                 ),
                 # Combine sentence and keyword scores
@@ -125,7 +120,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"combine_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
-                        f"similarity_matching_{taxonomy_name}",
                     ],
                 ),
                 # Add metadata
@@ -138,6 +132,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                     name=f"add_metadata_{taxonomy_name}",
+                    tags=[
+                        f"scores_{taxonomy_name}",
+                    ],
                 ),
                 # Final aggregation
                 node(
@@ -147,10 +144,12 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"aggregate_final_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
-                        f"similarity_matching_{taxonomy_name}",
                     ],
                 ),
-            ]
+            ],
+            tags=[
+                f"similarity_matching_{taxonomy_name}",
+            ],
         )
 
     return (
