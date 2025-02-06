@@ -1,3 +1,19 @@
 batch_size: 1000
 top_n: 10
 number_returns: 2000
+
+similarity_matching:
+  # Batch processing settings for raw matches
+  batch_size: 1000
+  top_n: 10
+  number_returns: 2000
+
+  document_matches:
+    top_k_per_document: 3  # Number of top matches to keep per document
+    min_score_quantile: 0.25  # Filter out bottom X% of scores
+    min_similarity_score: 0.5  # Minimum similarity score for normalisation
+
+  # Score combination weights
+  score_weights:
+    document_weight: 0.7  # Weight for document-based matches
+    keyword_weight: 0.3  # Weight for keyword-based matches 

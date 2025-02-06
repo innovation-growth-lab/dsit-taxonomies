@@ -99,22 +99,26 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
     return documents[["project_id", "uuid", "text"]]
 
 
-def compute_document_scores(
-    documents: pd.DataFrame, document_matches: pd.DataFrame
+def aggregate_document_matches(
+    documents: pd.DataFrame,
+    document_matches: pd.DataFrame,
+    top_k_per_document: int,
+    min_score_quantile: float,
+    min_similarity_score: float,
 ) -> pd.DataFrame:
     """
-    Compute the similarity scores for the top 3 matches for each document and sum them
-    for each project and taxonomy label.
+    Aggregate raw document matches to project level by selecting top matches and filtering low scores.
 
     Args:
-        documents (pd.DataFrame): DataFrame containing the GtR documents.
-        document_matches (pd.DataFrame): DataFrame containing the document matches.
-
-    Returns:
-        pd.DataFrame: DataFrame containing the project_id, taxonomy_label_id, and
-        similarity_score.
+        documents: DataFrame containing document metadata
+        document_matches: Raw similarity matches from compute_similarities_and_entropy
+        top_k_per_document: Number of top matches to keep per document
+        min_score_quantile: Minimum score quantile threshold
+        min_similarity_score: Minimum absolute similarity score threshold
     """
-    # merge documents with their matches
+    logger.info("Aggregating document matches to project level")
+
+    # Merge documents with matches
     merged_documents = pd.merge(
         documents[["project_id", "uuid"]],
         document_matches,
@@ -123,136 +127,192 @@ def compute_document_scores(
         how="right",
     )
 
-    # get top 3 similarity scores for each document
-    top_3_scores = (
+    # Get top K matches per document
+    logger.info("Selecting top %d matches per document", top_k_per_document)
+    top_k_matches = (
         merged_documents.sort_values(
             by=["project_id", "uuid", "similarity_score"], ascending=[True, True, False]
         )
         .groupby(["project_id", "uuid"], as_index=False)
-        .head(3)
+        .head(top_k_per_document)
     )
 
-    # [HACK] Limit the number of non-informational matches
-    # by filtering out scores in the bottom quantile
-    top_3_scores = top_3_scores[
-        top_3_scores["similarity_score"]
-        >= top_3_scores["similarity_score"].quantile(0.25)
+    # Filter low scores using both quantile and absolute thresholds
+    score_threshold = top_k_matches["similarity_score"].quantile(min_score_quantile)
+    final_threshold = max(score_threshold, min_similarity_score)
+    
+    logger.info(
+        "Filtering matches - Quantile threshold (%0.2f): %0.3f, Minimum threshold: %0.3f, Using: %0.3f",
+        min_score_quantile,
+        score_threshold,
+        min_similarity_score,
+        final_threshold,
+    )
+
+    filtered_matches = top_k_matches[
+        top_k_matches["similarity_score"] >= final_threshold
     ]
 
-    # sum the top 3 scores for each project and taxonomy label
-    output_scores = top_3_scores.groupby(
+    logger.info(
+        "Match statistics:\n"
+        "Original matches per document: %0.1f\n"
+        "After top-k filtering: %0.1f\n"
+        "After score filtering: %0.1f",
+        len(merged_documents) / len(merged_documents["uuid"].unique()),
+        len(top_k_matches) / len(top_k_matches["uuid"].unique()),
+        len(filtered_matches) / len(filtered_matches["uuid"].unique()),
+    )
+
+    # Sum scores by project and label
+    project_scores = filtered_matches.groupby(
         ["project_id", "taxonomy_label_id"], as_index=False
-    ).agg(similarity_score=("similarity_score", "sum"))
+    ).agg(
+        similarity_score=("similarity_score", "sum"),
+        num_matches=("similarity_score", "count"),
+        mean_entropy=("shannon_entropy", "mean"),
+    )
 
-    logger.info("Normalising scores")
-    normalised_output_scores = output_scores.groupby(
-        "project_id", group_keys=False
-    ).apply(_normalise_project_scores)
+    # normalise within projects
+    normalised_scores = _normalise_within_projects(project_scores)
 
-    return normalised_output_scores
+    logger.info(
+        "Final score distribution:\n%s",
+        normalised_scores["similarity_score"].describe(),
+    )
+
+    return normalised_scores
 
 
-def create_project_score_data(
+def combine_document_and_keyword_scores(
     document_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
-    taxonomy: lancedb,
+    taxonomy: pd.DataFrame,
+    document_weight: float,
+    keyword_weight: float,
 ) -> pd.DataFrame:
     """
-    Merge the document scores with the keyword scores and compute the relevance scores.
-
-    Args:
-        document_scores (pd.DataFrame): DataFrame containing the document scores.
-        keyword_scores (pd.DataFrame): DataFrame containing the keyword scores.
-        keyword_data (pd.DataFrame): DataFrame containing the keyword data.
-
-    Returns:
-        pd.DataFrame: DataFrame containing the project_id, keyword_id, taxonomy_label_id,
+    Combine document-based and keyword-based scores with configurable weights.
     """
+    logger.info("Combining document and keyword scores")
 
-    # merge the document scores with the keyword scores
-    project_keyword_map = (
+    # Map keywords to projects
+    project_keywords = (
         keyword_data[["project_ids", "uuid"]]
         .explode("project_ids")
         .rename(columns={"project_ids": "project_id", "uuid": "keyword_id"})
     )
 
-    # merge the keyword scores with the project ids
-    project_keywords = pd.merge(
-        project_keyword_map,
-        keyword_scores[["keyword_id", "taxonomy_label_id"]],
-        on="keyword_id",
-        how="left",
-    )
-
-    # merge the keyword_ids to the documents
-    documents = pd.merge(
-        document_scores,
-        project_keywords,
-        on=["project_id", "taxonomy_label_id"],
-        how="inner",
-    )
-
-    # rename documents' similarity_score to "weight"
-    documents.rename(columns={"similarity_score": "weight"}, inplace=True)
-
-    # merge back the keyword similarity and entropy
-    project_data = pd.merge(
-        documents,
-        keyword_scores,
+    # Merge document scores with keywords
+    combined_scores = pd.merge(
+        document_scores, project_keywords, on="project_id", how="left"
+    ).merge(
+        keyword_scores[
+            ["keyword_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]
+        ],
         on=["keyword_id", "taxonomy_label_id"],
         how="left",
+        suffixes=("_doc", "_key"),
     )
 
-    # create relevance score
-    project_data["relevance_score"] = (
-        project_data["weight"] * project_data["similarity_score"]
+    # Apply weights
+    logger.info(
+        "Applying weights - Document: %0.1f, Keyword: %0.1f",
+        document_weight,
+        keyword_weight,
+    )
+    combined_scores["relevance_score"] = (
+        document_weight * combined_scores["similarity_score_doc"]
+        + keyword_weight * combined_scores["similarity_score_key"]
     )
 
-    # merge with keywords and taxonomy labels
-    project_data = project_data.merge(
+    # Add metadata
+    final_scores = combined_scores.merge(
         keyword_data[["uuid", "keyword"]],
         left_on="keyword_id",
         right_on="uuid",
         how="left",
-    )
-    project_data = project_data.merge(
+    ).merge(
         taxonomy[["uuid", "label"]],
         left_on="taxonomy_label_id",
         right_on="uuid",
         how="left",
     )
-    project_data.drop(columns=["uuid_x", "uuid_y"], inplace=True)
 
-    # groupby project_id, taxonomy_label_id to sum the relevance scores
+    logger.info(
+        "Score distributions:\n"
+        "Document scores: %s\n"
+        "Keyword scores: %s\n"
+        "Combined scores: %s",
+        combined_scores["similarity_score_doc"].describe(),
+        combined_scores["similarity_score_key"].describe(),
+        combined_scores["relevance_score"].describe(),
+    )
 
-    return project_data[
+    return final_scores[
         [
             "project_id",
             "keyword_id",
             "taxonomy_label_id",
             "keyword",
             "label",
-            "weight",
-            "similarity_score",
-            "shannon_entropy",
+            "similarity_score_doc",
+            "similarity_score_key",
             "relevance_score",
+            "shannon_entropy_doc",
+            "shannon_entropy_key",
         ]
     ]
 
 
 def aggregate_scores_to_labels(
-    keyword_scores: pd.DataFrame,
-):
-    """Aggregate keyword scores to the project label level."""
-    return (
-        keyword_scores.groupby(["project_id", "taxonomy_label_id"], as_index=False)
+    scores: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Aggregate detailed scores to final project-label level summaries.
+    """
+    logger.info("Aggregating final scores to project-label level")
+
+    aggregated = (
+        scores.groupby(["project_id", "taxonomy_label_id", "label"], as_index=False)
         .agg(
-            weight=("weight", "first"),
-            relevance_score=("relevance_score", "sum"),
+            {
+                "relevance_score": "sum",
+                "similarity_score_doc": "mean",
+                "similarity_score_key": "mean",
+                "shannon_entropy_doc": "mean",
+                "shannon_entropy_key": "mean",
+                "keyword_id": "nunique",
+            }
         )
-        .reset_index(drop=True)
+        .rename(columns={"keyword_id": "num_keywords"})
     )
+
+    logger.info(
+        "Aggregation summary:\n"
+        "Total projects: %d\n"
+        "Average labels per project: %0.1f",
+        len(scores["project_id"].unique()),
+        len(aggregated) / len(aggregated["project_id"].unique()),
+    )
+
+    return aggregated
+
+
+def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
+    """Normalise scores within each project using min-max scaling."""
+    if len(group) == 1:
+        group["similarity_score"] = 1.0
+    else:
+        max_score = group["similarity_score"].max()
+        min_score = group["similarity_score"].min()
+        if max_score == min_score:
+            group["similarity_score"] = 1.0
+        else:
+            group["similarity_score"] = (
+                (group["similarity_score"] - min_score) / (max_score - min_score)
+            )
+    return group
 
 
 def _search_batch(
@@ -317,25 +377,6 @@ def _search_batch(
 def _compute_shannon_entropy(similarity_scores):
     """Compute the Shannon entropy for a given list of similarity scores."""
     return entropy(similarity_scores, base=2)
-
-
-def _normalise_project_scores(group):  #
-    """Normalise similarity scores for a project."""
-    if len(group) == 1:
-        # single label case: assign normalised score of 1.0
-        group["similarity_score"] = 1.0
-    else:
-        max_score = group["similarity_score"].max()
-        min_score = group["similarity_score"].min()
-        if max_score == min_score:
-            # assign equal normalised scores if max == min
-            group["similarity_score"] = 1.0
-        else:
-            # normalise scores normally
-            group["similarity_score"] = (group["similarity_score"] - min_score) / (
-                max_score - min_score
-            )
-    return group
 
 
 def _split_sentences(document: str, nlp: English) -> List[str]:
