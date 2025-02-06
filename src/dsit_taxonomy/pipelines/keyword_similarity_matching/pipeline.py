@@ -35,11 +35,12 @@ from .nodes import (
     compute_similarities_and_entropy,
     aggregate_sentence_matches,
     combine_sentence_and_keyword_scores,
+    add_metadata,
     aggregate_scores_to_labels,
 )
 
 
-def create_pipeline(**kwargs) -> Pipeline:
+def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     doc_preprocess_pipeline = pipeline(
         [
             node(
@@ -117,16 +118,26 @@ def create_pipeline(**kwargs) -> Pipeline:
                         "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                         "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                         "keyword_data": "keywords.gtr_data.db",
-                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
                         "keyword_weight": "params:similarity_matching.score_weights.keyword_weight",
                     },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
                     name=f"combine_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
                         f"similarity_matching_{taxonomy_name}",
                     ],
+                ),
+                # Add metadata
+                node(
+                    func=add_metadata,
+                    inputs={
+                        "combined_scores": f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
+                        "keyword_data": "keywords.gtr_data.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
+                    },
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
+                    name=f"add_metadata_{taxonomy_name}",
                 ),
                 # Final aggregation
                 node(

@@ -140,7 +140,7 @@ def aggregate_sentence_matches(
     # Filter low scores using both quantile and absolute thresholds
     score_threshold = top_k_matches["similarity_score"].quantile(min_score_quantile)
     final_threshold = max(score_threshold, min_similarity_score)
-    
+
     logger.info(
         "Filtering matches - Quantile threshold (%0.2f): %0.3f, Minimum threshold: %0.3f, Using: %0.3f",
         min_score_quantile,
@@ -187,7 +187,6 @@ def combine_sentence_and_keyword_scores(
     sentence_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
-    taxonomy: pd.DataFrame,
     sentence_weight: float,
     keyword_weight: float,
 ) -> pd.DataFrame:
@@ -225,6 +224,17 @@ def combine_sentence_and_keyword_scores(
         sentence_weight * combined_scores["similarity_score_sent"]
         + keyword_weight * combined_scores["similarity_score_key"]
     )
+
+    return combined_scores
+
+
+def add_metadata(
+    combined_scores: pd.DataFrame, keyword_data: pd.DataFrame, taxonomy: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Add metadata to the combined scores.
+    """
+    logger.info("Adding metadata to combined scores")
 
     # Add metadata
     final_scores = combined_scores.merge(
@@ -309,8 +319,8 @@ def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
         if max_score == min_score:
             group["similarity_score"] = 1.0
         else:
-            group["similarity_score"] = (
-                (group["similarity_score"] - min_score) / (max_score - min_score)
+            group["similarity_score"] = (group["similarity_score"] - min_score) / (
+                max_score - min_score
             )
     return group
 
