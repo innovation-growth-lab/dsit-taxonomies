@@ -172,8 +172,8 @@ def aggregate_sentence_matches(
         mean_entropy=("shannon_entropy", "mean"),
     )
 
-    # normalise within projects
-    normalised_scores = _normalise_within_projects(project_scores)
+    # normalise within projects [TEMP]
+    normalised_scores = project_scores # _normalise_within_projects(project_scores)
 
     logger.info(
         "Final score distribution:\n%s",
