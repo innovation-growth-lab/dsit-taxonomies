@@ -65,7 +65,10 @@ def create_pipeline(**kwargs) -> Pipeline:
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_sentence_matches_{taxonomy_name}",
-                    tags=[f"raw_matches_{taxonomy_name}"],
+                    tags=[
+                        f"raw_matches_{taxonomy_name}",
+                        f"similarity_matching_{taxonomy_name}",
+                    ],
                 ),
                 # Compute keyword matches
                 node(
@@ -77,9 +80,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                         "top_n": "params:similarity_matching.top_n",
                         "number_returns": "params:similarity_matching.number_returns",
                     },
-                    outputs=f"keywords.gtr_data.{taxonomy_name}_matches.raw",
+                    outputs=f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"compute_keyword_matches_{taxonomy_name}",
-                    tags=[f"raw_matches_{taxonomy_name}"],
+                    tags=[
+                        f"raw_matches_{taxonomy_name}",
+                        f"similarity_matching_{taxonomy_name}",
+                    ],
                 ),
             ]
         )
@@ -97,9 +103,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                         "min_score_quantile": "params:similarity_matching.sentence_matches.min_score_quantile",
                         "min_similarity_score": "params:similarity_matching.sentence_matches.min_similarity_score",
                     },
-                    outputs=f"sentences.gtr_data.{taxonomy_name}_matches.aggregated",
+                    outputs=f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"aggregate_sentence_matches_{taxonomy_name}",
-                    tags=[f"sentence_matches_{taxonomy_name}"],
+                    tags=[
+                        f"sentence_matches_{taxonomy_name}",
+                        f"similarity_matching_{taxonomy_name}",
+                    ],
                 ),
                 # Combine sentence and keyword scores
                 node(
@@ -114,7 +123,10 @@ def create_pipeline(**kwargs) -> Pipeline:
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                     name=f"combine_scores_{taxonomy_name}",
-                    tags=[f"scores_{taxonomy_name}"],
+                    tags=[
+                        f"scores_{taxonomy_name}",
+                        f"similarity_matching_{taxonomy_name}",
+                    ],
                 ),
                 # Final aggregation
                 node(
@@ -122,7 +134,10 @@ def create_pipeline(**kwargs) -> Pipeline:
                     inputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_final_scores_{taxonomy_name}",
-                    tags=[f"scores_{taxonomy_name}"],
+                    tags=[
+                        f"scores_{taxonomy_name}",
+                        f"similarity_matching_{taxonomy_name}",
+                    ],
                 ),
             ]
         )
