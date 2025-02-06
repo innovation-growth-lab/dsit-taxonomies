@@ -201,9 +201,9 @@ def combine_sentence_and_keyword_scores(
         .explode("project_ids")
         .rename(columns={"project_ids": "project_id", "uuid": "keyword_id"})
     ).merge(
-        keyword_scores[["document_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]].rename(
-            columns={"document_id": "keyword_id"}
-        ),
+        keyword_scores[
+            ["document_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]
+        ].rename(columns={"document_id": "keyword_id"}),
         on="keyword_id",
         how="left",
     )
@@ -213,7 +213,7 @@ def combine_sentence_and_keyword_scores(
         project_keywords,
         sentence_scores,
         on=["project_id", "taxonomy_label_id"],
-        how="left",
+        how="inner",
     )
 
     # Apply weights
