@@ -104,7 +104,6 @@ def aggregate_sentence_matches(
     sentence_matches: pd.DataFrame,
     top_k_per_sentence: int,
     min_score_quantile: float,
-    min_similarity_score: float,
 ) -> pd.DataFrame:
     """
     Aggregate raw sentence matches to project level by selecting top matches and filtering low scores.
@@ -114,7 +113,6 @@ def aggregate_sentence_matches(
         sentence_matches: Raw similarity matches from compute_similarities_and_entropy
         top_k_per_sentence: Number of top matches to keep per document
         min_score_quantile: Minimum score quantile threshold
-        min_similarity_score: Minimum absolute similarity score threshold
     """
     logger.info("Aggregating document matches to project level")
 
@@ -139,18 +137,15 @@ def aggregate_sentence_matches(
 
     # Filter low scores using both quantile and absolute thresholds
     score_threshold = top_k_matches["similarity_score"].quantile(min_score_quantile)
-    final_threshold = max(score_threshold, min_similarity_score)
 
     logger.info(
-        "Filtering matches - Quantile threshold (%0.2f): %0.3f, Minimum threshold: %0.3f, Using: %0.3f",
+        "Filtering matches - Quantile threshold (%0.2f): %0.3f.",
         min_score_quantile,
-        score_threshold,
-        min_similarity_score,
-        final_threshold,
+        score_threshold
     )
 
     filtered_matches = top_k_matches[
-        top_k_matches["similarity_score"] >= final_threshold
+        top_k_matches["similarity_score"] >=  score_threshold
     ]
 
     logger.info(

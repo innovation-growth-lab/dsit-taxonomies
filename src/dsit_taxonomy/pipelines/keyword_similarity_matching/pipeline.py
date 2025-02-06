@@ -98,7 +98,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                         "top_k_per_sentence": "params:similarity_matching.sentence_matches.top_k_per_sentence",
                         "min_score_quantile": "params:similarity_matching.sentence_matches.min_score_quantile",
-                        "min_similarity_score": "params:similarity_matching.sentence_matches.min_similarity_score",
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"aggregate_sentence_matches_{taxonomy_name}",
