@@ -31,11 +31,11 @@ Note:
 
 from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
-    compute_similarities_and_entropy,
-    aggregate_scores_to_labels,
-    aggregate_document_matches,
     document_preprocessing,
-    combine_document_and_keyword_scores,
+    compute_similarities_and_entropy,
+    aggregate_sentence_matches,
+    combine_sentence_and_keyword_scores,
+    aggregate_scores_to_labels,
 )
 
 
@@ -72,7 +72,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     func=compute_similarities_and_entropy,
                     inputs={
                         "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
-                        "documents": "keywords.gtr_data.embeddings",
+                        "documents": "keywords.gtr_data.db",
                         "batch_size": "params:similarity_matching.batch_size",
                         "top_n": "params:similarity_matching.top_n",
                         "number_returns": "params:similarity_matching.number_returns",
@@ -87,29 +87,29 @@ def create_pipeline(**kwargs) -> Pipeline:
     def scoring_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
-                # Aggregate document matches
+                # Aggregate sentence matches
                 node(
-                    func=aggregate_document_matches,
+                    func=aggregate_sentence_matches,
                     inputs={
-                        "documents": "sentences.gtr_data.db",
-                        "document_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
-                        "top_k_per_document": "params:similarity_matching.document_matches.top_k_per_document",
-                        "min_score_quantile": "params:similarity_matching.document_matches.min_score_quantile",
-                        "min_similarity_score": "params:similarity_matching.document_matches.min_similarity_score",
+                        "sentences": "sentences.gtr_data.db",
+                        "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
+                        "top_k_per_sentence": "params:similarity_matching.sentence_matches.top_k_per_sentence",
+                        "min_score_quantile": "params:similarity_matching.sentence_matches.min_score_quantile",
+                        "min_similarity_score": "params:similarity_matching.sentence_matches.min_similarity_score",
                     },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_matches.intermediate",
-                    name=f"aggregate_document_matches_{taxonomy_name}",
-                    tags=[f"matches_{taxonomy_name}"],
+                    outputs=f"sentences.gtr_data.{taxonomy_name}_matches.aggregated",
+                    name=f"aggregate_sentence_matches_{taxonomy_name}",
+                    tags=[f"sentence_matches_{taxonomy_name}"],
                 ),
-                # Combine document and keyword scores
+                # Combine sentence and keyword scores
                 node(
-                    func=combine_document_and_keyword_scores,
+                    func=combine_sentence_and_keyword_scores,
                     inputs={
-                        "document_scores": f"projects.gtr_data.{taxonomy_name}_matches.intermediate",
+                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.aggregated",
                         "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.raw",
                         "keyword_data": "keywords.gtr_data.db",
                         "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
-                        "document_weight": "params:similarity_matching.score_weights.document_weight",
+                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
                         "keyword_weight": "params:similarity_matching.score_weights.keyword_weight",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",

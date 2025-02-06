@@ -99,42 +99,42 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
     return documents[["project_id", "uuid", "text"]]
 
 
-def aggregate_document_matches(
-    documents: pd.DataFrame,
-    document_matches: pd.DataFrame,
-    top_k_per_document: int,
+def aggregate_sentence_matches(
+    sentences: pd.DataFrame,
+    sentence_matches: pd.DataFrame,
+    top_k_per_sentence: int,
     min_score_quantile: float,
     min_similarity_score: float,
 ) -> pd.DataFrame:
     """
-    Aggregate raw document matches to project level by selecting top matches and filtering low scores.
+    Aggregate raw sentence matches to project level by selecting top matches and filtering low scores.
 
     Args:
-        documents: DataFrame containing document metadata
-        document_matches: Raw similarity matches from compute_similarities_and_entropy
-        top_k_per_document: Number of top matches to keep per document
+        sentences: DataFrame containing document metadata
+        sentence_matches: Raw similarity matches from compute_similarities_and_entropy
+        top_k_per_sentence: Number of top matches to keep per document
         min_score_quantile: Minimum score quantile threshold
         min_similarity_score: Minimum absolute similarity score threshold
     """
     logger.info("Aggregating document matches to project level")
 
     # Merge documents with matches
-    merged_documents = pd.merge(
-        documents[["project_id", "uuid"]],
-        document_matches,
+    merged_sentences = pd.merge(
+        sentences[["project_id", "uuid"]],
+        sentence_matches,
         left_on="uuid",
         right_on="document_id",
         how="right",
     )
 
     # Get top K matches per document
-    logger.info("Selecting top %d matches per document", top_k_per_document)
+    logger.info("Selecting top %d matches per document", top_k_per_sentence)
     top_k_matches = (
-        merged_documents.sort_values(
+        merged_sentences.sort_values(
             by=["project_id", "uuid", "similarity_score"], ascending=[True, True, False]
         )
         .groupby(["project_id", "uuid"], as_index=False)
-        .head(top_k_per_document)
+        .head(top_k_per_sentence)
     )
 
     # Filter low scores using both quantile and absolute thresholds
@@ -155,10 +155,10 @@ def aggregate_document_matches(
 
     logger.info(
         "Match statistics:\n"
-        "Original matches per document: %0.1f\n"
+        "Original matches per sentence: %0.1f\n"
         "After top-k filtering: %0.1f\n"
         "After score filtering: %0.1f",
-        len(merged_documents) / len(merged_documents["uuid"].unique()),
+        len(merged_sentences) / len(merged_sentences["uuid"].unique()),
         len(top_k_matches) / len(top_k_matches["uuid"].unique()),
         len(filtered_matches) / len(filtered_matches["uuid"].unique()),
     )
@@ -183,12 +183,12 @@ def aggregate_document_matches(
     return normalised_scores
 
 
-def combine_document_and_keyword_scores(
-    document_scores: pd.DataFrame,
+def combine_sentence_and_keyword_scores(
+    sentence_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
     taxonomy: pd.DataFrame,
-    document_weight: float,
+    sentence_weight: float,
     keyword_weight: float,
 ) -> pd.DataFrame:
     """
@@ -205,24 +205,24 @@ def combine_document_and_keyword_scores(
 
     # Merge document scores with keywords
     combined_scores = pd.merge(
-        document_scores, project_keywords, on="project_id", how="left"
+        sentence_scores, project_keywords, on="project_id", how="left"
     ).merge(
         keyword_scores[
             ["keyword_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]
         ],
         on=["keyword_id", "taxonomy_label_id"],
         how="left",
-        suffixes=("_doc", "_key"),
+        suffixes=("_sent", "_key"),
     )
 
     # Apply weights
     logger.info(
         "Applying weights - Document: %0.1f, Keyword: %0.1f",
-        document_weight,
+        sentence_weight,
         keyword_weight,
     )
     combined_scores["relevance_score"] = (
-        document_weight * combined_scores["similarity_score_doc"]
+        sentence_weight * combined_scores["similarity_score_sent"]
         + keyword_weight * combined_scores["similarity_score_key"]
     )
 
@@ -241,10 +241,10 @@ def combine_document_and_keyword_scores(
 
     logger.info(
         "Score distributions:\n"
-        "Document scores: %s\n"
+        "Sentence scores: %s\n"
         "Keyword scores: %s\n"
         "Combined scores: %s",
-        combined_scores["similarity_score_doc"].describe(),
+        combined_scores["similarity_score_sent"].describe(),
         combined_scores["similarity_score_key"].describe(),
         combined_scores["relevance_score"].describe(),
     )
@@ -256,10 +256,10 @@ def combine_document_and_keyword_scores(
             "taxonomy_label_id",
             "keyword",
             "label",
-            "similarity_score_doc",
+            "similarity_score_sent",
             "similarity_score_key",
             "relevance_score",
-            "shannon_entropy_doc",
+            "shannon_entropy_sent",
             "shannon_entropy_key",
         ]
     ]
@@ -278,9 +278,9 @@ def aggregate_scores_to_labels(
         .agg(
             {
                 "relevance_score": "sum",
-                "similarity_score_doc": "mean",
+                "similarity_score_sent": "mean",
                 "similarity_score_key": "mean",
-                "shannon_entropy_doc": "mean",
+                "shannon_entropy_sent": "mean",
                 "shannon_entropy_key": "mean",
                 "keyword_id": "nunique",
             }
