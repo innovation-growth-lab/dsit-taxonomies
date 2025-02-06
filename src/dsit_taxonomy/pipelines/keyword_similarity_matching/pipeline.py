@@ -114,8 +114,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                 node(
                     func=combine_sentence_and_keyword_scores,
                     inputs={
-                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.aggregated",
-                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.raw",
+                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
+                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                         "keyword_data": "keywords.gtr_data.db",
                         "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
