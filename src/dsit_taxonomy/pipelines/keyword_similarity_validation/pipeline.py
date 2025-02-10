@@ -9,7 +9,7 @@ from .nodes import (
 )
 
 
-def create_pipeline(**kwargs) -> Pipeline:
+def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     # Expert labeling pipeline
     expert_labeling = pipeline(
         [
