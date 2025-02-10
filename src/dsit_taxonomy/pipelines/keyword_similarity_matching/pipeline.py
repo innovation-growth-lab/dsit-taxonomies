@@ -146,7 +146,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"aggregate_final_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
-                        "aggregated_scores",
+                        "aggregate_scores",
                     ],
                 ),
             ],
