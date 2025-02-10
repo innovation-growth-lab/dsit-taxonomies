@@ -112,8 +112,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                         "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                         "keyword_data": "keywords.gtr_data.db",
-                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
-                        "keyword_weight": "params:similarity_matching.score_weights.keyword_weight",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
                     name=f"combine_scores_{taxonomy_name}",
@@ -138,11 +136,17 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 # Final aggregation
                 node(
                     func=aggregate_scores_to_labels,
-                    inputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
+                    inputs={
+                        "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
+                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
+                        "keyword_weight": "params:similarity_matching.score_weights.keyword_weight",
+                        "similarity_quantile_threshold": "params:similarity_matching.similarity_quantile_threshold",
+                    },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_final_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
+                        "aggregated_scores",
                     ],
                 ),
             ],

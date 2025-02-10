@@ -141,11 +141,11 @@ def aggregate_sentence_matches(
     logger.info(
         "Filtering matches - Quantile threshold (%0.2f): %0.3f.",
         min_score_quantile,
-        score_threshold
+        score_threshold,
     )
 
     filtered_matches = top_k_matches[
-        top_k_matches["similarity_score"] >=  score_threshold
+        top_k_matches["similarity_score"] >= score_threshold
     ]
 
     logger.info(
@@ -168,7 +168,7 @@ def aggregate_sentence_matches(
     )
 
     # normalise within projects [TEMP]
-    normalised_scores = project_scores # _normalise_within_projects(project_scores)
+    normalised_scores = project_scores  # _normalise_within_projects(project_scores)
 
     logger.info(
         "Final score distribution:\n%s",
@@ -182,8 +182,6 @@ def combine_sentence_and_keyword_scores(
     sentence_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
     keyword_data: pd.DataFrame,
-    sentence_weight: float,
-    keyword_weight: float,
 ) -> pd.DataFrame:
     """
     Combine document-based and keyword-based scores with configurable weights.
@@ -210,17 +208,6 @@ def combine_sentence_and_keyword_scores(
         on=["project_id", "taxonomy_label_id"],
         how="inner",
         suffixes=("_key", "_sent"),
-    )
-
-    # Apply weights
-    logger.info(
-        "Applying weights - Document: %0.1f, Keyword: %0.1f",
-        sentence_weight,
-        keyword_weight,
-    )
-    combined_scores["relevance_score"] = (
-        sentence_weight * combined_scores["similarity_score_sent"]
-        + keyword_weight * combined_scores["similarity_score_key"]
     )
 
     return combined_scores
@@ -274,10 +261,31 @@ def add_metadata(
 
 def aggregate_scores_to_labels(
     scores: pd.DataFrame,
+    sentence_weight: float,
+    keyword_weight: float,
+    similarity_quantile_threshold: float,
 ) -> pd.DataFrame:
     """
     Aggregate detailed scores to final project-label level summaries.
     """
+
+    # Apply weights
+    logger.info(
+        "Applying weights - Document: %0.1f, Keyword: %0.1f",
+        sentence_weight,
+        keyword_weight,
+    )
+    scores["relevance_score"] = (
+        (sentence_weight * scores["similarity_score_sent"])
+        * (keyword_weight * scores["similarity_score_key"])
+    ) ** 2
+
+    # Filter low keyword scores
+    scores = scores[
+        scores["similarity_score_key"]
+        >= scores["similarity_score_key"].quantile(similarity_quantile_threshold)
+    ]
+
     logger.info("Aggregating final scores to project-label level")
 
     aggregated = (
