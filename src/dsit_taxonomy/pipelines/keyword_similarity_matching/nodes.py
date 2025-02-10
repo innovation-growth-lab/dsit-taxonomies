@@ -310,6 +310,9 @@ def aggregate_scores_to_labels(
         len(aggregated) / len(aggregated["project_id"].unique()),
     )
 
+    # Add confidence bins
+    aggregated = _assign_confidence_bins(aggregated)
+
     return aggregated
 
 
@@ -397,3 +400,127 @@ def _split_sentences(document: str, nlp: English) -> List[str]:
     """Split a document into sentences."""
     doc = nlp(document)
     return [sent.text for sent in doc.sents]
+
+
+def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Assign confidence bins to taxonomy labels based on global and local binning strategies.
+    """
+    logger.info("Assigning confidence bins to taxonomy labels")
+
+    # 1. Global binning (quartile-based)
+    q2 = df["relevance_score"].quantile(0.50)
+    q3 = df["relevance_score"].quantile(0.75)
+
+    def _assign_global_bin(score):
+        if score > q3:
+            return "High"
+        elif score > q2:
+            return "Medium"
+        return "Low"
+
+    df["global_bin"] = df["relevance_score"].apply(_assign_global_bin)
+
+    # 2. Local binning (combining quantiles and drop-offs)
+    def _assign_local_bins(group):
+        n_labels = len(group)
+
+        # Handle edge cases for small groups
+        if n_labels == 1:
+            return pd.Series(["High"], index=group.index)
+        elif n_labels == 2:
+            sorted_idx = group["relevance_score"].sort_values(ascending=False).index
+            return pd.Series(["High", "Medium"], index=sorted_idx)
+
+        # Sort scores in descending order
+        sorted_scores = group["relevance_score"].sort_values(ascending=False)
+
+        # Compute project-specific quantiles
+        q2_local = sorted_scores.quantile(0.50)
+        q3_local = sorted_scores.quantile(0.75)
+
+        def _assign_quantile_bin(score):
+            if score > q3_local:
+                return "High"
+            elif score > q2_local:
+                return "Medium"
+            return "Low"
+
+        quantile_bins = pd.Series(
+            [_assign_quantile_bin(score) for score in sorted_scores],
+            index=sorted_scores.index,
+        )
+
+        # Compute relative gaps (percentage drop from previous score)
+        relative_gaps = []
+        for i in range(1, len(sorted_scores)):
+            prev_score = sorted_scores.iloc[i - 1]
+            curr_score = sorted_scores.iloc[i]
+            relative_gap = (
+                (prev_score - curr_score) / prev_score if prev_score > 0 else 0
+            )
+            relative_gaps.append((i - 1, relative_gap))
+
+        # Find two largest relative gaps
+        relative_gaps.sort(key=lambda x: x[1], reverse=True)
+
+        if len(relative_gaps) >= 2:
+            # Get positions of two largest gaps
+            gap_positions = sorted([x[0] for x in relative_gaps[:2]])
+            i_star, j_star = gap_positions[0], gap_positions[1]
+
+            # Create bins based on gap positions
+            dropoff_bins = pd.Series(index=sorted_scores.index)
+            dropoff_bins.iloc[: i_star + 1] = "High"
+            dropoff_bins.iloc[i_star + 1 : j_star + 1] = "Medium"
+            dropoff_bins.iloc[j_star + 1 :] = "Low"
+        else:
+            # If no clear gaps, use quantile bins
+            dropoff_bins = quantile_bins
+
+        # Take minimum of quantile and dropoff bins
+        bin_order = {"High": 3, "Medium": 2, "Low": 1}
+        final_local_bins = pd.Series(index=sorted_scores.index)
+
+        for idx in sorted_scores.index:
+            quantile_val = bin_order[quantile_bins[idx]]
+            dropoff_val = bin_order[dropoff_bins[idx]]
+            min_val = min(quantile_val, dropoff_val)
+            final_local_bins[idx] = {3: "High", 2: "Medium", 1: "Low"}[min_val]
+
+        return final_local_bins
+
+    # Apply local binning to each project
+    df["local_bin"] = df.groupby("project_id", group_keys=False).apply(
+        _assign_local_bins
+    )
+
+    # 3. Final bin (minimum of global and local)
+    def _get_min_bin(row):
+        bin_order = {"High": 3, "Medium": 2, "Low": 1}
+        min_val = min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
+        return {3: "High", 2: "Medium", 1: "Low"}[min_val]
+
+    df["final_bin"] = df.apply(_get_min_bin, axis=1)
+
+    # Log summary statistics
+    logger.info(
+        "Binning summary:\n"
+        "Global thresholds - Q2: %0.3f, Q3: %0.3f\n"
+        "Global distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%\n"
+        "Local distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%\n"
+        "Final distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%",
+        q2,
+        q3,
+        100 * (df["global_bin"] == "High").mean(),
+        100 * (df["global_bin"] == "Medium").mean(),
+        100 * (df["global_bin"] == "Low").mean(),
+        100 * (df["local_bin"] == "High").mean(),
+        100 * (df["local_bin"] == "Medium").mean(),
+        100 * (df["local_bin"] == "Low").mean(),
+        100 * (df["final_bin"] == "High").mean(),
+        100 * (df["final_bin"] == "Medium").mean(),
+        100 * (df["final_bin"] == "Low").mean(),
+    )
+
+    return df
