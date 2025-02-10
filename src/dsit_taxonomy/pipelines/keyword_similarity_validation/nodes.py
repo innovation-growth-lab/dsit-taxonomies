@@ -3,7 +3,7 @@ This is a boilerplate pipeline 'keyword_similarity_validation'
 generated using Kedro 0.19.10
 """
 
-import ast
+import ast, json
 import logging
 from typing import Generator, Tuple
 import pandas as pd
@@ -111,8 +111,135 @@ def get_expert_labels(
                     )
 
 
+def validate_algorithmic_assignments(
+    scores: pd.DataFrame,
+    data: pd.DataFrame,
+    llm_model: str,
+    max_retries: int,
+    system_prompt: str,
+    question_prompt: str,
+) -> Generator:
+    """
+    Validate algorithmic assignments using OpenAI.
+
+    Args:
+        scores: DataFrame with algorithmic scores (project_id, label, relevance_score)
+        data: DataFrame with project data (title, abstract, etc.)
+        llm_model: Model name for ChatOpenAI
+        max_retries: Maximum number of retry attempts
+        system_prompt: System prompt for the LLM
+        question_prompt: Question prompt template
+
+    Yields:
+        Dictionary mapping project_id to list of validation results
+    """
+    logger.info("Validating algorithmic assignments using LLM")
+
+    model = ChatOpenAI(model=llm_model)
+
+    # Combine project text fields
+    project_data = data.copy()
+    project_data["text"] = project_data.apply(
+        lambda row: "\n".join(
+            filter(
+                None,
+                [
+                    f"TITLE: {row['title']}",
+                    (
+                        f"ABSTRACT: {row['abstract_text']}"
+                        if pd.notna(row["abstract_text"])
+                        else None
+                    ),
+                    (
+                        f"TECHNICAL ABSTRACT: {row['tech_abstract_text']}"
+                        if pd.notna(row["tech_abstract_text"])
+                        else None
+                    ),
+                    (
+                        f"POTENTIAL IMPACT: {row['potential_impact']}"
+                        if pd.notna(row["potential_impact"])
+                        else None
+                    ),
+                ],
+            )
+        ),
+        axis=1,
+    )
+
+    # get scores for the sample projects
+    scores = scores[scores["project_id"].isin(project_data["project_id"])]
+
+    for i, project_id in enumerate(scores["project_id"].unique()):
+
+        logger.info(
+            "Getting project details. Project %d / %d",
+            i + 1,
+            scores.project_id.nunique(),
+        )
+        # Get project details
+        project_text = project_data[project_data["project_id"] == project_id][
+            "text"
+        ].iloc[0]
+        project_predictions = scores[scores["project_id"] == project_id]
+
+        # Format labels text with IDs
+        labels_text = "\n".join(
+            [
+                f"- {row['label']} (ID: {row['taxonomy_label_id']})"
+                for _, row in project_predictions.iterrows()
+            ]
+        )
+
+        formatted_question = question_prompt.format(
+            project_text=project_text, labels_text=labels_text
+        )
+
+        for attempt in range(max_retries):
+            try:
+                response = model.invoke(
+                    [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": formatted_question},
+                    ]
+                )
+
+                # if "```json" is in the response, remove it
+                if "```json" in response.content:
+                    response.content = response.content.replace("```json", "").replace(
+                        "```", ""
+                    )
+
+                response_json = json.loads(response.content)
+
+                # Validate response format
+                for item in response_json:
+                    if not all(
+                        k in item
+                        for k in ["taxonomy_label_id", "positive", "explanation"]
+                    ):
+                        raise ValueError("Missing required fields in response")
+
+                yield {project_id: response_json}
+                break
+            except (ValueError, SyntaxError) as e:
+                if attempt == max_retries - 1:
+                    logger.error(
+                        "Failed to decode JSON response after %d attempts for project %s: %s",
+                        max_retries,
+                        project_id,
+                        e,
+                    )
+                else:
+                    logger.warning(
+                        "Attempt %d failed for project %s, retrying...",
+                        attempt + 1,
+                        project_id,
+                    )
+
+
 def prepare_validation_data(
     expert_labels: AbstractDataset,
+    expert_validation: AbstractDataset,
     scores: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -133,86 +260,167 @@ def prepare_validation_data(
         logger.info("Processing label: %d / %d", i + 1, len(expert_labels))
         # Each project can have multiple labels
         for label_dict in loader_func():
-            labels_data.append({
-                "project_id": project_id,
-                "label": label_dict["label"],
-                "likelihood": label_dict["likelihood"]
-            })
-    
+            if "error" in label_dict:
+                logger.warning(
+                    "Error in expert labels for project %s: %s", project_id, label_dict
+                )
+                continue
+            labels_data.append(
+                {
+                    "project_id": project_id,
+                    "label": label_dict["label"],
+                    "likelihood": label_dict["likelihood"],
+                }
+            )
+
     expert_df = pd.DataFrame(labels_data)
-    
-    # Only keep predicted scores for the project_ids in expert_df
-    algorithmic_df = scores[scores["project_id"].isin(expert_df["project_id"])]
+
+    # map the labels to the taxonomy_label_id
+    expert_df = expert_df.merge(
+        scores.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
+        ],
+        on="label",
+        how="left",
+    )
+
+    scores_data = []
+    for i, (project_id, loader_func) in enumerate(expert_validation.items()):
+        logger.info("Processing validation: %d / %d", i + 1, len(expert_validation))
+        for label_dict in loader_func():
+            scores_data.append(
+                {
+                    "project_id": project_id,
+                    "taxonomy_label_id": label_dict["taxonomy_label_id"],
+                    "positive": label_dict["positive"],
+                    "explanation": label_dict["explanation"],
+                }
+            )
+
+    scores_df = pd.DataFrame(scores_data)
+
+    # map the id to the label
+    algorithmic_df = scores_df.merge(
+        scores.drop_duplicates(subset=["project_id", "taxonomy_label_id", "label"])[
+            ["project_id", "taxonomy_label_id", "label", "final_bin"]
+        ],
+        on=["project_id", "taxonomy_label_id"],
+        how="left",
+    )
 
     return expert_df, algorithmic_df
 
 
-def validate_top_predictions(
+def validate_predictions(
     expert_df: pd.DataFrame,
     algorithm_df: pd.DataFrame,
-    top_n: int = 3,
 ) -> pd.DataFrame:
     """
-    Validate whether top algorithm predictions match expert high-likelihood labels.
+    Validate predictions by comparing expert high likelihood labels with algorithmic predictions.
+    Computes metrics for both strict (high only) and relaxed (high+medium) algorithmic confidence.
     
     Args:
         expert_df: DataFrame with expert labels (columns: project_id, label, likelihood)
-        algorithm_df: DataFrame with algorithm predictions (columns: project_id, label, relevance_score)
-        top_n: Number of top predictions to consider per project
+        algorithm_df: DataFrame with algorithm predictions (columns: project_id, label, final_bin, positive)
         
     Returns:
-        DataFrame with validation results per project
+        DataFrame with performance metrics for both strict and relaxed confidence thresholds
     """
-    logger.info("Validating top %d predictions against expert labels", top_n)
+    logger.info("Validating predictions against expert high likelihood labels")
     
-    # Get high-likelihood expert labels
-    high_conf_expert = expert_df[expert_df["likelihood"] == "high"].copy()
+    # Remove hallucinated labels and convert to lowercase
+    expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
+    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
     
-    # Get top N predictions per project
-    top_predictions = (
-        algorithm_df
-        .sort_values(["project_id", "relevance_score"], ascending=[True, False])
-        .groupby("project_id")
-        .head(top_n)
+    # Merge expert and algorithm predictions
+    data = pd.merge(
+        algorithm_df,
+        expert_df,
+        on=["project_id", "taxonomy_label_id"],
+        how="outer",
     )
     
-    # Validate predictions project by project
-    results = []
-    for project_id in top_predictions["project_id"].unique():
-        # Get expert and algorithm labels for this project
-        expert_labels = set(
-            high_conf_expert[high_conf_expert["project_id"] == project_id]["label"]
-        )
-        algo_labels = set(
-            top_predictions[top_predictions["project_id"] == project_id]["label"]
+    # Clean up labels
+    data["label"] = data["label_x"].fillna(data["label_y"])
+    data = data.drop(columns=["label_x", "label_y"])
+    
+    metrics = []
+    
+    # Calculate metrics for both strict and relaxed thresholds
+    for threshold in ["strict", "relaxed"]:
+        # True positives: Algorithm predicted high (or high/medium) AND expert gave high likelihood
+        algo_condition = (
+            (data["final_bin"] == "high")
+            if threshold == "strict"
+            else (data["final_bin"].isin(["high", "medium"]))
         )
         
-        # Check for matches
-        correct_predictions = expert_labels & algo_labels
+        true_positives = sum(
+            algo_condition
+            & (data["likelihood"] == "high")
+            & (data["positive"] == True)
+        )
         
-        results.append({
-            "project_id": project_id,
-            "num_expert_labels": len(expert_labels),
-            "num_correct_predictions": len(correct_predictions),
-            "has_correct_prediction": len(correct_predictions) > 0,
-            "correct_labels": list(correct_predictions),
+        # False positives: Algorithm predicted high (or high/medium) but expert either:
+        # - Didn't label it at all
+        # - Gave medium/low likelihood
+        false_positives = sum(
+            algo_condition
+            & ((data["likelihood"] != "high") | pd.isna(data["likelihood"]))
+            & (data["positive"] == True)
+        )
+        
+        # False negatives: Expert gave high likelihood but algorithm either:
+        # - Missed it completely
+        # - Assigned lower confidence
+        false_negatives = sum(
+            (data["likelihood"] == "high")
+            & ((~algo_condition) | pd.isna(data["final_bin"]))
+        )
+        
+        # Calculate metrics
+        precision = (
+            true_positives / (true_positives + false_positives)
+            if (true_positives + false_positives) > 0
+            else 0
+        )
+        recall = (
+            true_positives / (true_positives + false_negatives)
+            if (true_positives + false_negatives) > 0
+            else 0
+        )
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall) > 0
+            else 0
+        )
+        
+        metrics.append({
+            "threshold": threshold,
+            "true_positives": true_positives,
+            "false_positives": false_positives,
+            "false_negatives": false_negatives,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1,
         })
+        
+        logger.info(
+            "%s Threshold Metrics (algo: %s, expert: high):\n"
+            "Precision: %0.3f\n"
+            "Recall: %0.3f\n"
+            "F1 Score: %0.3f\n"
+            "True Positives: %d\n"
+            "False Positives: %d\n"
+            "False Negatives: %d",
+            threshold.title(),
+            "high only" if threshold == "strict" else "high+medium",
+            precision,
+            recall,
+            f1,
+            true_positives,
+            false_positives,
+            false_negatives,
+        )
     
-    results_df = pd.DataFrame(results)
-    
-    # Log summary statistics
-    total_projects = len(results_df)
-    projects_with_match = results_df["has_correct_prediction"].sum()
-    
-    logger.info(
-        "Validation results:\n"
-        "Total projects: %d\n"
-        "Projects with correct prediction: %d (%0.1f%%)\n"
-        "Average correct predictions per project: %0.2f",
-        total_projects,
-        projects_with_match,
-        100 * projects_with_match / total_projects,
-        results_df["num_correct_predictions"].mean(),
-    )
-    
-    return results_df
+    return pd.DataFrame(metrics)

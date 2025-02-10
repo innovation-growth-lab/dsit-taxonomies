@@ -4,18 +4,20 @@
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.10/configuration/parameters.html
 
-expert_validation:
-  # Sample settings
-  sample_size: 300
-  sample_random_state: 42
-  
-  # Model settings
-  llm_model: "gpt-4"
+# Sample selection parameters
+sample:
+  size: 300
+  random_state: 42
+
+# LLM settings
+llm:
+  model: "gpt-3.5-turbo"
   embedding_model: "text-embedding-3-small"
-  retriever_k: 20
   max_retries: 3
 
-  # Prompt settings
+# First validation step: Expert label generation
+expert_labeling:
+  retriever_k: 20
   system_prompt: |
     You are an expert research taxonomy validator analyzing scientific projects. Your task is to validate and classify taxonomy labels, ensuring accurate categorization of research projects.
 
@@ -73,9 +75,41 @@ expert_validation:
     4. Be strict with confidence levels
     5. Focus on specificity and accuracy
 
+# Second validation step: Algorithmic results validation
+algo_validation:
+  system_prompt: |
+    You are an expert research validator. Your task is to validate whether proposed taxonomy labels accurately describe a research project.
 
-validation:
-  top_n_predictions: 3  # Number of top predictions to validate against expert labels
-  # Thresholds for grid search
+    For each label, determine if it is a TRUE POSITIVE (correctly describes the project) or FALSE POSITIVE (incorrect or misleading match).
+
+    Consider:
+    1. Core focus of the project
+    2. Research methods and approaches
+    3. Intended outcomes and impact
+
+    Return an array with each label classified as:
+    {
+        "taxonomy_label_id": "Label ID",
+        "positive": true/false,
+        "explanation": "Brief reason for classification"
+    }
+
+    Be strict in your assessment - only mark as positive if the label genuinely reflects the project's focus.
+
+  question_prompt: |
+    Please validate the following taxonomy labels for this research project:
+
+    PROJECT DESCRIPTION:
+    {project_text}
+
+    PROPOSED LABELS:
+    {labels_text}
+
+    Evaluate each label and return an array indicating whether each is a true or false positive.
+    Remember to include the taxonomy_label_id, positive flag, and explanation for each label. 
+
+# Analysis parameters
+analysis:
+  top_n_predictions: 3
   weight_thresholds: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.9]
   quantile_thresholds: [0.5, 0.6, 0.7, 0.8, 0.9]

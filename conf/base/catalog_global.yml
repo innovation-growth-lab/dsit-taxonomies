@@ -206,6 +206,10 @@ projects.gtr_data.oa_concepts_scores.aggregated:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/aggregated/oa_concepts.parquet
 
 # -> 5. GTR Validation Data:
+gtr.projects.sample:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample.parquet
+
 gtr.projects.sample.expert_labels.goscience:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/goscience/
@@ -213,6 +217,14 @@ gtr.projects.sample.expert_labels.goscience:
 gtr.projects.sample.expert_labels.cwts:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/cwts/
+
+gtr.projects.sample.expert_validation.goscience:
+  <<: *_js_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_validation/goscience/
+
+gtr.projects.sample.expert_validation.cwts:
+  <<: *_js_ptd
+  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_validation/cwts/
 
 # Validation outputs
 validation.cwts.expert_labels.processed:
@@ -222,3 +234,12 @@ validation.cwts.expert_labels.processed:
 validation.cwts.scores.processed:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/scores_processed.parquet
+
+validation.goscience.expert_labels.processed:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/expert_labels_processed.parquet
+
+validation.goscience.scores.processed:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/scores_processed.parquet
+
