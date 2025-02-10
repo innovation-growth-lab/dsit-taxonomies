@@ -106,7 +106,8 @@ def aggregate_sentence_matches(
     min_score_quantile: float,
 ) -> pd.DataFrame:
     """
-    Aggregate raw sentence matches to project level by selecting top matches and filtering low scores.
+    Aggregate raw sentence matches to project level by selecting top matches and 
+    filtering low scores.
 
     Args:
         sentences: DataFrame containing document metadata
@@ -414,10 +415,10 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
     def _assign_global_bin(score):
         if score > q3:
-            return "High"
+            return "high"
         elif score > q2:
-            return "Medium"
-        return "Low"
+            return "medium"
+        return "low"
 
     df["global_bin"] = df["relevance_score"].apply(_assign_global_bin)
 
@@ -427,10 +428,10 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
         # Handle edge cases for small groups
         if n_labels == 1:
-            return pd.Series(["High"], index=group.index)
+            return pd.Series(["high"], index=group.index)
         elif n_labels == 2:
             sorted_idx = group["relevance_score"].sort_values(ascending=False).index
-            return pd.Series(["High", "Medium"], index=sorted_idx)
+            return pd.Series(["high", "medium"], index=sorted_idx)
 
         # Sort scores in descending order
         sorted_scores = group["relevance_score"].sort_values(ascending=False)
@@ -441,10 +442,10 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
         def _assign_quantile_bin(score):
             if score > q3_local:
-                return "High"
+                return "high"
             elif score > q2_local:
-                return "Medium"
-            return "Low"
+                return "medium"
+            return "low"
 
         quantile_bins = pd.Series(
             [_assign_quantile_bin(score) for score in sorted_scores],
@@ -471,22 +472,22 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
             # Create bins based on gap positions
             dropoff_bins = pd.Series(index=sorted_scores.index)
-            dropoff_bins.iloc[: i_star + 1] = "High"
-            dropoff_bins.iloc[i_star + 1 : j_star + 1] = "Medium"
-            dropoff_bins.iloc[j_star + 1 :] = "Low"
+            dropoff_bins.iloc[: i_star + 1] = "high"
+            dropoff_bins.iloc[i_star + 1 : j_star + 1] = "medium"
+            dropoff_bins.iloc[j_star + 1 :] = "low"
         else:
             # If no clear gaps, use quantile bins
             dropoff_bins = quantile_bins
 
         # Take minimum of quantile and dropoff bins
-        bin_order = {"High": 3, "Medium": 2, "Low": 1}
+        bin_order = {"high": 3, "medium": 2, "low": 1}
         final_local_bins = pd.Series(index=sorted_scores.index)
 
         for idx in sorted_scores.index:
             quantile_val = bin_order[quantile_bins[idx]]
             dropoff_val = bin_order[dropoff_bins[idx]]
             min_val = min(quantile_val, dropoff_val)
-            final_local_bins[idx] = {3: "High", 2: "Medium", 1: "Low"}[min_val]
+            final_local_bins[idx] = {3: "high", 2: "medium", 1: "low"}[min_val]
 
         return final_local_bins
 
@@ -497,9 +498,9 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
     # 3. Final bin (minimum of global and local)
     def _get_min_bin(row):
-        bin_order = {"High": 3, "Medium": 2, "Low": 1}
+        bin_order = {"high": 3, "medium": 2, "low": 1}
         min_val = min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
-        return {3: "High", 2: "Medium", 1: "Low"}[min_val]
+        return {3: "high", 2: "medium", 1: "low"}[min_val]
 
     df["final_bin"] = df.apply(_get_min_bin, axis=1)
 
@@ -507,20 +508,20 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
     logger.info(
         "Binning summary:\n"
         "Global thresholds - Q2: %0.3f, Q3: %0.3f\n"
-        "Global distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%\n"
-        "Local distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%\n"
-        "Final distribution - High: %0.1f%%, Medium: %0.1f%%, Low: %0.1f%%",
+        "Global distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%\n"
+        "Local distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%\n"
+        "Final distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%",
         q2,
         q3,
-        100 * (df["global_bin"] == "High").mean(),
-        100 * (df["global_bin"] == "Medium").mean(),
-        100 * (df["global_bin"] == "Low").mean(),
-        100 * (df["local_bin"] == "High").mean(),
-        100 * (df["local_bin"] == "Medium").mean(),
-        100 * (df["local_bin"] == "Low").mean(),
-        100 * (df["final_bin"] == "High").mean(),
-        100 * (df["final_bin"] == "Medium").mean(),
-        100 * (df["final_bin"] == "Low").mean(),
+        100 * (df["global_bin"] == "high").mean(),
+        100 * (df["global_bin"] == "medium").mean(),
+        100 * (df["global_bin"] == "low").mean(),
+        100 * (df["local_bin"] == "high").mean(),
+        100 * (df["local_bin"] == "medium").mean(),
+        100 * (df["local_bin"] == "low").mean(),
+        100 * (df["final_bin"] == "high").mean(),
+        100 * (df["final_bin"] == "medium").mean(),
+        100 * (df["final_bin"] == "low").mean(),
     )
 
     return df

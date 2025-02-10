@@ -16,3 +16,5 @@ similarity_matching:
   score_weights:
     sentence_weight: 0.66  # Weight for document-based matches
     keyword_weight: 0.33  # Weight for keyword-based matches 
+
+  similarity_quantile_threshold: 0.8  # Filter out bottom X% of scores
