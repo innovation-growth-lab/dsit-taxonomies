@@ -6,6 +6,7 @@ generated using Kedro 0.19.10
 import ast, json
 import logging
 from typing import Generator, Tuple
+from itertools import product
 import pandas as pd
 from kedro.io import AbstractDataset
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -14,6 +15,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from ..keyword_similarity_matching.nodes import aggregate_scores_to_labels
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +135,7 @@ def validate_algorithmic_assignments(
     Yields:
         Dictionary mapping project_id to list of validation results
     """
+
     logger.info("Validating algorithmic assignments using LLM")
 
     model = ChatOpenAI(model=llm_model)
@@ -169,7 +172,18 @@ def validate_algorithmic_assignments(
     # get scores for the sample projects
     scores = scores[scores["project_id"].isin(project_data["project_id"])]
 
-    for i, project_id in enumerate(scores["project_id"].unique()):
+    aggregated_scores = aggregate_scores_to_labels(
+        scores.copy(),
+        sentence_weight=0.5,
+        keyword_weight=0.5,
+        similarity_quantile_threshold=0.25,
+        global_q2_threshold=0.25,
+        global_q3_threshold=0.5,
+        local_q2_threshold=0.25,
+        local_q3_threshold=0.5,
+    )
+
+    for i, project_id in enumerate(aggregated_scores["project_id"].unique()):
 
         logger.info(
             "Getting project details. Project %d / %d",
@@ -180,7 +194,9 @@ def validate_algorithmic_assignments(
         project_text = project_data[project_data["project_id"] == project_id][
             "text"
         ].iloc[0]
-        project_predictions = scores[scores["project_id"] == project_id]
+        project_predictions = aggregated_scores[
+            aggregated_scores["project_id"] == project_id
+        ]
 
         # Format labels text with IDs
         labels_text = "\n".join(
@@ -240,18 +256,19 @@ def validate_algorithmic_assignments(
 def prepare_validation_data(
     expert_labels: AbstractDataset,
     expert_validation: AbstractDataset,
-    scores: pd.DataFrame,
+    taxonomy: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Prepare expert labels and algorithmic scores for comparison.
 
     Args:
         expert_labels: Partitioned dataset with expert labels.
-        scores: DataFrame with algorithm-assigned scores (containing sentence and keyword scores)
+        expert_validation: Partitioned dataset with expert validation.
 
     Returns:
         Tuple of processed expert labels and algorithmic scores
     """
+    taxonomy.rename(columns={"uuid": "taxonomy_label_id"}, inplace=True)
     logger.info("Preparing validation data")
 
     # Read the jsons from the expert_labels dataset and flatten into DataFrame
@@ -277,12 +294,15 @@ def prepare_validation_data(
 
     # map the labels to the taxonomy_label_id
     expert_df = expert_df.merge(
-        scores.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
             ["label", "taxonomy_label_id"]
         ],
         on="label",
         how="left",
     )
+
+    # remove hallucinated labels
+    expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
 
     scores_data = []
     for i, (project_id, loader_func) in enumerate(expert_validation.items()):
@@ -297,14 +317,14 @@ def prepare_validation_data(
                 }
             )
 
-    scores_df = pd.DataFrame(scores_data)
+    algorithmic_df = pd.DataFrame(scores_data)
 
     # map the id to the label
-    algorithmic_df = scores_df.merge(
-        scores.drop_duplicates(subset=["project_id", "taxonomy_label_id", "label"])[
-            ["project_id", "taxonomy_label_id", "label", "final_bin"]
+    algorithmic_df = algorithmic_df.merge(
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
         ],
-        on=["project_id", "taxonomy_label_id"],
+        on="taxonomy_label_id",
         how="left",
     )
 
@@ -319,17 +339,16 @@ def validate_predictions(
     Validate predictions by comparing expert high likelihood labels with algorithmic predictions.
     Computes metrics for both strict (high only) and relaxed (high+medium) algorithmic confidence.
 
-    Args:
-        expert_df: DataFrame with expert labels (columns: project_id, label, likelihood)
-        algorithm_df: DataFrame with algorithm predictions (columns: project_id, label, final_bin, positive)
-
-    Returns:
-        DataFrame with performance metrics for both strict and relaxed confidence thresholds
+    True Positive: Algorithm predicts high confidence AND
+                  (expert validates as positive OR gave high likelihood)
+    False Positive: Algorithm predicts high confidence BUT
+                   (expert validates as negative OR didn't give high likelihood)
+    False Negative: Algorithm doesn't predict high confidence BUT
+                   (expert validates as positive OR gave high likelihood)
     """
     logger.info("Validating predictions against expert high likelihood labels")
 
     # Remove hallucinated labels and convert to lowercase
-    expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
     expert_df["likelihood"] = expert_df["likelihood"].str.lower()
 
     # Merge expert and algorithm predictions
@@ -348,32 +367,27 @@ def validate_predictions(
 
     # Calculate metrics for both strict and relaxed thresholds
     for threshold in ["strict", "relaxed"]:
-        # True positives: Algorithm predicted high (or high/medium) AND expert gave high likelihood
+        # Define algorithm condition based on threshold
         algo_condition = (
             (data["final_bin"] == "high")
             if threshold == "strict"
             else (data["final_bin"].isin(["high", "medium"]))
         )
 
-        true_positives = sum(
-            algo_condition & (data["likelihood"] == "high") & (data["positive"] == True)
-        )
+        # True positives: Algorithm predicts high AND expert agrees
+        expert_agreement = (data["positive"] is True) | (data["likelihood"] == "high")
+        true_positives = sum(algo_condition & expert_agreement)
 
-        # False positives: Algorithm predicted high (or high/medium) but expert either:
-        # - Didn't label it at all
-        # - Gave medium/low likelihood
-        false_positives = sum(
-            algo_condition
-            & ((data["likelihood"] != "high") | pd.isna(data["likelihood"]))
-            & (data["positive"] == True)
+        # False positives: Algorithm predicts high BUT expert disagrees
+        expert_disagreement = (data["positive"] is False) | (
+            data["likelihood"] != "high"
         )
+        false_positives = sum(algo_condition & expert_disagreement)
 
-        # False negatives: Expert gave high likelihood but algorithm either:
-        # - Missed it completely
-        # - Assigned lower confidence
+        # False negatives: Algorithm doesn't predict high (or is missing) BUT 
+        # expert thinks it should
         false_negatives = sum(
-            (data["likelihood"] == "high")
-            & ((~algo_condition) | pd.isna(data["final_bin"]))
+            (~algo_condition | algo_condition.isna()) & expert_agreement
         )
 
         # Calculate metrics
@@ -405,8 +419,11 @@ def validate_predictions(
             }
         )
 
+        # Format threshold description for logging
+        threshold_desc = "high only" if threshold == "strict" else "high+medium"
+
         logger.info(
-            "%s Threshold Metrics (algo: %s, expert: high):\n"
+            "%s Threshold Metrics (algo: %s):\n"
             "Precision: %0.3f\n"
             "Recall: %0.3f\n"
             "F1 Score: %0.3f\n"
@@ -414,7 +431,7 @@ def validate_predictions(
             "False Positives: %d\n"
             "False Negatives: %d",
             threshold.title(),
-            "high only" if threshold == "strict" else "high+medium",
+            threshold_desc,
             precision,
             recall,
             f1,
@@ -428,6 +445,7 @@ def validate_predictions(
 
 def tune_matching_parameters(
     scores: pd.DataFrame,
+    algorithm_df: pd.DataFrame,
     expert_df: pd.DataFrame,
     param_grid: dict,
 ) -> pd.DataFrame:
@@ -451,8 +469,6 @@ def tune_matching_parameters(
     Returns:
         DataFrame with parameter combinations and their validation metrics
     """
-    from itertools import product
-    from ..keyword_similarity_matching.nodes import aggregate_scores_to_labels
 
     # Generate all parameter combinations
     param_names = list(param_grid.keys())
@@ -468,8 +484,17 @@ def tune_matching_parameters(
         # Aggregate scores with current parameters
         aggregated_scores = aggregate_scores_to_labels(scores.copy(), **params)
 
+        # map the id to the label
+        grid_algorithmic_df = algorithm_df.merge(
+            aggregated_scores[["project_id", "taxonomy_label_id", "final_bin"]],
+            on=["project_id", "taxonomy_label_id"],
+            how="left",
+        )
+
         # Validate predictions
-        validation_metrics = validate_predictions(expert_df.copy(), aggregated_scores)
+        validation_metrics = validate_predictions(
+            expert_df.copy(), grid_algorithmic_df.copy()
+        )
 
         # Add parameters to results
         result = params.copy()
