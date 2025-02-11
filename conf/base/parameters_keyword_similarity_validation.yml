@@ -11,7 +11,7 @@ sample:
 
 # LLM settings
 llm:
-  model: "gpt-3.5-turbo"
+  model: "gpt-4"
   embedding_model: "text-embedding-3-small"
   max_retries: 3
 

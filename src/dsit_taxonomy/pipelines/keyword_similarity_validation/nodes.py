@@ -375,7 +375,9 @@ def validate_predictions(
         )
 
         # True positives: Algorithm predicts high AND expert agrees
-        expert_agreement = (data["positive"] is True) | (data["likelihood"] == "high")
+        expert_agreement = (data["positive"] is True) | (
+            data["likelihood"] == "high"
+        )  # Positive often specified to odd ones maybe consider running True & ["high", "medium"]
         true_positives = sum(algo_condition & expert_agreement)
 
         # False positives: Algorithm predicts high BUT expert disagrees
@@ -384,10 +386,13 @@ def validate_predictions(
         )
         false_positives = sum(algo_condition & expert_disagreement)
 
-        # False negatives: Algorithm doesn't predict high (or is missing) BUT 
+        # False negatives: Algorithm doesn't predict high (or is missing) BUT
         # expert thinks it should
+        expert_true_agreement = (data["positive"] is True) & (
+            data["likelihood"] == "high"
+        )
         false_negatives = sum(
-            (~algo_condition | algo_condition.isna()) & expert_agreement
+            (~algo_condition | algo_condition.isna()) & expert_true_agreement
         )
 
         # Calculate metrics

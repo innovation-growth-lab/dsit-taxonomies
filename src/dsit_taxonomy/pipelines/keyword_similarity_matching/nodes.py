@@ -5,6 +5,8 @@ import lancedb
 import pandas as pd
 from scipy.stats import entropy
 from spacy.lang.en import English
+import joblib
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +108,7 @@ def aggregate_sentence_matches(
     min_score_quantile: float,
 ) -> pd.DataFrame:
     """
-    Aggregate raw sentence matches to project level by selecting top matches and 
+    Aggregate raw sentence matches to project level by selecting top matches and
     filtering low scores.
 
     Args:
@@ -272,7 +274,7 @@ def aggregate_scores_to_labels(
 ) -> pd.DataFrame:
     """
     Aggregate detailed scores to final project-label level summaries.
-    
+
     Args:
         scores: Raw scores DataFrame
         sentence_weight: Weight for sentence-based scores
@@ -340,15 +342,15 @@ def aggregate_scores_to_labels(
     )
 
     # Add confidence bins with custom thresholds
-    scores = _assign_confidence_bins(
-        scores,
+    aggregated = _assign_confidence_bins(
+        aggregated,
         global_q2_threshold,
         global_q3_threshold,
         local_q2_threshold,
         local_q3_threshold,
     )
 
-    return scores
+    return aggregated
 
 
 def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
@@ -443,16 +445,19 @@ def _assign_confidence_bins(
     global_q3_threshold: float,
     local_q2_threshold: float,
     local_q3_threshold: float,
+    n_jobs: int = 8,
 ) -> pd.DataFrame:
     """
     Assign confidence bins to taxonomy labels based on global and local binning strategies.
-    
+    Uses parallel processing for faster computation.
+
     Args:
         df: Input DataFrame with relevance scores
         global_q2_threshold: Global threshold for medium confidence
         global_q3_threshold: Global threshold for high confidence
         local_q2_threshold: Project-level threshold for medium confidence
         local_q3_threshold: Project-level threshold for high confidence
+        n_jobs: Number of parallel jobs (-1 for all cores)
     """
     logger.info("Assigning confidence bins to taxonomy labels")
 
@@ -469,79 +474,26 @@ def _assign_confidence_bins(
 
     df["global_bin"] = df["relevance_score"].apply(_assign_global_bin)
 
-    # 2. Local binning (using provided thresholds)
-    def _assign_local_bins(group):
-        n_labels = len(group)
+    # 2. Local binning - prepare data for parallel processing
+    project_groups = [group for _, group in df.groupby("project_id")]
 
-        # Handle edge cases for small groups
-        if n_labels == 1:
-            return pd.Series(["high"], index=group.index)
-        elif n_labels == 2:
-            sorted_idx = group["relevance_score"].sort_values(ascending=False).index
-            return pd.Series(["high", "medium"], index=sorted_idx)
-
-        # Sort scores in descending order
-        sorted_scores = group["relevance_score"].sort_values(ascending=False)
-
-        # Compute project-specific quantiles using parameters
-        q2_local = sorted_scores.quantile(local_q2_threshold)
-        q3_local = sorted_scores.quantile(local_q3_threshold)
-
-        def _assign_quantile_bin(score):
-            if score > q3_local:
-                return "high"
-            elif score > q2_local:
-                return "medium"
-            return "low"
-
-        quantile_bins = pd.Series(
-            [_assign_quantile_bin(score) for score in sorted_scores],
-            index=sorted_scores.index,
-        )
-
-        # Compute relative gaps (percentage drop from previous score)
-        relative_gaps = []
-        for i in range(1, len(sorted_scores)):
-            prev_score = sorted_scores.iloc[i - 1]
-            curr_score = sorted_scores.iloc[i]
-            relative_gap = (
-                (prev_score - curr_score) / prev_score if prev_score > 0 else 0
-            )
-            relative_gaps.append((i - 1, relative_gap))
-
-        # Find two largest relative gaps
-        relative_gaps.sort(key=lambda x: x[1], reverse=True)
-
-        if len(relative_gaps) >= 2:
-            # Get positions of two largest gaps
-            gap_positions = sorted([x[0] for x in relative_gaps[:2]])
-            i_star, j_star = gap_positions[0], gap_positions[1]
-
-            # Create bins based on gap positions
-            dropoff_bins = pd.Series(index=sorted_scores.index)
-            dropoff_bins.iloc[: i_star + 1] = "high"
-            dropoff_bins.iloc[i_star + 1 : j_star + 1] = "medium"
-            dropoff_bins.iloc[j_star + 1 :] = "low"
-        else:
-            # If no clear gaps, use quantile bins
-            dropoff_bins = quantile_bins
-
-        # Take minimum of quantile and dropoff bins
-        bin_order = {"high": 3, "medium": 2, "low": 1}
-        final_local_bins = pd.Series(index=sorted_scores.index)
-
-        for idx in sorted_scores.index:
-            quantile_val = bin_order[quantile_bins[idx]]
-            dropoff_val = bin_order[dropoff_bins[idx]]
-            min_val = min(quantile_val, dropoff_val)
-            final_local_bins[idx] = {3: "high", 2: "medium", 1: "low"}[min_val]
-
-        return final_local_bins
-
-    # Apply local binning to each project
-    df["local_bin"] = df.groupby("project_id", group_keys=False).apply(
-        _assign_local_bins
+    # Create partial function with fixed parameters
+    _assign_local_bins_partial = partial(
+        _process_project_group,
+        local_q2_threshold=local_q2_threshold,
+        local_q3_threshold=local_q3_threshold,
     )
+
+    # Process groups in parallel
+    logger.info("Processing %d projects in parallel", len(project_groups))
+    results = joblib.Parallel(n_jobs=n_jobs)(
+        joblib.delayed(_assign_local_bins_partial)(group) for group in project_groups
+    )
+
+    # Combine results
+    local_bins = pd.concat(results)
+
+    df["local_bin"] = local_bins
 
     # 3. Final bin (minimum of global and local)
     def _get_min_bin(row):
@@ -572,3 +524,71 @@ def _assign_confidence_bins(
     )
 
     return df
+
+
+def _process_project_group(
+    group: pd.DataFrame,
+    local_q2_threshold: float,
+    local_q3_threshold: float,
+) -> pd.Series:
+    """Process a single project group for local binning."""
+    n_labels = len(group)
+
+    # Handle edge cases for small groups
+    if n_labels == 1:
+        return pd.Series(["high"], index=group.index)
+    elif n_labels == 2:
+        sorted_idx = group["relevance_score"].sort_values(ascending=False).index
+        return pd.Series(["high", "medium"], index=sorted_idx)
+
+    # Sort scores in descending order
+    sorted_scores = group["relevance_score"].sort_values(ascending=False)
+
+    # Compute project-specific quantiles
+    q2_local = sorted_scores.quantile(local_q2_threshold)
+    q3_local = sorted_scores.quantile(local_q3_threshold)
+
+    def _assign_quantile_bin(score):
+        if score > q3_local:
+            return "high"
+        elif score > q2_local:
+            return "medium"
+        return "low"
+
+    quantile_bins = pd.Series(
+        [_assign_quantile_bin(score) for score in sorted_scores],
+        index=sorted_scores.index,
+    )
+
+    # Compute relative gaps
+    relative_gaps = []
+    for i in range(1, len(sorted_scores)):
+        prev_score = sorted_scores.iloc[i - 1]
+        curr_score = sorted_scores.iloc[i]
+        relative_gap = (prev_score - curr_score) / prev_score if prev_score > 0 else 0
+        relative_gaps.append((i - 1, relative_gap))
+
+    # Find two largest relative gaps
+    relative_gaps.sort(key=lambda x: x[1], reverse=True)
+
+    if len(relative_gaps) >= 2:
+        gap_positions = sorted([x[0] for x in relative_gaps[:2]])
+        i_star, j_star = gap_positions[0], gap_positions[1]
+
+        dropoff_bins = pd.Series("low", index=sorted_scores.index, dtype="string")
+        dropoff_bins.iloc[: i_star + 1] = "high"
+        dropoff_bins.iloc[i_star + 1 : j_star + 1] = "medium"
+    else:
+        dropoff_bins = quantile_bins
+
+    # Take minimum of quantile and dropoff bins
+    bin_order = {"high": 3, "medium": 2, "low": 1}
+    final_local_bins = pd.Series(index=sorted_scores.index, dtype="string")
+
+    for idx in sorted_scores.index:
+        quantile_val = bin_order[quantile_bins[idx]]
+        dropoff_val = bin_order[dropoff_bins[idx]]
+        min_val = min(quantile_val, dropoff_val)
+        final_local_bins[idx] = {3: "high", 2: "medium", 1: "low"}[min_val]
+
+    return final_local_bins

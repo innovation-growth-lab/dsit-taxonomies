@@ -5,7 +5,6 @@ from .nodes import (
     select_sample_projects,
     get_expert_labels,
     prepare_validation_data,
-    validate_predictions,
     validate_algorithmic_assignments,
     tune_matching_parameters,
 )
@@ -58,7 +57,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"gtr.projects.sample.expert_validation.{taxonomy_name}",
                     name=f"validate_algorithmic_assignments_{taxonomy_name}",
-                    tags=[f"dev_{taxonomy_name}", "algo"],
+                    tags=[f"dev_{taxonomy_name}", "validation_algorithms"],
                 ),
             ],
             tags=["expert_labels"],
