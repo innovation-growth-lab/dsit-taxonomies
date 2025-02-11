@@ -7,6 +7,7 @@ from .nodes import (
     prepare_validation_data,
     validate_predictions,
     validate_algorithmic_assignments,
+    tune_matching_parameters,
 )
 
 
@@ -90,6 +91,17 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     outputs=f"validation.{taxonomy_name}.prediction_validation",
                     name=f"validate_predictions_{taxonomy_name}",
                     tags=[f"dev_{taxonomy_name}", "dev", "validation"],
+                ),
+                node(
+                    func=tune_matching_parameters,
+                    inputs={
+                        "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
+                        "expert_df": f"validation.{taxonomy_name}.expert_labels.processed",
+                        "param_grid": "params:validation.parameter_tuning.param_grid",
+                    },
+                    outputs=f"validation.{taxonomy_name}.parameter_tuning_results",
+                    name=f"tune_matching_parameters_{taxonomy_name}",
+                    tags=[f"tuning_{taxonomy_name}", "tuning"],
                 ),
             ]
         )

@@ -318,20 +318,20 @@ def validate_predictions(
     """
     Validate predictions by comparing expert high likelihood labels with algorithmic predictions.
     Computes metrics for both strict (high only) and relaxed (high+medium) algorithmic confidence.
-    
+
     Args:
         expert_df: DataFrame with expert labels (columns: project_id, label, likelihood)
         algorithm_df: DataFrame with algorithm predictions (columns: project_id, label, final_bin, positive)
-        
+
     Returns:
         DataFrame with performance metrics for both strict and relaxed confidence thresholds
     """
     logger.info("Validating predictions against expert high likelihood labels")
-    
+
     # Remove hallucinated labels and convert to lowercase
     expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
     expert_df["likelihood"] = expert_df["likelihood"].str.lower()
-    
+
     # Merge expert and algorithm predictions
     data = pd.merge(
         algorithm_df,
@@ -339,13 +339,13 @@ def validate_predictions(
         on=["project_id", "taxonomy_label_id"],
         how="outer",
     )
-    
+
     # Clean up labels
     data["label"] = data["label_x"].fillna(data["label_y"])
     data = data.drop(columns=["label_x", "label_y"])
-    
+
     metrics = []
-    
+
     # Calculate metrics for both strict and relaxed thresholds
     for threshold in ["strict", "relaxed"]:
         # True positives: Algorithm predicted high (or high/medium) AND expert gave high likelihood
@@ -354,13 +354,11 @@ def validate_predictions(
             if threshold == "strict"
             else (data["final_bin"].isin(["high", "medium"]))
         )
-        
+
         true_positives = sum(
-            algo_condition
-            & (data["likelihood"] == "high")
-            & (data["positive"] == True)
+            algo_condition & (data["likelihood"] == "high") & (data["positive"] == True)
         )
-        
+
         # False positives: Algorithm predicted high (or high/medium) but expert either:
         # - Didn't label it at all
         # - Gave medium/low likelihood
@@ -369,7 +367,7 @@ def validate_predictions(
             & ((data["likelihood"] != "high") | pd.isna(data["likelihood"]))
             & (data["positive"] == True)
         )
-        
+
         # False negatives: Expert gave high likelihood but algorithm either:
         # - Missed it completely
         # - Assigned lower confidence
@@ -377,7 +375,7 @@ def validate_predictions(
             (data["likelihood"] == "high")
             & ((~algo_condition) | pd.isna(data["final_bin"]))
         )
-        
+
         # Calculate metrics
         precision = (
             true_positives / (true_positives + false_positives)
@@ -394,17 +392,19 @@ def validate_predictions(
             if (precision + recall) > 0
             else 0
         )
-        
-        metrics.append({
-            "threshold": threshold,
-            "true_positives": true_positives,
-            "false_positives": false_positives,
-            "false_negatives": false_negatives,
-            "precision": precision,
-            "recall": recall,
-            "f1_score": f1,
-        })
-        
+
+        metrics.append(
+            {
+                "threshold": threshold,
+                "true_positives": true_positives,
+                "false_positives": false_positives,
+                "false_negatives": false_negatives,
+                "precision": precision,
+                "recall": recall,
+                "f1_score": f1,
+            }
+        )
+
         logger.info(
             "%s Threshold Metrics (algo: %s, expert: high):\n"
             "Precision: %0.3f\n"
@@ -422,5 +422,93 @@ def validate_predictions(
             false_positives,
             false_negatives,
         )
-    
+
     return pd.DataFrame(metrics)
+
+
+def tune_matching_parameters(
+    scores: pd.DataFrame,
+    expert_df: pd.DataFrame,
+    param_grid: dict,
+) -> pd.DataFrame:
+    """
+    Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
+
+    Args:
+        scores: Raw scores DataFrame
+        expert_df: Expert validation DataFrame
+        param_grid: Dictionary of parameters to try, e.g.:
+            {
+                "sentence_weight": [0.5, 0.66, 0.75],
+                "keyword_weight": [0.25, 0.33, 0.5],
+                "similarity_quantile_threshold": [0.7, 0.8, 0.9],
+                "global_q2_threshold": [0.4, 0.5, 0.6],
+                "global_q3_threshold": [0.7, 0.75, 0.8],
+                "local_q2_threshold": [0.4, 0.5, 0.6],
+                "local_q3_threshold": [0.7, 0.75, 0.8]
+            }
+
+    Returns:
+        DataFrame with parameter combinations and their validation metrics
+    """
+    from itertools import product
+    from ..keyword_similarity_matching.nodes import aggregate_scores_to_labels
+
+    # Generate all parameter combinations
+    param_names = list(param_grid.keys())
+    param_values = list(product(*param_grid.values()))
+
+    results = []
+    total_combinations = len(param_values)
+
+    for i, values in enumerate(param_values, 1):
+        params = dict(zip(param_names, values))
+        logger.info("Testing combination %d/%d: %s", i, total_combinations, params)
+
+        # Aggregate scores with current parameters
+        aggregated_scores = aggregate_scores_to_labels(scores.copy(), **params)
+
+        # Validate predictions
+        validation_metrics = validate_predictions(expert_df.copy(), aggregated_scores)
+
+        # Add parameters to results
+        result = params.copy()
+        for _, row in validation_metrics.iterrows():
+            threshold = row["threshold"]
+            result.update(
+                {
+                    f"{threshold}_precision": row["precision"],
+                    f"{threshold}_recall": row["recall"],
+                    f"{threshold}_f1": row["f1_score"],
+                    f"{threshold}_tp": row["true_positives"],
+                    f"{threshold}_fp": row["false_positives"],
+                    f"{threshold}_fn": row["false_negatives"],
+                }
+            )
+
+        results.append(result)
+
+        # Log current best results
+        results_df = pd.DataFrame(results)
+        best_strict = results_df.nlargest(1, "strict_f1").iloc[0]
+        best_relaxed = results_df.nlargest(1, "relaxed_f1").iloc[0]
+
+        logger.info(
+            "Current best results:\n"
+            "Strict (F1=%0.3f):\n%s\n"
+            "Relaxed (F1=%0.3f):\n%s",
+            best_strict["strict_f1"],
+            {
+                k: v
+                for k, v in best_strict.items()
+                if not k.startswith(("strict_", "relaxed_"))
+            },
+            best_relaxed["relaxed_f1"],
+            {
+                k: v
+                for k, v in best_relaxed.items()
+                if not k.startswith(("strict_", "relaxed_"))
+            },
+        )
+
+    return pd.DataFrame(results)

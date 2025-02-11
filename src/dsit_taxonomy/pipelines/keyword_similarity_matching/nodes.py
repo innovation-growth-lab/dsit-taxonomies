@@ -265,10 +265,38 @@ def aggregate_scores_to_labels(
     sentence_weight: float,
     keyword_weight: float,
     similarity_quantile_threshold: float,
+    global_q2_threshold: float = 0.50,
+    global_q3_threshold: float = 0.75,
+    local_q2_threshold: float = 0.50,
+    local_q3_threshold: float = 0.75,
 ) -> pd.DataFrame:
     """
     Aggregate detailed scores to final project-label level summaries.
+    
+    Args:
+        scores: Raw scores DataFrame
+        sentence_weight: Weight for sentence-based scores
+        keyword_weight: Weight for keyword-based scores
+        similarity_quantile_threshold: Threshold for filtering low scores
+        global_q2_threshold: Global threshold for medium confidence
+        global_q3_threshold: Global threshold for high confidence
+        local_q2_threshold: Project-level threshold for medium confidence
+        local_q3_threshold: Project-level threshold for high confidence
     """
+    logger.info(
+        "Aggregating scores with parameters:\n"
+        "Weights - Sentence: %0.2f, Keyword: %0.2f\n"
+        "Score threshold: %0.2f\n"
+        "Global quantiles - Q2: %0.2f, Q3: %0.2f\n"
+        "Local quantiles - Q2: %0.2f, Q3: %0.2f",
+        sentence_weight,
+        keyword_weight,
+        similarity_quantile_threshold,
+        global_q2_threshold,
+        global_q3_threshold,
+        local_q2_threshold,
+        local_q3_threshold,
+    )
 
     # Apply weights
     logger.info(
@@ -311,10 +339,16 @@ def aggregate_scores_to_labels(
         len(aggregated) / len(aggregated["project_id"].unique()),
     )
 
-    # Add confidence bins
-    aggregated = _assign_confidence_bins(aggregated)
+    # Add confidence bins with custom thresholds
+    scores = _assign_confidence_bins(
+        scores,
+        global_q2_threshold,
+        global_q3_threshold,
+        local_q2_threshold,
+        local_q3_threshold,
+    )
 
-    return aggregated
+    return scores
 
 
 def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
@@ -403,15 +437,28 @@ def _split_sentences(document: str, nlp: English) -> List[str]:
     return [sent.text for sent in doc.sents]
 
 
-def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
+def _assign_confidence_bins(
+    df: pd.DataFrame,
+    global_q2_threshold: float,
+    global_q3_threshold: float,
+    local_q2_threshold: float,
+    local_q3_threshold: float,
+) -> pd.DataFrame:
     """
     Assign confidence bins to taxonomy labels based on global and local binning strategies.
+    
+    Args:
+        df: Input DataFrame with relevance scores
+        global_q2_threshold: Global threshold for medium confidence
+        global_q3_threshold: Global threshold for high confidence
+        local_q2_threshold: Project-level threshold for medium confidence
+        local_q3_threshold: Project-level threshold for high confidence
     """
     logger.info("Assigning confidence bins to taxonomy labels")
 
-    # 1. Global binning (quartile-based)
-    q2 = df["relevance_score"].quantile(0.50)
-    q3 = df["relevance_score"].quantile(0.75)
+    # 1. Global binning (using provided thresholds)
+    q2 = df["relevance_score"].quantile(global_q2_threshold)
+    q3 = df["relevance_score"].quantile(global_q3_threshold)
 
     def _assign_global_bin(score):
         if score > q3:
@@ -422,7 +469,7 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
 
     df["global_bin"] = df["relevance_score"].apply(_assign_global_bin)
 
-    # 2. Local binning (combining quantiles and drop-offs)
+    # 2. Local binning (using provided thresholds)
     def _assign_local_bins(group):
         n_labels = len(group)
 
@@ -436,9 +483,9 @@ def _assign_confidence_bins(df: pd.DataFrame) -> pd.DataFrame:
         # Sort scores in descending order
         sorted_scores = group["relevance_score"].sort_values(ascending=False)
 
-        # Compute project-specific quantiles
-        q2_local = sorted_scores.quantile(0.50)
-        q3_local = sorted_scores.quantile(0.75)
+        # Compute project-specific quantiles using parameters
+        q2_local = sorted_scores.quantile(local_q2_threshold)
+        q3_local = sorted_scores.quantile(local_q3_threshold)
 
         def _assign_quantile_bin(score):
             if score > q3_local:
