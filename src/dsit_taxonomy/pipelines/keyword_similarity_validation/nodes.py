@@ -453,7 +453,7 @@ def tune_matching_parameters(
     algorithm_df: pd.DataFrame,
     expert_df: pd.DataFrame,
     param_grid: dict,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
 
@@ -472,14 +472,16 @@ def tune_matching_parameters(
             }
 
     Returns:
-        DataFrame with parameter combinations and their validation metrics
+        Tuple[pd.DataFrame, pd.DataFrame]:
+            - DataFrame with parameter combinations and their validation metrics
+            - DataFrame with per-project metrics for each parameter combination
     """
-
     # Generate all parameter combinations
     param_names = list(param_grid.keys())
     param_values = list(product(*param_grid.values()))
 
     results = []
+    project_results = []
     total_combinations = len(param_values)
 
     for i, values in enumerate(param_values, 1):
@@ -496,7 +498,17 @@ def tune_matching_parameters(
             how="left",
         )
 
-        # Validate predictions
+        # Get per-project metrics
+        project_metrics = _compute_per_project_metrics(
+            expert_df.copy(), grid_algorithmic_df.copy()
+        )
+
+        # Add parameters to project results
+        for param_name, param_value in params.items():
+            project_metrics[param_name] = param_value
+        project_results.append(project_metrics)
+
+        # Validate predictions for overall metrics
         validation_metrics = validate_predictions(
             expert_df.copy(), grid_algorithmic_df.copy()
         )
@@ -541,4 +553,65 @@ def tune_matching_parameters(
             },
         )
 
-    return pd.DataFrame(results)
+    # Combine all project results
+    project_results_df = pd.concat(project_results, ignore_index=True)
+
+    return pd.DataFrame(results), project_results_df
+
+
+def _compute_per_project_metrics(
+    expert_df: pd.DataFrame, algorithm_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Compute true positives, false positives, and false negatives for each project.
+
+    Args:
+        expert_df: DataFrame with expert labels
+        algorithm_df: DataFrame with algorithmic predictions
+
+    Returns:
+        DataFrame with per-project metrics
+    """
+    # Remove hallucinated labels and convert to lowercase
+    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
+
+    # Merge expert and algorithm predictions
+    data = pd.merge(
+        algorithm_df,
+        expert_df,
+        on=["project_id", "taxonomy_label_id"],
+        how="outer",
+    )
+
+    project_metrics = []
+
+    for project_id in data["project_id"].unique():
+        project_data = data[data["project_id"] == project_id]
+
+        # Define conditions for true/false positives/negatives
+        algo_high = project_data["final_bin"] == "high"
+        expert_agreement = (project_data["positive"] is True) | (
+            project_data["likelihood"] == "high"
+        )
+        expert_disagreement = (project_data["positive"] is False) | (
+            project_data["likelihood"] != "high"
+        )
+        expert_true_agreement = (project_data["positive"] is True) & (
+            project_data["likelihood"] == "high"
+        )
+
+        # Calculate metrics
+        true_positives = sum(algo_high & expert_agreement)
+        false_positives = sum(algo_high & expert_disagreement)
+        false_negatives = sum((~algo_high | algo_high.isna()) & expert_true_agreement)
+
+        project_metrics.append(
+            {
+                "project_id": project_id,
+                "true_positives": true_positives,
+                "false_positives": false_positives,
+                "false_negatives": false_negatives,
+            }
+        )
+
+    return pd.DataFrame(project_metrics)
