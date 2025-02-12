@@ -7,6 +7,7 @@ from scipy.stats import entropy
 from spacy.lang.en import English
 import joblib
 from functools import partial
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -104,18 +105,20 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
 def aggregate_sentence_matches(
     sentences: pd.DataFrame,
     sentence_matches: pd.DataFrame,
-    top_k_per_sentence: int,
     min_score_quantile: float,
+    relative_score_threshold: float = 0.7,
 ) -> pd.DataFrame:
     """
-    Aggregate raw sentence matches to project level by selecting top matches and
-    filtering low scores.
+    Aggregate sentence matches with length-aware scoring.
 
     Args:
-        sentences: DataFrame containing document metadata
-        sentence_matches: Raw similarity matches from compute_similarities_and_entropy
-        top_k_per_sentence: Number of top matches to keep per document
-        min_score_quantile: Minimum score quantile threshold
+        sentences: DataFrame with sentence metadata
+        sentence_matches: Raw similarity matches
+        min_score_quantile: Global minimum score quantile threshold
+        relative_score_threshold: Keep scores within this fraction of project's max score
+
+    Returns:
+        DataFrame with aggregated and filtered similarity scores
     """
     logger.info("Aggregating document matches to project level")
 
@@ -128,57 +131,75 @@ def aggregate_sentence_matches(
         how="right",
     )
 
-    # Get top K matches per document
-    logger.info("Selecting top %d matches per document", top_k_per_sentence)
-    top_k_matches = (
-        merged_sentences.sort_values(
-            by=["project_id", "uuid", "similarity_score"], ascending=[True, True, False]
+    # Compute project-level aggregations
+    project_scores = (
+        merged_sentences.groupby(["project_id", "taxonomy_label_id"])
+        .agg(
+            {
+                "similarity_score": [
+                    "sum",  # Raw sum for high-frequency signals
+                    "mean",  # Average strength
+                    "max",  # Strongest single match
+                    "count",  # Number of matching sentences
+                ]
+            }
         )
-        .groupby(["project_id", "uuid"], as_index=False)
-        .head(top_k_per_sentence)
+        .reset_index()
     )
 
-    # Filter low scores using both quantile and absolute thresholds
-    score_threshold = top_k_matches["similarity_score"].quantile(min_score_quantile)
-
-    logger.info(
-        "Filtering matches - Quantile threshold (%0.2f): %0.3f.",
-        min_score_quantile,
-        score_threshold,
-    )
-
-    filtered_matches = top_k_matches[
-        top_k_matches["similarity_score"] >= score_threshold
+    # Flatten column names
+    project_scores.columns = [
+        "project_id",
+        "taxonomy_label_id",
+        "score_sum",
+        "score_mean",
+        "score_max",
+        "match_count",
     ]
 
+    # Get sentence counts per project for normalisation
+    project_lengths = merged_sentences.groupby("project_id")["uuid"].nunique()
+
+    # Compute normalised scores
+    project_scores = project_scores.merge(
+        project_lengths.reset_index(name="n_sentences"), on="project_id"
+    )
+
+    # Compute initial combined scores
+    project_scores["initial_score"] = (
+        # normalised frequency component
+        (project_scores["match_count"] / project_scores["n_sentences"])
+        *
+        # Average strength component
+        project_scores["score_mean"]
+        *
+        # Boost factor for very strong individual matches
+        (1 + np.log1p(project_scores["score_max"]))
+    )
+
+    # Apply global quantile threshold
+    score_threshold = project_scores["initial_score"].quantile(min_score_quantile)
+    filtered_scores = project_scores[project_scores["initial_score"] >= score_threshold]
+
+    # Apply relative threshold within each project
+    max_scores = filtered_scores.groupby("project_id")["initial_score"].transform("max")
+    final_scores = filtered_scores[
+        filtered_scores["initial_score"] >= relative_score_threshold * max_scores
+    ]
+
+    # Log distribution of topics per project
+    topics_per_project = final_scores.groupby("project_id").size()
     logger.info(
-        "Match statistics:\n"
-        "Original matches per sentence: %0.1f\n"
-        "After top-k filtering: %0.1f\n"
-        "After score filtering: %0.1f",
-        len(merged_sentences) / len(merged_sentences["uuid"].unique()),
-        len(top_k_matches) / len(top_k_matches["uuid"].unique()),
-        len(filtered_matches) / len(filtered_matches["uuid"].unique()),
+        "Score and topic distribution:\n"
+        "Global score threshold: %0.3f\n"
+        "Topics per project:\n%s",
+        score_threshold,
+        topics_per_project.describe().to_string(),
     )
 
-    # Sum scores by project and label
-    project_scores = filtered_matches.groupby(
-        ["project_id", "taxonomy_label_id"], as_index=False
-    ).agg(
-        similarity_score=("similarity_score", "sum"),
-        num_matches=("similarity_score", "count"),
-        mean_entropy=("shannon_entropy", "mean"),
-    )
+    final_scores = final_scores.rename(columns={"initial_score": "similarity_score"})
 
-    # normalise within projects [TEMP]
-    normalised_scores = project_scores  # _normalise_within_projects(project_scores)
-
-    logger.info(
-        "Final score distribution:\n%s",
-        normalised_scores["similarity_score"].describe(),
-    )
-
-    return normalised_scores
+    return final_scores
 
 
 def combine_sentence_and_keyword_scores(
@@ -313,8 +334,8 @@ def aggregate_scores_to_labels(
 
     # Filter low keyword scores
     scores = scores[
-        scores["similarity_score_key"]
-        >= scores["similarity_score_key"].quantile(similarity_quantile_threshold)
+        scores["relevance_score"]
+        >= scores["relevance_score"].quantile(similarity_quantile_threshold)
     ]
 
     logger.info("Aggregating final scores to project-label level")

@@ -1,11 +1,11 @@
-"""Pipeline for expert labeling and validation of taxonomy matching."""
+"""Pipeline for expert labeling and fine-tuning of taxonomy matching parameters."""
 
 from kedro.pipeline import Pipeline, pipeline, node
 from .nodes import (
     select_sample_projects,
     get_expert_labels,
-    prepare_validation_data,
-    validate_algorithmic_assignments,
+    prepare_tuning_data,
+    evaluate_algorithmic_assignments,
     tune_matching_parameters,
 )
 
@@ -46,50 +46,50 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"get_expert_labels_{taxonomy_name}",
                 ),
                 node(
-                    func=validate_algorithmic_assignments,
+                    func=evaluate_algorithmic_assignments,
                     inputs={
                         "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                         "data": "gtr.projects.sample",
                         "llm_model": "params:llm.model",
                         "max_retries": "params:llm.max_retries",
-                        "system_prompt": "params:algo_validation.system_prompt",
-                        "question_prompt": "params:algo_validation.question_prompt",
+                        "system_prompt": "params:algo_evaluation.system_prompt",
+                        "question_prompt": "params:algo_evaluation.question_prompt",
                     },
-                    outputs=f"gtr.projects.sample.expert_validation.{taxonomy_name}",
-                    name=f"validate_algorithmic_assignments_{taxonomy_name}",
-                    tags=[f"dev_{taxonomy_name}", "validation_algorithms"],
+                    outputs=f"gtr.projects.sample.expert_tuning.{taxonomy_name}",
+                    name=f"evaluate_algorithmic_assignments_{taxonomy_name}",
+                    tags=[f"dev_{taxonomy_name}", "evaluate_algorithms"],
                 ),
             ],
             tags=["expert_labels"],
         )
 
-    # Performance validation pipeline
-    def analysis_pipeline(taxonomy_name: str) -> Pipeline:
+    # Parameter tuning pipeline
+    def tuning_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
                 node(
-                    func=prepare_validation_data,
+                    func=prepare_tuning_data,
                     inputs={
                         "expert_labels": f"gtr.projects.sample.expert_labels.{taxonomy_name}",
-                        "expert_validation": f"gtr.projects.sample.expert_validation.{taxonomy_name}",
+                        "expert_tuning": f"gtr.projects.sample.expert_tuning.{taxonomy_name}",
                         "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
                     },
                     outputs=[
-                        f"validation.{taxonomy_name}.expert_labels.processed",
-                        f"validation.{taxonomy_name}.scores.processed",
+                        f"tuning.{taxonomy_name}.expert_labels.processed",
+                        f"tuning.{taxonomy_name}.scores.processed",
                     ],
-                    name=f"prepare_validation_data_{taxonomy_name}",
+                    name=f"prepare_tuning_data_{taxonomy_name}",
                     tags=[f"dev_{taxonomy_name}", "dev"],
                 ),
                 node(
                     func=tune_matching_parameters,
                     inputs={
                         "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
-                        "expert_df": f"validation.{taxonomy_name}.expert_labels.processed",
-                        "algorithm_df": f"validation.{taxonomy_name}.scores.processed",
-                        "param_grid": "params:validation.parameter_tuning.param_grid",
+                        "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
+                        "algorithm_df": f"tuning.{taxonomy_name}.scores.processed",
+                        "param_grid": "params:tuning.parameter_grid",
                     },
-                    outputs=f"validation.{taxonomy_name}.parameter_tuning_results",
+                    outputs=f"tuning.{taxonomy_name}.parameter_tuning_results",
                     name=f"tune_matching_parameters_{taxonomy_name}",
                     tags=[f"tuning_{taxonomy_name}", "tuning"],
                 ),
@@ -99,5 +99,5 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     return (
         sample_projects_pipeline
         + sum(expert_labeling_pipeline(tax) for tax in ["cwts", "goscience"])
-        + sum(analysis_pipeline(tax) for tax in ["cwts", "goscience"])
+        + sum(tuning_pipeline(tax) for tax in ["cwts", "goscience"])
     )

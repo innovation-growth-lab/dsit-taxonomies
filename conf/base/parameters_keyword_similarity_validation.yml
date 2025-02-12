@@ -4,6 +4,8 @@
 # Documentation for this file format can be found in "Parameters"
 # Link: https://docs.kedro.org/en/0.19.10/configuration/parameters.html
 
+# Parameters for fine-tuning taxonomy matching pipeline
+
 # Sample selection parameters
 sample:
   size: 300
@@ -15,11 +17,11 @@ llm:
   embedding_model: "text-embedding-3-small"
   max_retries: 3
 
-# First validation step: Expert label generation
+# First step: Expert label generation
 expert_labeling:
   retriever_k: 20
   system_prompt: |
-    You are an expert research taxonomy validator analyzing scientific projects. Your task is to validate and classify taxonomy labels, ensuring accurate categorization of research projects.
+    You are an expert research taxonomy analyst analyzing scientific projects. Your task is to identify and classify taxonomy labels, ensuring accurate categorization of research projects.
 
     For each project, you will analyze:
     1. Project Details:
@@ -75,10 +77,10 @@ expert_labeling:
     4. Be strict with confidence levels
     5. Focus on specificity and accuracy
 
-# Second validation step: Algorithmic results validation
-algo_validation:
+# Second step: Algorithmic results evaluation
+algo_evaluation:
   system_prompt: |
-    You are an expert research validator. Your task is to validate whether proposed taxonomy labels accurately describe a research project.
+    You are an expert research analyst. Your task is to evaluate whether proposed taxonomy labels accurately describe a research project.
 
     For each label, determine if it is a TRUE POSITIVE (correctly describes the project) or FALSE POSITIVE (incorrect or misleading match).
 
@@ -108,13 +110,13 @@ algo_validation:
     Evaluate each label and return an array indicating whether each is a true or false positive.
     Remember to include the taxonomy_label_id, positive flag, and explanation for each label. 
 
-validation:
-  parameter_tuning:
-    param_grid:
-      sentence_weight: [0.66]
-      keyword_weight: [0.33]
-      similarity_quantile_threshold: [0.7, 0.8, 0.9]
-      global_q2_threshold: [0.4, 0.5, 0.6]
-      global_q3_threshold: [0.65, 0.75, 0.85]
-      local_q2_threshold: [0.4, 0.5, 0.6]
-      local_q3_threshold: [0.65, 0.75, 0.85]
+# Parameter tuning settings
+tuning:
+  parameter_grid:
+    sentence_weight: [0.66]
+    keyword_weight: [0.33]
+    similarity_quantile_threshold: [0.7, 0.8, 0.9]
+    global_q2_threshold: [0.4, 0.5, 0.6]
+    global_q3_threshold: [0.65, 0.75, 0.85]
+    local_q2_threshold: [0.4, 0.5, 0.6]
+    local_q3_threshold: [0.65, 0.75, 0.85]

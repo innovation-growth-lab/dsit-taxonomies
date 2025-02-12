@@ -9,8 +9,8 @@ similarity_matching:
   number_returns: 2000
 
   sentence_matches:
-    top_k_per_sentence: 4  # Number of top matches to keep per document
     min_score_quantile: 0.8  # Filter out bottom X% of scores
+    relative_score_threshold: 0.7  # Keep scores within X% of project's max score
 
   # Score combination weights
   score_weights:

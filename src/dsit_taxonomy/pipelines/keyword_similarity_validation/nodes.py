@@ -113,7 +113,85 @@ def get_expert_labels(
                     )
 
 
-def validate_algorithmic_assignments(
+def prepare_tuning_data(
+    expert_labels: AbstractDataset,
+    expert_tuning: AbstractDataset,
+    taxonomy: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Prepare expert labels and algorithmic scores for parameter tuning.
+
+    Args:
+        expert_labels: Partitioned dataset with expert labels.
+        expert_validation: Partitioned dataset with expert validation.
+
+    Returns:
+        Tuple of processed expert labels and algorithmic scores
+    """
+    taxonomy.rename(columns={"uuid": "taxonomy_label_id"}, inplace=True)
+    logger.info("Preparing validation data")
+
+    # Read the jsons from the expert_labels dataset and flatten into DataFrame
+    labels_data = []
+    for i, (project_id, loader_func) in enumerate(expert_labels.items()):
+        logger.info("Processing label: %d / %d", i + 1, len(expert_labels))
+        # Each project can have multiple labels
+        for label_dict in loader_func():
+            if "error" in label_dict:
+                logger.warning(
+                    "Error in expert labels for project %s: %s", project_id, label_dict
+                )
+                continue
+            labels_data.append(
+                {
+                    "project_id": project_id,
+                    "label": label_dict["label"],
+                    "likelihood": label_dict["likelihood"],
+                }
+            )
+
+    expert_df = pd.DataFrame(labels_data)
+
+    # map the labels to the taxonomy_label_id
+    expert_df = expert_df.merge(
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
+        ],
+        on="label",
+        how="left",
+    )
+
+    # remove hallucinated labels
+    expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
+
+    scores_data = []
+    for i, (project_id, loader_func) in enumerate(expert_tuning.items()):
+        logger.info("Processing validation: %d / %d", i + 1, len(expert_tuning))
+        for label_dict in loader_func():
+            scores_data.append(
+                {
+                    "project_id": project_id,
+                    "taxonomy_label_id": label_dict["taxonomy_label_id"],
+                    "positive": label_dict["positive"],
+                    "explanation": label_dict["explanation"],
+                }
+            )
+
+    algorithmic_df = pd.DataFrame(scores_data)
+
+    # map the id to the label
+    algorithmic_df = algorithmic_df.merge(
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
+        ],
+        on="taxonomy_label_id",
+        how="left",
+    )
+
+    return expert_df, algorithmic_df
+
+
+def evaluate_algorithmic_assignments(
     scores: pd.DataFrame,
     data: pd.DataFrame,
     llm_model: str,
@@ -122,7 +200,7 @@ def validate_algorithmic_assignments(
     question_prompt: str,
 ) -> Generator:
     """
-    Validate algorithmic assignments using OpenAI.
+    Evaluate algorithmic assignments using OpenAI.
 
     Args:
         scores: DataFrame with algorithmic scores (project_id, label, relevance_score)
@@ -251,84 +329,6 @@ def validate_algorithmic_assignments(
                         attempt + 1,
                         project_id,
                     )
-
-
-def prepare_validation_data(
-    expert_labels: AbstractDataset,
-    expert_validation: AbstractDataset,
-    taxonomy: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Prepare expert labels and algorithmic scores for comparison.
-
-    Args:
-        expert_labels: Partitioned dataset with expert labels.
-        expert_validation: Partitioned dataset with expert validation.
-
-    Returns:
-        Tuple of processed expert labels and algorithmic scores
-    """
-    taxonomy.rename(columns={"uuid": "taxonomy_label_id"}, inplace=True)
-    logger.info("Preparing validation data")
-
-    # Read the jsons from the expert_labels dataset and flatten into DataFrame
-    labels_data = []
-    for i, (project_id, loader_func) in enumerate(expert_labels.items()):
-        logger.info("Processing label: %d / %d", i + 1, len(expert_labels))
-        # Each project can have multiple labels
-        for label_dict in loader_func():
-            if "error" in label_dict:
-                logger.warning(
-                    "Error in expert labels for project %s: %s", project_id, label_dict
-                )
-                continue
-            labels_data.append(
-                {
-                    "project_id": project_id,
-                    "label": label_dict["label"],
-                    "likelihood": label_dict["likelihood"],
-                }
-            )
-
-    expert_df = pd.DataFrame(labels_data)
-
-    # map the labels to the taxonomy_label_id
-    expert_df = expert_df.merge(
-        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
-            ["label", "taxonomy_label_id"]
-        ],
-        on="label",
-        how="left",
-    )
-
-    # remove hallucinated labels
-    expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
-
-    scores_data = []
-    for i, (project_id, loader_func) in enumerate(expert_validation.items()):
-        logger.info("Processing validation: %d / %d", i + 1, len(expert_validation))
-        for label_dict in loader_func():
-            scores_data.append(
-                {
-                    "project_id": project_id,
-                    "taxonomy_label_id": label_dict["taxonomy_label_id"],
-                    "positive": label_dict["positive"],
-                    "explanation": label_dict["explanation"],
-                }
-            )
-
-    algorithmic_df = pd.DataFrame(scores_data)
-
-    # map the id to the label
-    algorithmic_df = algorithmic_df.merge(
-        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
-            ["label", "taxonomy_label_id"]
-        ],
-        on="taxonomy_label_id",
-        how="left",
-    )
-
-    return expert_df, algorithmic_df
 
 
 def validate_predictions(
