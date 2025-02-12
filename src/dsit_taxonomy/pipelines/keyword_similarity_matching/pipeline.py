@@ -97,13 +97,12 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "sentences": "sentences.gtr_data.db",
                         "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                         "min_score_quantile": "params:similarity_matching.sentence_matches.min_score_quantile",
-                        "relative_score_threshold": "params:similarity_matching.sentence_matches.relative_score_threshold",
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"aggregate_sentence_matches_{taxonomy_name}",
                     tags=[
                         f"sentence_matches_{taxonomy_name}",
-                        "aggregate_sentence_matches",
+                        "combine_scores_and_add_metadata",
                     ],
                 ),
                 # Combine sentence and keyword scores
@@ -118,6 +117,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"combine_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
+                        "combine_scores_and_add_metadata",
                     ],
                 ),
                 # Add metadata
@@ -132,6 +132,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"add_metadata_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
+                        "combine_scores_and_add_metadata",
                     ],
                 ),
                 # Final aggregation
@@ -140,7 +141,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                         "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
-                        "keyword_weight": "params:similarity_matching.score_weights.keyword_weight",
                         "similarity_quantile_threshold": "params:similarity_matching.similarity_quantile_threshold",
                         "global_q2_threshold": "params:similarity_matching.binning.global_q2_threshold",
                         "global_q3_threshold": "params:similarity_matching.binning.global_q3_threshold",

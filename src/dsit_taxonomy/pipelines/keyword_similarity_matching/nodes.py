@@ -106,7 +106,6 @@ def aggregate_sentence_matches(
     sentences: pd.DataFrame,
     sentence_matches: pd.DataFrame,
     min_score_quantile: float,
-    relative_score_threshold: float = 0.7,
 ) -> pd.DataFrame:
     """
     Aggregate sentence matches with length-aware scoring.
@@ -167,8 +166,9 @@ def aggregate_sentence_matches(
 
     # Compute initial combined scores
     project_scores["initial_score"] = (
-        # normalised frequency component
-        (project_scores["match_count"] / project_scores["n_sentences"])
+        # Sublinear scaling of match frequency
+        (1 + np.log1p(project_scores["match_count"]))
+        / (1 + np.log1p(project_scores["n_sentences"]))
         *
         # Average strength component
         project_scores["score_mean"]
@@ -177,29 +177,36 @@ def aggregate_sentence_matches(
         (1 + np.log1p(project_scores["score_max"]))
     )
 
-    # Apply global quantile threshold
-    score_threshold = project_scores["initial_score"].quantile(min_score_quantile)
-    filtered_scores = project_scores[project_scores["initial_score"] >= score_threshold]
+    project_scores = project_scores.rename(
+        columns={"initial_score": "similarity_score"}
+    )
 
-    # Apply relative threshold within each project
-    max_scores = filtered_scores.groupby("project_id")["initial_score"].transform("max")
-    final_scores = filtered_scores[
-        filtered_scores["initial_score"] >= relative_score_threshold * max_scores
+    # Apply local quantile threshold per project
+    project_thresholds = project_scores.groupby("project_id")[
+        "similarity_score"
+    ].transform(lambda x: x.quantile(min_score_quantile))
+    filtered_scores = project_scores[
+        project_scores["similarity_score"] >= project_thresholds
     ]
 
     # Log distribution of topics per project
-    topics_per_project = final_scores.groupby("project_id").size()
+    topics_per_project = filtered_scores.groupby("project_id").size()
     logger.info(
-        "Score and topic distribution:\n"
-        "Global score threshold: %0.3f\n"
-        "Topics per project:\n%s",
-        score_threshold,
+        "Score and topic distribution:\n" "Topics per project:\n%s",
         topics_per_project.describe().to_string(),
     )
 
-    final_scores = final_scores.rename(columns={"initial_score": "similarity_score"})
+    # Scale scores relative to maximum within each project
+    filtered_scores["similarity_score"] = filtered_scores.groupby("project_id")[
+        "similarity_score"
+    ].transform(lambda x: x / x.max())
 
-    return final_scores
+    logger.info(
+        "Scaled score distribution:\n%s",
+        filtered_scores["similarity_score"].describe().to_string()
+    )
+
+    return filtered_scores
 
 
 def combine_sentence_and_keyword_scores(
@@ -258,16 +265,6 @@ def add_metadata(
         how="left",
     )
 
-    logger.info(
-        "Score distributions:\n"
-        "Sentence scores: %s\n"
-        "Keyword scores: %s\n"
-        "Combined scores: %s",
-        combined_scores["similarity_score_sent"].describe(),
-        combined_scores["similarity_score_key"].describe(),
-        combined_scores["relevance_score"].describe(),
-    )
-
     return final_scores[
         [
             "project_id",
@@ -277,7 +274,6 @@ def add_metadata(
             "label",
             "similarity_score_sent",
             "similarity_score_key",
-            "relevance_score",
             "shannon_entropy",
         ]
     ]
@@ -286,7 +282,6 @@ def add_metadata(
 def aggregate_scores_to_labels(
     scores: pd.DataFrame,
     sentence_weight: float,
-    keyword_weight: float,
     similarity_quantile_threshold: float,
     global_q2_threshold: float = 0.50,
     global_q3_threshold: float = 0.75,
@@ -299,7 +294,6 @@ def aggregate_scores_to_labels(
     Args:
         scores: Raw scores DataFrame
         sentence_weight: Weight for sentence-based scores
-        keyword_weight: Weight for keyword-based scores
         similarity_quantile_threshold: Threshold for filtering low scores
         global_q2_threshold: Global threshold for medium confidence
         global_q3_threshold: Global threshold for high confidence
@@ -308,12 +302,11 @@ def aggregate_scores_to_labels(
     """
     logger.info(
         "Aggregating scores with parameters:\n"
-        "Weights - Sentence: %0.2f, Keyword: %0.2f\n"
+        "Weights - Sentence: %0.2f\n"
         "Score threshold: %0.2f\n"
         "Global quantiles - Q2: %0.2f, Q3: %0.2f\n"
         "Local quantiles - Q2: %0.2f, Q3: %0.2f",
         sentence_weight,
-        keyword_weight,
         similarity_quantile_threshold,
         global_q2_threshold,
         global_q3_threshold,
@@ -325,17 +318,17 @@ def aggregate_scores_to_labels(
     logger.info(
         "Applying weights - Document: %0.1f, Keyword: %0.1f",
         sentence_weight,
-        keyword_weight,
+        (1 -  sentence_weight),
     )
     scores["relevance_score"] = (
         (sentence_weight * scores["similarity_score_sent"])
-        * (keyword_weight * scores["similarity_score_key"])
+        + ((1 -  sentence_weight) * scores["similarity_score_key"])
     ) ** 2
 
     # Filter low keyword scores
     scores = scores[
-        scores["relevance_score"]
-        >= scores["relevance_score"].quantile(similarity_quantile_threshold)
+        scores["similarity_score_key"]
+        >= scores["similarity_score_key"].quantile(similarity_quantile_threshold)
     ]
 
     logger.info("Aggregating final scores to project-label level")
@@ -344,9 +337,9 @@ def aggregate_scores_to_labels(
         scores.groupby(["project_id", "taxonomy_label_id", "label"], as_index=False)
         .agg(
             {
-                "relevance_score": "sum",
-                "similarity_score_sent": "mean",
-                "similarity_score_key": "mean",
+                "relevance_score": "max",
+                "similarity_score_sent": "max",
+                "similarity_score_key": "max",
                 "shannon_entropy": "mean",
                 "keyword_id": "nunique",
             }
@@ -354,24 +347,14 @@ def aggregate_scores_to_labels(
         .rename(columns={"keyword_id": "num_keywords"})
     )
 
-    logger.info(
-        "Aggregation summary:\n"
-        "Total projects: %d\n"
-        "Average labels per project: %0.1f",
-        len(scores["project_id"].unique()),
-        len(aggregated) / len(aggregated["project_id"].unique()),
-    )
-
-    # Add confidence bins with custom thresholds
-    aggregated = _assign_confidence_bins(
+    # Assign confidence bins
+    return _assign_confidence_bins(
         aggregated,
         global_q2_threshold,
         global_q3_threshold,
         local_q2_threshold,
         local_q3_threshold,
     )
-
-    return aggregated
 
 
 def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:

@@ -253,7 +253,6 @@ def evaluate_algorithmic_assignments(
     aggregated_scores = aggregate_scores_to_labels(
         scores.copy(),
         sentence_weight=0.5,
-        keyword_weight=0.5,
         similarity_quantile_threshold=0.25,
         global_q2_threshold=0.25,
         global_q3_threshold=0.5,
@@ -376,23 +375,20 @@ def validate_predictions(
 
         # True positives: Algorithm predicts high AND expert agrees
         expert_agreement = (data["positive"] is True) | (
-            data["likelihood"] == "high"
+            data["likelihood"].isin(["high", "medium"])
         )  # Positive often specified to odd ones maybe consider running True & ["high", "medium"]
         true_positives = sum(algo_condition & expert_agreement)
 
         # False positives: Algorithm predicts high BUT expert disagrees
         expert_disagreement = (data["positive"] is False) | (
-            data["likelihood"] != "high"
+            ~data["likelihood"].isin(["high", "medium"])
         )
         false_positives = sum(algo_condition & expert_disagreement)
 
         # False negatives: Algorithm doesn't predict high (or is missing) BUT
         # expert thinks it should
-        expert_true_agreement = (data["positive"] is True) & (
-            data["likelihood"] == "high"
-        )
         false_negatives = sum(
-            (~algo_condition | algo_condition.isna()) & expert_true_agreement
+            (~algo_condition | algo_condition.isna()) & expert_agreement
         )
 
         # Calculate metrics
@@ -583,6 +579,9 @@ def _compute_per_project_metrics(
         how="outer",
     )
 
+    data["label"] = data["label_x"].fillna(data["label_y"])
+    data = data.drop(columns=["label_x", "label_y"])
+
     project_metrics = []
 
     for project_id in data["project_id"].unique():
@@ -596,20 +595,24 @@ def _compute_per_project_metrics(
         expert_disagreement = (project_data["positive"] is False) | (
             project_data["likelihood"] != "high"
         )
-        expert_true_agreement = (project_data["positive"] is True) & (
-            project_data["likelihood"] == "high"
-        )
 
         # Calculate metrics
-        true_positives = sum(algo_high & expert_agreement)
-        false_positives = sum(algo_high & expert_disagreement)
-        false_negatives = sum((~algo_high | algo_high.isna()) & expert_true_agreement)
+        true_positives = project_data[algo_high & expert_agreement]["label"].tolist()
+        false_positives = project_data[algo_high & expert_disagreement][
+            "label"
+        ].tolist()
+        false_negatives = project_data[
+            (~algo_high | algo_high.isna()) & expert_agreement
+        ]["label"].tolist()
 
         project_metrics.append(
             {
                 "project_id": project_id,
+                "num_true_positives": len(true_positives),
                 "true_positives": true_positives,
+                "num_false_positives": len(false_positives),
                 "false_positives": false_positives,
+                "num_false_negatives": len(false_negatives),
                 "false_negatives": false_negatives,
             }
         )

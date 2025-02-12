@@ -112,11 +112,11 @@ algo_evaluation:
 
 # Parameter tuning settings
 tuning:
-  parameter_grid:
-    sentence_weight: [0.66]
-    keyword_weight: [0.33]
-    similarity_quantile_threshold: [0.7, 0.8, 0.9]
-    global_q2_threshold: [0.4, 0.5, 0.6]
-    global_q3_threshold: [0.65, 0.75, 0.85]
-    local_q2_threshold: [0.4, 0.5, 0.6]
-    local_q3_threshold: [0.65, 0.75, 0.85]
+  parameter_tuning:
+    param_grid:
+      sentence_weight: [0.3, 0.4, 0.5]
+      similarity_quantile_threshold: [0.4, 0.5, 0.6]
+      global_q2_threshold: [0.3, 0.4, 0.5, 0.6]
+      global_q3_threshold: [0.7, 0.75, 0.8, 0.9]
+      local_q2_threshold: [0.3, 0.4, 0.5, 0.6]
+      local_q3_threshold: [0.7, 0.75, 0.8, 0.9]
