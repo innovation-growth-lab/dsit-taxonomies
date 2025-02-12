@@ -239,6 +239,11 @@ tuning.cwts.parameter_tuning_results:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/parameter_tuning_results.parquet
 
+tuning.cwts.project_results:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/project_results.parquet
+
+# goscience
 tuning.goscience.expert_labels.processed:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/expert_labels_processed.parquet
@@ -250,3 +255,7 @@ tuning.goscience.scores.processed:
 tuning.goscience.parameter_tuning_results:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/parameter_tuning_results.parquet
+
+tuning.goscience.project_results:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/project_results.parquet

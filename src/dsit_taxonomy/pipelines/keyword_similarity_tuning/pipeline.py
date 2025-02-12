@@ -89,7 +89,10 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "algorithm_df": f"tuning.{taxonomy_name}.scores.processed",
                         "param_grid": "params:tuning.parameter_tuning.param_grid",
                     },
-                    outputs=f"tuning.{taxonomy_name}.parameter_tuning_results",
+                    outputs=[
+                        f"tuning.{taxonomy_name}.parameter_tuning_results",
+                        f"tuning.{taxonomy_name}.project_results",
+                    ],
                     name=f"tune_matching_parameters_{taxonomy_name}",
                     tags=[f"tuning_{taxonomy_name}", "tuning"],
                 ),
