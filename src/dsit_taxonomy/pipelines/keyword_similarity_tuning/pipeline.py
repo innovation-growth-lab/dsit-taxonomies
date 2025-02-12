@@ -87,7 +87,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
                         "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
                         "algorithm_df": f"tuning.{taxonomy_name}.scores.processed",
-                        "param_grid": "params:tuning.parameter_grid",
+                        "param_grid": "params:tuning.parameter_tuning.parameter_grid",
                     },
                     outputs=f"tuning.{taxonomy_name}.parameter_tuning_results",
                     name=f"tune_matching_parameters_{taxonomy_name}",
