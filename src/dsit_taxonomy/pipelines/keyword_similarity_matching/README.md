@@ -32,11 +32,11 @@ This pipeline matches research projects to taxonomy labels using a hybrid approa
    $$score(p, l_k) = \frac{1 + \log(1 + count(p, l_k))}{1 + \log(1 + n\_sentences)} \cdot mean(p, l_k) \cdot (1 + \log(1 + max(p, l_k)))$$
    where $n\_sentences$ is the total number of sentences in project $p$
 
-   Filtering and normalization:
+   Filtering and normalisation:
    1. Project-level quantile filtering:
       $$S_{filtered}(p) = \{s : s > Q_q(S_{score}(p))\}$$
       where $Q_q(S_{score}(p))$ is the $q$-th quantile of scores within project $p$
-   2. Per-project score normalization:
+   2. Per-project score normalisation:
       $$S_{final}(p, l_k) = \frac{S_{filtered}(p, l_k)}{\max_{l_j} S_{filtered}(p, l_j)}$$
       This ensures each project's top score is 1.0 while preserving relative strengths
 
@@ -53,19 +53,13 @@ This pipeline matches research projects to taxonomy labels using a hybrid approa
    This ensures keyword matches only reinforce labels that were relevant in sentence matching.
 
 3. **Combined Score**
-   - Initial weighted combination with configurable weights $\alpha$ and $\beta$:
-     $$raw\_score(k_j, l_k) = ((\alpha \cdot S_{score}(p, l_k)) \cdot (\beta \cdot K_{score}(k_j, l_k)))^2$$
-   - Filter by relevance score quantile threshold
+   - Weighted combination with configurable weights $\alpha$ and $\beta$:
+     $$score(p, l_k) = ((\alpha \cdot S_{score}(p, l_k)) \cdot (\beta \cdot K_{score}(k_j, l_k)))^2$$
+   - Filter by keyword similarity quantile threshold
    - Aggregate to project-label level:
-     - Mean relevance score: $\mu(p, l_k)$
-     - Maximum relevance score: $max(p, l_k)$
-     - Number of matching keywords: $n(p, l_k)$
-   - Final boosted score:
-     $$score(p, l_k) = \mu(p, l_k) \cdot (1 + \log(1 + max(p, l_k))) \cdot (1 + \log(1 + n(p, l_k)/10))$$
-   This balances:
-     - Average match quality ($\mu$)
-     - Strong individual matches ($max$)
-     - Multiple supporting evidence ($n$)
+     - Take maximum of relevance scores
+     - Count unique matching keywords
+     - Average entropy across matches
 
 ### 4. Confidence Binning
 1. **Global Thresholding**

@@ -136,7 +136,6 @@ def aggregate_sentence_matches(
         .agg(
             {
                 "similarity_score": [
-                    "sum",  # Raw sum for high-frequency signals
                     "mean",  # Average strength
                     "max",  # Strongest single match
                     "count",  # Number of matching sentences
@@ -150,7 +149,6 @@ def aggregate_sentence_matches(
     project_scores.columns = [
         "project_id",
         "taxonomy_label_id",
-        "score_sum",
         "score_mean",
         "score_max",
         "match_count",
