@@ -1,7 +1,6 @@
 import logging
 import uuid
 from typing import List, Dict
-import lancedb
 import pandas as pd
 from scipy.stats import entropy
 from spacy.lang.en import English
@@ -90,144 +89,122 @@ def compute_similarities(
     return pd.concat(results, ignore_index=True)
 
 
-def aggregate_sentence_matches(
-    sentences: pd.DataFrame,
+def prune_raw_matches(
     sentence_matches: pd.DataFrame,
-    min_score_quantile: float,
-) -> pd.DataFrame:
+    global_matches: pd.DataFrame,
+    keyword_matches: pd.DataFrame,
+    sentence_threshold: float,
+    global_threshold: float,
+    keyword_threshold: float,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Aggregate sentence matches with length-aware scoring.
+    Prune low-scoring matches from all three sources based on quantile thresholds.
 
     Args:
-        sentences: DataFrame with sentence metadata
-        sentence_matches: Raw similarity matches
-        min_score_quantile: Global minimum score quantile threshold
-        relative_score_threshold: Keep scores within this fraction of project's max score
+        sentence_matches: DataFrame with raw sentence similarity matches
+        global_matches: DataFrame with raw project-level matches
+        keyword_matches: DataFrame with raw keyword matches
+        sentence_threshold: Quantile threshold for sentence matches
+        global_threshold: Quantile threshold for global matches
+        keyword_threshold: Quantile threshold for keyword matches
 
     Returns:
-        DataFrame with aggregated and filtered similarity scores
+        Tuple of (pruned_sentence_matches, pruned_global_matches, pruned_keyword_matches)
     """
-    logger.info("Aggregating document matches to project level")
-
-    # Merge documents with matches
-    merged_sentences = pd.merge(
-        sentences[["project_id", "uuid"]],
-        sentence_matches,
-        left_on="uuid",
-        right_on="document_id",
-        how="right",
+    logger.info(
+        "Pruning matches with thresholds - Sentence: %.2f, Global: %.2f, Keyword: %.2f",
+        sentence_threshold, global_threshold, keyword_threshold
     )
 
-    # Compute project-level aggregations
-    project_scores = (
-        merged_sentences.groupby(["project_id", "taxonomy_label_id"])
-        .agg(
-            {
-                "similarity_score": [
-                    "mean",  # Average strength
-                    "max",  # Strongest single match
-                    "count",  # Number of matching sentences
-                ]
-            }
-        )
-        .reset_index()
-    )
-
-    # Flatten column names
-    project_scores.columns = [
-        "project_id",
-        "taxonomy_label_id",
-        "score_mean",
-        "score_max",
-        "match_count",
+    # Prune sentence matches
+    sent_threshold = sentence_matches["similarity_score"].quantile(sentence_threshold)
+    pruned_sentences = sentence_matches[
+        sentence_matches["similarity_score"] >= sent_threshold
+    ]
+    
+    # Prune global matches
+    global_threshold_val = global_matches["similarity_score"].quantile(global_threshold)
+    pruned_global = global_matches[
+        global_matches["similarity_score"] >= global_threshold_val
+    ]
+    
+    # Prune keyword matches
+    key_threshold = keyword_matches["similarity_score"].quantile(keyword_threshold)
+    pruned_keywords = keyword_matches[
+        keyword_matches["similarity_score"] >= key_threshold
     ]
 
-    # Get sentence counts per project for normalisation
-    project_lengths = merged_sentences.groupby("project_id")["uuid"].nunique()
-
-    # Compute normalised scores
-    project_scores = project_scores.merge(
-        project_lengths.reset_index(name="n_sentences"), on="project_id"
-    )
-
-    # Compute initial combined scores
-    project_scores["initial_score"] = (
-        # Sublinear scaling of match frequency
-        (1 + np.log1p(project_scores["match_count"]))
-        / (1 + np.log1p(project_scores["n_sentences"]))
-        *
-        # Average strength component
-        project_scores["score_mean"]
-        *
-        # Boost factor for very strong individual matches
-        (1 + np.log1p(project_scores["score_max"]))
-    )
-
-    project_scores = project_scores.rename(
-        columns={"initial_score": "similarity_score"}
-    )
-
-    # Apply local quantile threshold per project
-    project_thresholds = project_scores.groupby("project_id")[
-        "similarity_score"
-    ].transform(lambda x: x.quantile(min_score_quantile))
-    filtered_scores = project_scores[
-        project_scores["similarity_score"] >= project_thresholds
-    ]
-
-    # Log distribution of topics per project
-    topics_per_project = filtered_scores.groupby("project_id").size()
     logger.info(
-        "Score and topic distribution:\n" "Topics per project:\n%s",
-        topics_per_project.describe().to_string(),
+        "Pruning results:\n"
+        "Sentences: %d -> %d (%.1f%%)\n"
+        "Global: %d -> %d (%.1f%%)\n"
+        "Keywords: %d -> %d (%.1f%%)",
+        len(sentence_matches), len(pruned_sentences),
+        100 * len(pruned_sentences) / len(sentence_matches),
+        len(global_matches), len(pruned_global),
+        100 * len(pruned_global) / len(global_matches),
+        len(keyword_matches), len(pruned_keywords),
+        100 * len(pruned_keywords) / len(keyword_matches)
     )
 
-    # Scale scores relative to maximum within each project
-    filtered_scores["similarity_score"] = filtered_scores.groupby("project_id")[
-        "similarity_score"
-    ].transform(lambda x: x / x.max())
-
-    logger.info(
-        "Scaled score distribution:\n%s",
-        filtered_scores["similarity_score"].describe().to_string(),
-    )
-
-    return filtered_scores
+    return pruned_sentences, pruned_global, pruned_keywords
 
 
-def combine_sentence_and_keyword_scores(
+def combine_scores(
     sentence_scores: pd.DataFrame,
     keyword_scores: pd.DataFrame,
-    keyword_data: pd.DataFrame,
+    global_scores: pd.DataFrame,
+    sentence_weight: float,  # sentence weight
+    global_weight: float,   # global weight
 ) -> pd.DataFrame:
     """
-    Combine document-based and keyword-based scores with configurable weights.
+    Compute granular sentence-level scores with boosts.
+    
+    For each (sentence, label) pair, computes:
+    - Base sentence score (weight alpha)
+    - Global boost if label appears in project's top candidates (weight beta)
+    - Keyword boost if label appears in project's keyword matches (weight 1-alpha-beta)
     """
-    logger.info("Combining document and keyword scores")
-
-    # Map keywords to projects
-    project_keywords = (
-        keyword_data[["project_ids", "uuid"]]
-        .explode("project_ids")
-        .rename(columns={"project_ids": "project_id", "uuid": "keyword_id"})
-    ).merge(
-        keyword_scores[
-            ["document_id", "taxonomy_label_id", "similarity_score", "shannon_entropy"]
-        ].rename(columns={"document_id": "keyword_id"}),
-        on="keyword_id",
-        how="left",
+    logger.info(
+        "Computing granular scores with weights - Sentence: %.2f, Global: %.2f, Keyword: %.2f",
+        sentence_weight, global_weight, 1-sentence_weight-global_weight
     )
 
-    # Merge keyword and sentence scores
-    combined_scores = pd.merge(
-        project_keywords,
-        sentence_scores,
+    # Start with sentence scores
+    granular_scores = sentence_scores.copy()
+    
+    # Add global boost
+    granular_scores = pd.merge(
+        granular_scores,
+        global_scores[["project_id", "taxonomy_label_id", "similarity_score"]],
         on=["project_id", "taxonomy_label_id"],
-        how="inner",
-        suffixes=("_key", "_sent"),
+        how="left",
+        suffixes=("", "_global")
+    )
+    
+    # Add keyword boost (max similarity across project keywords)
+    keyword_max_scores = (
+        keyword_scores.groupby(["project_id", "taxonomy_label_id"])
+        ["similarity_score"].max()
+        .reset_index()
+        .rename(columns={"similarity_score": "similarity_score_key"})
+    )
+    
+    granular_scores = pd.merge(
+        granular_scores,
+        keyword_max_scores,
+        on=["project_id", "taxonomy_label_id"],
+        how="left"
+    )
+    
+    # Compute sentence-level score with weighted boosts
+    granular_scores["sentence_score"] = (
+        sentence_weight * granular_scores["similarity_score"] +
+        global_weight * granular_scores["similarity_score_global"].fillna(0) +
+        (1 - sentence_weight - global_weight) * granular_scores["similarity_score_key"].fillna(0)
     )
 
-    return combined_scores
+    return granular_scores
 
 
 def add_metadata(
@@ -266,81 +243,43 @@ def add_metadata(
 
 
 def aggregate_scores_to_labels(
-    scores: pd.DataFrame,
-    sentence_weight: float,
-    similarity_quantile_threshold: float,
-    global_q2_threshold: float = 0.50,
-    global_q3_threshold: float = 0.75,
-    local_q2_threshold: float = 0.50,
-    local_q3_threshold: float = 0.75,
+    granular_scores: pd.DataFrame,
+    min_score_quantile: float,
+    **binning_params
 ) -> pd.DataFrame:
     """
-    Aggregate detailed scores to final project-label level summaries.
-
-    Args:
-        scores: Raw scores DataFrame
-        sentence_weight: Weight for sentence-based scores
-        similarity_quantile_threshold: Threshold for filtering low scores
-        global_q2_threshold: Global threshold for medium confidence
-        global_q3_threshold: Global threshold for high confidence
-        local_q2_threshold: Project-level threshold for medium confidence
-        local_q3_threshold: Project-level threshold for high confidence
+    Aggregate sentence-level scores to project-label pairs.
     """
-    logger.info(
-        "Aggregating scores with parameters:\n"
-        "Weights - Sentence: %0.2f\n"
-        "Score threshold: %0.2f\n"
-        "Global quantiles - Q2: %0.2f, Q3: %0.2f\n"
-        "Local quantiles - Q2: %0.2f, Q3: %0.2f",
-        sentence_weight,
-        similarity_quantile_threshold,
-        global_q2_threshold,
-        global_q3_threshold,
-        local_q2_threshold,
-        local_q3_threshold,
-    )
+    logger.info("Aggregating sentence-level scores to project-label pairs")
 
-    # Apply weights
-    logger.info(
-        "Applying weights - Document: %0.1f, Keyword: %0.1f",
-        sentence_weight,
-        (1 - sentence_weight),
-    )
-    scores["relevance_score"] = (
-        (sentence_weight * scores["similarity_score_sent"])
-        + ((1 - sentence_weight) * scores["similarity_score_key"])
-    ) ** 2
-
-    # Filter low keyword scores
-    scores = scores[
-        scores["similarity_score_key"]
-        >= scores["similarity_score_key"].quantile(similarity_quantile_threshold)
+    # Filter by minimum score threshold within each project
+    project_thresholds = granular_scores.groupby("project_id")[
+        "sentence_score"
+    ].transform(lambda x: x.quantile(min_score_quantile))
+    
+    filtered_scores = granular_scores[
+        granular_scores["sentence_score"] >= project_thresholds
     ]
 
-    logger.info("Aggregating final scores to project-label level")
-
+    # Aggregate to project-label level
     aggregated = (
-        scores.groupby(["project_id", "taxonomy_label_id", "label"], as_index=False)
-        .agg(
-            {
-                "relevance_score": "max",
-                "similarity_score_sent": "max",
-                "similarity_score_key": "max",
-                "shannon_entropy": "mean",
-                "keyword_id": "nunique",
-            }
-        )
-        .rename(columns={"keyword_id": "num_keywords"})
+        filtered_scores.groupby(["project_id", "taxonomy_label_id"])
+        .agg({
+            "sentence_score": ["mean", "max", "count"],
+            "similarity_score_global": "first",
+            "similarity_score_key": "max",
+        })
+        .reset_index()
     )
 
-    # Assign confidence bins
-    return _assign_confidence_bins(
-        aggregated,
-        global_q2_threshold,
-        global_q3_threshold,
-        local_q2_threshold,
-        local_q3_threshold,
+    # Compute final relevance incorporating all signals
+    aggregated["relevance_score"] = (
+        aggregated[("sentence_score", "mean")] *
+        (1 + np.log1p(aggregated[("sentence_score", "max")])) *
+        (1 + np.log1p(aggregated[("sentence_score", "count")]))
     )
+
+    return _assign_confidence_bins(aggregated, **binning_params)
 
 
 def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
@@ -614,3 +553,4 @@ def prune_global_matches(
     )
 
     return pruned_matches
+

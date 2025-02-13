@@ -15,8 +15,9 @@ similarity_matching:
 
   # Score combination weights
   score_weights:
-    sentence_weight: 0.66  # Weight for document-based matches
-    keyword_weight: 0.33  # Weight for keyword-based matches 
+    sentence_weight: 0.66  # Weight for sentence-based matches (alpha)
+    global_weight: 0.20    # Weight for global matches (beta)
+    # Remaining 0.14 goes to keyword matches (1-alpha-beta)
 
   similarity_quantile_threshold: 0.8  # Filter out bottom X% of scores
 
@@ -28,4 +29,7 @@ similarity_matching:
     local_q3_threshold: 0.75     # Project-level threshold for high confidence
 
   # Global pruning threshold
-  global_embedding_threshold: 0.75  # Remove bottom 75% of matches by similarity score
+  pruning:
+    sentence_threshold: 0.75  # Keep top 25% of sentence matches
+    global_threshold: 0.75    # Keep top 25% of global matches
+    keyword_threshold: 0.75   # Keep top 25% of keyword matches

@@ -145,55 +145,14 @@ keywords.gtr_data.embeddings:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet
 
 # -> 4. Taxonomy matching candidates:
-keywords.gtr_data.cwts_matches.intermediate:
+"{group}.gtr_data.{taxonomy_name}_matches.raw":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/cwts.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/{group}/matches/{taxonomy_name}.parquet
 
-keywords.gtr_data.goscience_matches.intermediate:
+# Pruned matches
+"{group}.gtr_data.{taxonomy_name}_matches.pruned":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/goscience.parquet
-
-keywords.gtr_data.oa_concepts_matches.intermediate:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/oa_concepts.parquet
-
-# Similarity matching intermediate files
-projects.gtr_data.cwts_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/cwts.parquet
-
-projects.gtr_data.goscience_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/goscience.parquet
-
-projects.gtr_data.oa_concepts_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/oa_concepts.parquet
-
-sentences.gtr_data.cwts_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/sentences/matches/cwts.parquet
-
-sentences.gtr_data.goscience_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/sentences/matches/goscience.parquet
-
-sentences.gtr_data.oa_concepts_matches.raw:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/sentences/matches/oa_concepts.parquet
-
-# Aggregated sentence matches
-sentences.gtr_data.cwts_matches.intermediate:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/cwts.parquet
-
-sentences.gtr_data.goscience_matches.intermediate:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/goscience.parquet
-
-sentences.gtr_data.oa_concepts_matches.intermediate:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/matches/oa_concepts.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/{group}/matches/{taxonomy_name}.parquet
 
 # Detailed combined scores
 projects.gtr_data.cwts_scores.detailed:

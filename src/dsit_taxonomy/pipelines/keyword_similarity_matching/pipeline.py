@@ -33,11 +33,10 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     document_preprocessing,
     compute_similarities,
-    aggregate_sentence_matches,
     combine_sentence_and_keyword_scores,
     add_metadata,
     aggregate_scores_to_labels,
-    prune_global_matches,
+    prune_raw_matches,
 )
 
 
@@ -88,14 +87,13 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "batch_size": "params:similarity_matching.keywords.batch_size",
                         "top_n": "params:similarity_matching.keywords.top_n",
                     },
-                    outputs=f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
+                    outputs=f"keywords.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_keyword_matches_{taxonomy_name}",
                 ),
             ],
             tags=[
-                f"raw_matches_{taxonomy_name}",
                 f"similarity_matching_{taxonomy_name}",
-                "raw_matches",
+                "similarity_matching",
             ],
         )
 
@@ -104,36 +102,35 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             [
                 # Prune global matches
                 node(
-                    func=prune_global_matches,
+                    func=prune_raw_matches,
                     inputs={
-                        "matches": f"projects.gtr_data.{taxonomy_name}_matches.raw",
-                        "global_embedding_threshold": "params:similarity_matching.global_embedding_threshold",
-                    },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_matches.pruned",
-                    name=f"prune_global_matches_{taxonomy_name}",
-                ),
-                # Aggregate sentence matches
-                node(
-                    func=aggregate_sentence_matches,
-                    inputs={
-                        "sentences": "sentences.gtr_data.db",
                         "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
-                        "min_score_quantile": "params:similarity_matching.sentence_matches.min_score_quantile",
+                        "global_matches": f"projects.gtr_data.{taxonomy_name}_matches.raw",
+                        "keyword_matches": f"keywords.gtr_data.{taxonomy_name}_matches.raw",
+                        "sentence_threshold": "params:similarity_matching.pruning.sentence_threshold",
+                        "global_threshold": "params:similarity_matching.pruning.global_threshold",
+                        "keyword_threshold": "params:similarity_matching.pruning.keyword_threshold",
                     },
-                    outputs=f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
-                    name=f"aggregate_sentence_matches_{taxonomy_name}",
+                    outputs=[
+                        f"sentences.gtr_data.{taxonomy_name}_matches.pruned",
+                        f"projects.gtr_data.{taxonomy_name}_matches.pruned",
+                        f"keywords.gtr_data.{taxonomy_name}_matches.pruned",
+                    ],
+                    name=f"prune_raw_matches_{taxonomy_name}",
                     tags=[
-                        f"sentence_matches_{taxonomy_name}",
-                        "combine_scores_and_add_metadata",
+                        "similarity_matching",
                     ],
                 ),
+                # Aggregate sentence matches
                 # Combine sentence and keyword scores
                 node(
                     func=combine_sentence_and_keyword_scores,
                     inputs={
-                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
-                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
-                        "keyword_data": "keywords.gtr_data.db",
+                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.pruned",
+                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.pruned",
+                        "global_scores": f"projects.gtr_data.{taxonomy_name}_matches.pruned",
+                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
+                        "global_weight": "params:similarity_matching.score_weights.global_weight",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
                     name=f"combine_scores_{taxonomy_name}",
