@@ -2,7 +2,7 @@ ipython>=8.10
 jupyterlab_server>=2.11.1
 jupyterlab~=3.0
 jupyter~=1.0
-kedro~=0.19.6
+kedro~=0.19.10
 kedro-telemetry>=0.3.1
 notebook
 kedro-datasets[pandas.CSVDataset, pandas.ExcelDataset, pandas.ParquetDataset, plotly.PlotlyDataset, plotly.JSONDataset, matplotlib.MatplotlibWriter]>=1.0
@@ -13,7 +13,8 @@ spacy~=3.7.5
 rake-nltk~=1.0.6
 git+https://github.com/LIAAD/yake
 keybert~=0.8.5
-transformers~=4.47.1
+transformers~=4.48.3
+sentence-transformers~=3.4.1
 accelerate~=1.2.1
 # langchain-openai 
 # langchain-community

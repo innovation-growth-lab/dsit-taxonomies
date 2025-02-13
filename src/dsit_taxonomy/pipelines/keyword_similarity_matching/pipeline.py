@@ -47,6 +47,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 func=document_preprocessing,
                 inputs="gtr.projects.documents",
                 outputs=["projects.gtr_data.db","sentences.gtr_data.db"],
+                name="document_preprocessing",
             )
         ]
     )
@@ -59,11 +60,11 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "documents": "projects.gtr_data.db",
-                        "batch_size": "params:projects.similarity_matching.batch_size",
-                        "top_n": "params:projects.similarity_matching.top_n",
+                        "batch_size": "params:similarity_matching.projects.batch_size",
+                        "top_n": "params:similarity_matching.projects.top_n",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_matches.raw",
-                    name=f"compute_sentence_matches_{taxonomy_name}",
+                    name=f"compute_global_matches_{taxonomy_name}",
                 ),
                 # Compute sentence matches
                 node(
@@ -71,8 +72,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "documents": "sentences.gtr_data.db",
-                        "batch_size": "params:sentences.similarity_matching.batch_size",
-                        "top_n": "params:sentences.similarity_matching.top_n",
+                        "batch_size": "params:similarity_matching.sentences.batch_size",
+                        "top_n": "params:similarity_matching.sentences.top_n",
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_sentence_matches_{taxonomy_name}",
@@ -83,8 +84,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "documents": "keywords.gtr_data.db",
-                        "batch_size": "params:keywords.similarity_matching.batch_size",
-                        "top_n": "params:keywords.similarity_matching.top_n",
+                        "batch_size": "params:similarity_matching.keywords.batch_size",
+                        "top_n": "params:similarity_matching.keywords.top_n",
                     },
                     outputs=f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"compute_keyword_matches_{taxonomy_name}",

@@ -52,6 +52,10 @@ gtr.projects.documents:
       - tech_abstract_text
       - potential_impact
 
+projects.gtr_data.db:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/global/main.parquet
+
 sentences.gtr_data.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/main.parquet
