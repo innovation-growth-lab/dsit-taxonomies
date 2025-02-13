@@ -139,40 +139,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "combine_scores_and_add_metadata",
                     ],
                 ),
-                # Add metadata
-                node(
-                    func=add_metadata,
-                    inputs={
-                        "combined_scores": f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
-                        "keyword_data": "keywords.gtr_data.db",
-                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
-                    },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.detailed",
-                    name=f"add_metadata_{taxonomy_name}",
-                    tags=[
-                        f"scores_{taxonomy_name}",
-                        "combine_scores_and_add_metadata",
-                    ],
-                ),
-                # Final aggregation
-                node(
-                    func=aggregate_scores_to_labels,
-                    inputs={
-                        "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
-                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
-                        "similarity_quantile_threshold": "params:similarity_matching.similarity_quantile_threshold",
-                        "global_q2_threshold": "params:similarity_matching.binning.global_q2_threshold",
-                        "global_q3_threshold": "params:similarity_matching.binning.global_q3_threshold",
-                        "local_q2_threshold": "params:similarity_matching.binning.local_q2_threshold",
-                        "local_q3_threshold": "params:similarity_matching.binning.local_q3_threshold",
-                    },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
-                    name=f"aggregate_final_scores_{taxonomy_name}",
-                    tags=[
-                        f"scores_{taxonomy_name}",
-                        "aggregate_scores",
-                    ],
-                ),
             ],
             tags=[
                 f"similarity_matching_{taxonomy_name}",
