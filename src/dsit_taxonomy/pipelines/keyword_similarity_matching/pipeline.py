@@ -32,7 +32,7 @@ Note:
 from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     document_preprocessing,
-    compute_similarities_and_entropy,
+    compute_similarities,
     aggregate_sentence_matches,
     combine_sentence_and_keyword_scores,
     add_metadata,
@@ -46,7 +46,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             node(
                 func=document_preprocessing,
                 inputs="gtr.projects.documents",
-                outputs="sentences.gtr_data.db",
+                outputs=["projects.gtr_data.db","sentences.gtr_data.db"],
             )
         ]
     )
@@ -54,28 +54,37 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     def compute_raw_matches_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
+                node(
+                    func=compute_similarities,
+                    inputs={
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
+                        "documents": "projects.gtr_data.db",
+                        "batch_size": "params:projects.similarity_matching.batch_size",
+                        "top_n": "params:projects.similarity_matching.top_n",
+                    },
+                    outputs=f"projects.gtr_data.{taxonomy_name}_matches.raw",
+                    name=f"compute_sentence_matches_{taxonomy_name}",
+                ),
                 # Compute sentence matches
                 node(
-                    func=compute_similarities_and_entropy,
+                    func=compute_similarities,
                     inputs={
-                        "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "documents": "sentences.gtr_data.db",
-                        "batch_size": "params:similarity_matching.batch_size",
-                        "top_n": "params:similarity_matching.top_n",
-                        "number_returns": "params:similarity_matching.number_returns",
+                        "batch_size": "params:sentences.similarity_matching.batch_size",
+                        "top_n": "params:sentences.similarity_matching.top_n",
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_sentence_matches_{taxonomy_name}",
                 ),
                 # Compute keyword matches
                 node(
-                    func=compute_similarities_and_entropy,
+                    func=compute_similarities,
                     inputs={
-                        "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "documents": "keywords.gtr_data.db",
-                        "batch_size": "params:similarity_matching.batch_size",
-                        "top_n": "params:similarity_matching.top_n",
-                        "number_returns": "params:similarity_matching.number_returns",
+                        "batch_size": "params:keywords.similarity_matching.batch_size",
+                        "top_n": "params:keywords.similarity_matching.top_n",
                     },
                     outputs=f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     name=f"compute_keyword_matches_{taxonomy_name}",

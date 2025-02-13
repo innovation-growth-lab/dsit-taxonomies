@@ -1,12 +1,14 @@
-batch_size: 1000
-top_n: 10
-number_returns: 2000
-
 similarity_matching:
   # Batch processing settings for raw matches
-  batch_size: 1000
-  top_n: 10
-  number_returns: 2000
+  sentences:
+    batch_size: 1000
+    top_n: 5
+  keywords:
+    batch_size: 1000
+    top_n: 10
+  projects:
+    batch_size: 1000
+    top_n: 50
 
   sentence_matches:
     min_score_quantile: 0.75  # Filter out bottom X% of scores

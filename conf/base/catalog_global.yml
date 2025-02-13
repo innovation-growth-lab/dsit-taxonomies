@@ -154,6 +154,18 @@ keywords.gtr_data.oa_concepts_matches.intermediate:
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/matches/oa_concepts.parquet
 
 # Similarity matching intermediate files
+projects.gtr_data.cwts_matches.raw:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/cwts.parquet
+
+projects.gtr_data.goscience_matches.raw:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/goscience.parquet
+
+projects.gtr_data.oa_concepts_matches.raw:
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/global/matches/oa_concepts.parquet
+
 sentences.gtr_data.cwts_matches.raw:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/sentences/matches/cwts.parquet
