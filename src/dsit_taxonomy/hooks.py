@@ -90,7 +90,7 @@ class LanceDBHook:
                     else:
                         data_to_insert = [
                             {
-                                "project_id": project_id,
+                                "id": project_id,
                                 "text": text,
                                 "vector": embedding.tolist(),
                             }
