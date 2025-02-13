@@ -99,7 +99,7 @@ class EmbeddingsHook:
         if isinstance(documents, list):
             return documents
         elif isinstance(documents, pd.DataFrame):
-            for column in ["label", "text", "keyword"]:
+            for column in ["label", "text", "keyword", "sentence_text"]:
                 if column in documents.columns:
                     return documents[column].dropna().tolist()
             raise ValueError("No suitable text column found in the DataFrame.")

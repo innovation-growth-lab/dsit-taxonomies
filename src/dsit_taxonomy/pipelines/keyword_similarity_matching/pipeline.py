@@ -95,6 +95,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             tags=[
                 f"raw_matches_{taxonomy_name}",
                 f"similarity_matching_{taxonomy_name}",
+                "raw_matches",
             ],
         )
 
