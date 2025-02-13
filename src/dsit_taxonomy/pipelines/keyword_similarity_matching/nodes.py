@@ -5,11 +5,12 @@ import lancedb
 import pandas as pd
 from scipy.stats import entropy
 from spacy.lang.en import English
-import joblib
+from joblib import Parallel, delayed
 from functools import partial
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
     """
@@ -53,31 +54,23 @@ def document_preprocessing(documents: pd.DataFrame) -> pd.DataFrame:
     # This of course has the downside that it may remove some valid matches.
     sentences = sentences.drop_duplicates(subset=["sentence_text"], keep=False)
 
-    return documents[["project_id", "text"]], sentences[["project_id", "uuid", "sentence_text"]]
-
+    return (
+        documents[["project_id", "text"]],
+        sentences[["project_id", "uuid", "sentence_text"]],
+    )
 
 
 def compute_similarities(
-    taxonomy: lancedb,
-    documents: lancedb,
+    taxonomy: pd.DataFrame,
+    documents: pd.DataFrame,
     batch_size: int = 1000,
     top_n: int = 10,
 ) -> pd.DataFrame:
-    """
-    Compute similarity scores for a set of documents against a taxonomy of labels.
-
-    Args:
-        taxonomy: LanceDB table for taxonomy embeddings.
-        documents: LanceDB table for document embeddings.
-        batch_size: Number of documents to process in each batch.
-        top_n: Number of top matches to retain for final output.
-
-    Returns:
-        pd.DataFrame: DataFrame with columns "documents_id", "taxonomy_label_id",
-        "similarity_score", and "shannon_entropy".
-    """
-    # convert LanceDB table to a list of dicts for batch processing
-    documents_dict = documents.to_pandas().to_dict(orient="records")
+    """Compute similarity scores using parallel processing."""
+    # Convert to numpy arrays
+    taxonomy_embeddings = np.vstack(taxonomy["vector"].values)
+    taxonomy_ids = taxonomy["id"].values
+    documents_dict = documents.to_dict(orient="records")
 
     # Divide documents into batches
     document_batches = [
@@ -85,18 +78,17 @@ def compute_similarities(
         for i in range(0, len(documents_dict), batch_size)
     ]
 
-    # Process each batch sequentially
-    results = []
-    for i, batch in enumerate(document_batches):
-        logger.info("Processing batch %d / %d", i + 1, len(document_batches))
-        batch_results = _search_batch(
-            batch, taxonomy, top_n=top_n
-        )
-        results.append(batch_results)
+    # Process batches in parallel
+    logger.info("Processing %d batches in parallel", len(document_batches))
+    results = Parallel(n_jobs=8, verbose=10)(
+        delayed(_search_batch)(
+            batch, taxonomy_embeddings, taxonomy_ids, top_n
+        ) for batch in document_batches
+    )
 
-    # Concatenate results into a single DataFrame
     logger.info("Flattening results")
     return pd.concat(results, ignore_index=True)
+
 
 def aggregate_sentence_matches(
     sentences: pd.DataFrame,
@@ -197,7 +189,7 @@ def aggregate_sentence_matches(
 
     logger.info(
         "Scaled score distribution:\n%s",
-        filtered_scores["similarity_score"].describe().to_string()
+        filtered_scores["similarity_score"].describe().to_string(),
     )
 
     return filtered_scores
@@ -312,11 +304,11 @@ def aggregate_scores_to_labels(
     logger.info(
         "Applying weights - Document: %0.1f, Keyword: %0.1f",
         sentence_weight,
-        (1 -  sentence_weight),
+        (1 - sentence_weight),
     )
     scores["relevance_score"] = (
         (sentence_weight * scores["similarity_score_sent"])
-        + ((1 -  sentence_weight) * scores["similarity_score_key"])
+        + ((1 - sentence_weight) * scores["similarity_score_key"])
     ) ** 2
 
     # Filter low keyword scores
@@ -369,50 +361,56 @@ def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
 
 def _search_batch(
     document_batch: List[Dict[str, str]],
-    taxonomy_table: lancedb,
-    top_n=10,
+    taxonomy_embeddings: np.ndarray,
+    taxonomy_ids: np.ndarray,
+    top_n: int = 10,
 ) -> pd.DataFrame:
     """
-    Perform similarity search for a batch of strings, computing entropy over a larger number
-    of matches (number_returns) but only retaining the top N matches for output. It also
-    computes the Shannon entropy over the similarity scores of the expanded matches.
+    Perform vectorized similarity search for a batch of documents.
 
     Args:
-        document_batch (List[Dict[str, str]]): List of document embeddings.
-        taxonomy_table (lancedb): LanceDB table for taxonomy embeddings.
-        top_n (int): Number of top matches to retain for final output.
-        number_returns (int): Number of matches to use for Shannon entropy calculation.
+        document_batch: List of document embeddings
+        taxonomy_embeddings: Array of taxonomy label embeddings (n_labels, embedding_dim)
+        taxonomy_ids: Array of taxonomy label IDs
+        top_n: Number of top matches to retain
+
+    Returns:
+        DataFrame with similarity matches
     """
+    # Stack document embeddings
+    doc_embeddings = np.vstack([doc["vector"] for doc in document_batch])
+    doc_ids = [doc["id"] for doc in document_batch]
+    
+    # Compute cosine similarity matrix
+    # (num_docs, embedding_dim) @ (embedding_dim, num_labels) = (num_docs, num_labels)
+    similarities = doc_embeddings @ taxonomy_embeddings.T
+    
+    # Normalize for cosine similarity
+    doc_norms = np.linalg.norm(doc_embeddings, axis=1, keepdims=True)
+    tax_norms = np.linalg.norm(taxonomy_embeddings, axis=1, keepdims=True).T
+    similarities = similarities / (doc_norms @ tax_norms)
+    
+    # Get top N indices and scores for each document
+    top_indices = np.argpartition(-similarities, top_n, axis=1)[:, :top_n]
+    
     results = []
-
-    for document in document_batch:
-        embedding = document["vector"]
-        document_id = document["id"]
-
-        # perform similarity search, retrieving a larger number of matches for entropy
-        top_matches = (
-            taxonomy_table.search(embedding)
-            .metric("cosine")
-            .limit(top_n)
-            .to_pandas()
-        )
-
-        # normalise similarity as 1 - 1/2*_distance.
-        # See https://lancedb.github.io/lancedb/python/python/#lancedb.index.IvfPq
-        top_matches["similarity_score"] = (2 - top_matches["_distance"]) / 2
-
-        # Append results as a DataFrame
+    for i, doc_id in enumerate(doc_ids):
+        top_idx = top_indices[i]
+        scores = similarities[i, top_idx]
+        
+        # Sort by score
+        sort_idx = np.argsort(-scores)
+        top_idx = top_idx[sort_idx]
+        scores = scores[sort_idx]
+        
         results.append(
-            pd.DataFrame(
-                {
-                    "document_id": document_id,
-                    "taxonomy_label_id": top_matches["id"].values,
-                    "similarity_score": top_matches["similarity_score"].values,
-                }
-            )
+            pd.DataFrame({
+                "document_id": doc_id,
+                "taxonomy_label_id": taxonomy_ids[top_idx],
+                "similarity_score": scores,
+            })
         )
-
-    # concatenate all DataFrames into a single DataFrame
+    
     return pd.concat(results, ignore_index=True)
 
 
@@ -474,8 +472,8 @@ def _assign_confidence_bins(
 
     # Process groups in parallel
     logger.info("Processing %d projects in parallel", len(project_groups))
-    results = joblib.Parallel(n_jobs=n_jobs)(
-        joblib.delayed(_assign_local_bins_partial)(group) for group in project_groups
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(_assign_local_bins_partial)(group) for group in project_groups
     )
 
     # Combine results
@@ -580,3 +578,39 @@ def _process_project_group(
         final_local_bins[idx] = {3: "high", 2: "medium", 1: "low"}[min_val]
 
     return final_local_bins
+
+
+def prune_global_matches(
+    matches: pd.DataFrame,
+    global_embedding_threshold: float,
+) -> pd.DataFrame:
+    """
+    Prune low-scoring matches based on a global quantile threshold.
+
+    Args:
+        matches: DataFrame with raw similarity matches
+        global_embedding_threshold: Quantile threshold below which matches are dropped
+
+    Returns:
+        DataFrame with pruned matches
+    """
+    logger.info(
+        "Pruning global matches with threshold: %0.2f\n" "Initial matches: %d",
+        global_embedding_threshold,
+        len(matches),
+    )
+
+    # Compute threshold
+    score_threshold = matches["similarity_score"].quantile(global_embedding_threshold)
+
+    # Filter matches
+    pruned_matches = matches[matches["similarity_score"] >= score_threshold]
+
+    logger.info(
+        "Score threshold: %0.3f\n" "Remaining matches: %d (%0.1f%%)",
+        score_threshold,
+        len(pruned_matches),
+        100 * len(pruned_matches) / len(matches),
+    )
+
+    return pruned_matches

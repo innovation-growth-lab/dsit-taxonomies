@@ -2,4 +2,4 @@ test:
   _true: True
   _false: False
 
-embeddings_model_name: nomic-ai/modernbert-embed-base
+embeddings_model_name: all-MiniLM-L6-v2 # nomic-ai/modernbert-embed-base 

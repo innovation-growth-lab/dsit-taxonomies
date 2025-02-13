@@ -1,7 +1,7 @@
 """Project settings. There is no need to edit this file unless you want to change values
 from the Kedro defaults. For further information, including these default values, see
 https://kedro.readthedocs.io/en/stable/kedro_project_setup/settings.html."""
-from .hooks import LanceDBHook
+from .hooks import EmbeddingsHook
 # Instantiated project hooks.
 # For example, after creating a hooks.py and defining a ProjectHooks class there, do
 # from dsit_taxonomy.hooks import ProjectHooks
@@ -51,13 +51,13 @@ GTR_ENDPOINTS = ["projects", "publications", "organisations", "funds"]
 
 
 HOOKS = (
-    LanceDBHook(target_node_name="compute_global_matches_cwts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_global_matches_oa_concepts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_global_matches_goscience", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_sentence_matches_cwts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_sentence_matches_oa_concepts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_sentence_matches_goscience", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_keyword_matches_cwts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_keyword_matches_oa_concepts", lancedb_path="/tmp"),
-    LanceDBHook(target_node_name="compute_keyword_matches_goscience", lancedb_path="/tmp"),
+    EmbeddingsHook(target_node_name="compute_global_matches_cwts"),
+    EmbeddingsHook(target_node_name="compute_global_matches_oa_concepts"),
+    EmbeddingsHook(target_node_name="compute_global_matches_goscience"),
+    EmbeddingsHook(target_node_name="compute_sentence_matches_cwts"),
+    EmbeddingsHook(target_node_name="compute_sentence_matches_oa_concepts"),
+    EmbeddingsHook(target_node_name="compute_sentence_matches_goscience"),
+    EmbeddingsHook(target_node_name="compute_keyword_matches_cwts"),
+    EmbeddingsHook(target_node_name="compute_keyword_matches_oa_concepts"),
+    EmbeddingsHook(target_node_name="compute_keyword_matches_goscience"),
 )

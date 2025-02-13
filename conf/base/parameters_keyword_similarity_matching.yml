@@ -26,3 +26,6 @@ similarity_matching:
     global_q3_threshold: 0.75    # Global threshold for high confidence
     local_q2_threshold: 0.50     # Project-level threshold for medium confidence
     local_q3_threshold: 0.75     # Project-level threshold for high confidence
+
+  # Global pruning threshold
+  global_embedding_threshold: 0.75  # Remove bottom 75% of matches by similarity score

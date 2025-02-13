@@ -37,6 +37,7 @@ from .nodes import (
     combine_sentence_and_keyword_scores,
     add_metadata,
     aggregate_scores_to_labels,
+    prune_global_matches,
 )
 
 
@@ -46,7 +47,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             node(
                 func=document_preprocessing,
                 inputs="gtr.projects.documents",
-                outputs=["projects.gtr_data.db","sentences.gtr_data.db"],
+                outputs=["projects.gtr_data.db", "sentences.gtr_data.db"],
                 name="document_preprocessing",
             )
         ]
@@ -100,6 +101,16 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     def scoring_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
+                # Prune global matches
+                node(
+                    func=prune_global_matches,
+                    inputs={
+                        "matches": f"projects.gtr_data.{taxonomy_name}_matches.raw",
+                        "global_embedding_threshold": "params:similarity_matching.global_embedding_threshold",
+                    },
+                    outputs=f"projects.gtr_data.{taxonomy_name}_matches.pruned",
+                    name=f"prune_global_matches_{taxonomy_name}",
+                ),
                 # Aggregate sentence matches
                 node(
                     func=aggregate_sentence_matches,

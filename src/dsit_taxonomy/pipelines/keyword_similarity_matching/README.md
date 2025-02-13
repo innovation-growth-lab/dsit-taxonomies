@@ -54,7 +54,7 @@ This pipeline matches research projects to taxonomy labels using a hybrid approa
 
 3. **Combined Score**
    - Weighted combination with configurable weights $\alpha$ and $\beta$:
-     $$score(p, l_k) = ((\alpha \cdot S_{score}(p, l_k)) \cdot (\beta \cdot K_{score}(k_j, l_k)))^2$$
+     $$score(p, l_k) = ((\alpha \cdot S_{score}(p, l_k)) + (\beta \cdot K_{score}(k_j, l_k)))^2$$
    - Filter by keyword similarity quantile threshold
    - Aggregate to project-label level:
      - Take maximum of relevance scores
