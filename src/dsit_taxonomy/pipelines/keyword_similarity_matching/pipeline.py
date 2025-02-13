@@ -33,7 +33,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     document_preprocessing,
     compute_similarities,
-    combine_sentence_and_keyword_scores,
+    combine_scores,
     add_metadata,
     aggregate_scores_to_labels,
     prune_raw_matches,
@@ -124,7 +124,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 # Aggregate sentence matches
                 # Combine sentence and keyword scores
                 node(
-                    func=combine_sentence_and_keyword_scores,
+                    func=combine_scores,
                     inputs={
                         "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.pruned",
                         "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.pruned",
