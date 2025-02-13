@@ -72,23 +72,34 @@ class LanceDBHook:
                 # convert texts to embeddings
                 embeddings = model.encode(texts, show_progress_bar=True)
 
-                # extract the column uuid (only accept 1)
-                uuids = input_object["uuid"].tolist()
-
                 if "project_id" in input_object.columns:
                     project_ids = input_object["project_id"].tolist()
-                    data_to_insert = [
-                        {
-                            "project_id": project_id,
-                            "id": uuid,
-                            "text": text,
-                            "vector": embedding.tolist(),
-                        }
-                        for project_id, uuid, text, embedding in zip(
-                            project_ids, uuids, texts, embeddings
-                        )
-                    ]
+                    if "uuid" in input_object.columns:
+                        uuids = input_object["uuid"].tolist()
+                        data_to_insert = [
+                            {
+                                "project_id": project_id,
+                                "id": uuid,
+                                "text": text,
+                                "vector": embedding.tolist(),
+                            }
+                            for project_id, uuid, text, embedding in zip(
+                                project_ids, uuids, texts, embeddings
+                            )
+                        ]
+                    else:
+                        data_to_insert = [
+                            {
+                                "project_id": project_id,
+                                "text": text,
+                                "vector": embedding.tolist(),
+                            }
+                            for project_id, text, embedding in zip(
+                                project_ids, texts, embeddings
+                            )
+                        ]
                 else:
+                    uuids = input_object["uuid"].tolist()
                     data_to_insert = [
                         {"id": uuid, "text": text, "vector": embedding.tolist()}
                         for uuid, text, embedding in zip(uuids, texts, embeddings)
