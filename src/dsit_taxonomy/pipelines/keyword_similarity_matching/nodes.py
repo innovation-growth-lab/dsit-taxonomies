@@ -80,9 +80,8 @@ def compute_similarities(
     # Process batches in parallel
     logger.info("Processing %d batches in parallel", len(document_batches))
     results = Parallel(n_jobs=8, verbose=10)(
-        delayed(_search_batch)(
-            batch, taxonomy_embeddings, taxonomy_ids, top_n
-        ) for batch in document_batches
+        delayed(_search_batch)(batch, taxonomy_embeddings, taxonomy_ids, top_n)
+        for batch in document_batches
     )
 
     logger.info("Flattening results")
@@ -113,7 +112,9 @@ def prune_raw_matches(
     """
     logger.info(
         "Pruning matches with thresholds - Sentence: %.2f, Global: %.2f, Keyword: %.2f",
-        sentence_threshold, global_threshold, keyword_threshold
+        sentence_threshold,
+        global_threshold,
+        keyword_threshold,
     )
 
     # Prune sentence matches
@@ -121,13 +122,13 @@ def prune_raw_matches(
     pruned_sentences = sentence_matches[
         sentence_matches["similarity_score"] >= sent_threshold
     ]
-    
+
     # Prune global matches
     global_threshold_val = global_matches["similarity_score"].quantile(global_threshold)
     pruned_global = global_matches[
         global_matches["similarity_score"] >= global_threshold_val
     ]
-    
+
     # Prune keyword matches
     key_threshold = keyword_matches["similarity_score"].quantile(keyword_threshold)
     pruned_keywords = keyword_matches[
@@ -139,15 +140,90 @@ def prune_raw_matches(
         "Sentences: %d -> %d (%.1f%%)\n"
         "Global: %d -> %d (%.1f%%)\n"
         "Keywords: %d -> %d (%.1f%%)",
-        len(sentence_matches), len(pruned_sentences),
+        len(sentence_matches),
+        len(pruned_sentences),
         100 * len(pruned_sentences) / len(sentence_matches),
-        len(global_matches), len(pruned_global),
+        len(global_matches),
+        len(pruned_global),
         100 * len(pruned_global) / len(global_matches),
-        len(keyword_matches), len(pruned_keywords),
-        100 * len(pruned_keywords) / len(keyword_matches)
+        len(keyword_matches),
+        len(pruned_keywords),
+        100 * len(pruned_keywords) / len(keyword_matches),
     )
 
     return pruned_sentences, pruned_global, pruned_keywords
+
+
+def add_metadata(
+    sentence_scores: pd.DataFrame,
+    keyword_scores: pd.DataFrame,
+    sentence_db: pd.DataFrame,
+    keyword_db: pd.DataFrame,
+    taxonomy: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Add metadata to the combined scores.
+    """
+    logger.info("Adding metadata to sentence scores")
+    sentence_scores = (
+        pd.merge(
+            sentence_scores,
+            sentence_db[["uuid", "project_id"]],
+            left_on="document_id",
+            right_on="uuid",
+            how="inner",
+        )
+        .rename(columns={"document_id": "sentence_id"})[
+            ["project_id", "sentence_id", "taxonomy_label_id", "similarity_score"]
+        ]
+        .merge(
+            taxonomy[["uuid", "label"]],
+            left_on="taxonomy_label_id",
+            right_on="uuid",
+            how="left",
+        )
+        .rename(columns={"label": "taxonomy_label"})[
+            [
+                "project_id",
+                "sentence_id",
+                "taxonomy_label_id",
+                "taxonomy_label",
+                "similarity_score",
+            ]
+        ]
+    )
+
+    logger.info("Adding metadata to keyword scores")
+
+    keyword_scores = (
+        pd.merge(
+            keyword_scores,
+            keyword_db,
+            left_on="document_id",
+            right_on="uuid",
+            how="left",
+        )
+        .rename(columns={"document_id": "keyword_id"})
+        .merge(
+            taxonomy[["uuid", "label"]],
+            left_on="taxonomy_label_id",
+            right_on="uuid",
+            how="left",
+        )
+        .rename(columns={"label": "taxonomy_label"})[
+            [
+                "keyword_id",
+                "keyword",
+                "num_annotators",
+                "project_ids",
+                "taxonomy_label_id",
+                "taxonomy_label",
+                "similarity_score",
+            ]
+        ]
+    )
+
+    return sentence_scores, keyword_scores
 
 
 def combine_scores(
@@ -155,11 +231,11 @@ def combine_scores(
     keyword_scores: pd.DataFrame,
     global_scores: pd.DataFrame,
     sentence_weight: float,  # sentence weight
-    global_weight: float,   # global weight
+    global_weight: float,  # global weight
 ) -> pd.DataFrame:
     """
     Compute granular sentence-level scores with boosts.
-    
+
     For each (sentence, label) pair, computes:
     - Base sentence score (weight alpha)
     - Global boost if label appears in project's top candidates (weight beta)
@@ -167,117 +243,77 @@ def combine_scores(
     """
     logger.info(
         "Computing granular scores with weights - Sentence: %.2f, Global: %.2f, Keyword: %.2f",
-        sentence_weight, global_weight, 1-sentence_weight-global_weight
+        sentence_weight,
+        global_weight,
+        1 - sentence_weight - global_weight,
     )
+
+    global_scores.rename(columns={"document_id": "project_id"}, inplace=True)
 
     # Start with sentence scores
     granular_scores = sentence_scores.copy()
-    
+
     # Add global boost
     granular_scores = pd.merge(
         granular_scores,
         global_scores[["project_id", "taxonomy_label_id", "similarity_score"]],
         on=["project_id", "taxonomy_label_id"],
         how="left",
-        suffixes=("", "_global")
+        suffixes=("", "_global"),
     )
-    
+
     # Add keyword boost (max similarity across project keywords)
+    keyword_scores_exploded = keyword_scores.explode("project_ids").rename(
+        columns={"project_ids": "project_id"}
+    )
     keyword_max_scores = (
-        keyword_scores.groupby(["project_id", "taxonomy_label_id"])
-        ["similarity_score"].max()
+        keyword_scores_exploded.groupby(["project_id", "taxonomy_label_id"])[
+            "similarity_score"
+        ]
+        .max()
         .reset_index()
         .rename(columns={"similarity_score": "similarity_score_key"})
     )
-    
+
     granular_scores = pd.merge(
         granular_scores,
         keyword_max_scores,
         on=["project_id", "taxonomy_label_id"],
-        how="left"
+        how="left",
     )
-    
+
     # Compute sentence-level score with weighted boosts
     granular_scores["sentence_score"] = (
-        sentence_weight * granular_scores["similarity_score"] +
-        global_weight * granular_scores["similarity_score_global"].fillna(0) +
-        (1 - sentence_weight - global_weight) * granular_scores["similarity_score_key"].fillna(0)
+        sentence_weight * granular_scores["similarity_score"]
+        + global_weight * granular_scores["similarity_score_global"].fillna(0)
+        + (1 - sentence_weight - global_weight)
+        * granular_scores["similarity_score_key"].fillna(0)
     )
 
     return granular_scores
 
 
-def add_metadata(
-    combined_scores: pd.DataFrame, keyword_data: pd.DataFrame, taxonomy: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Add metadata to the combined scores.
-    """
-    logger.info("Adding metadata to combined scores")
-
-    # Add metadata
-    final_scores = combined_scores.merge(
-        keyword_data[["uuid", "keyword"]],
-        left_on="keyword_id",
-        right_on="uuid",
-        how="left",
-    ).merge(
-        taxonomy[["uuid", "label"]],
-        left_on="taxonomy_label_id",
-        right_on="uuid",
-        how="left",
-    )
-
-    return final_scores[
-        [
-            "project_id",
-            "keyword_id",
-            "taxonomy_label_id",
-            "keyword",
-            "label",
-            "similarity_score_sent",
-            "similarity_score_key",
-            "shannon_entropy",
-        ]
-    ]
-
-
 def aggregate_scores_to_labels(
-    granular_scores: pd.DataFrame,
-    min_score_quantile: float,
-    **binning_params
+    granular_scores: pd.DataFrame, **binning_params
 ) -> pd.DataFrame:
     """
     Aggregate sentence-level scores to project-label pairs.
     """
     logger.info("Aggregating sentence-level scores to project-label pairs")
 
-    # Filter by minimum score threshold within each project
-    project_thresholds = granular_scores.groupby("project_id")[
-        "sentence_score"
-    ].transform(lambda x: x.quantile(min_score_quantile))
-    
-    filtered_scores = granular_scores[
-        granular_scores["sentence_score"] >= project_thresholds
-    ]
-
     # Aggregate to project-label level
     aggregated = (
-        filtered_scores.groupby(["project_id", "taxonomy_label_id"])
-        .agg({
-            "sentence_score": ["mean", "max", "count"],
-            "similarity_score_global": "first",
-            "similarity_score_key": "max",
-        })
+        granular_scores.groupby(["project_id", "taxonomy_label_id"])
+        .agg(
+            {
+                "sentence_score": ["max", "count"],
+            }
+        )
         .reset_index()
     )
 
     # Compute final relevance incorporating all signals
-    aggregated["relevance_score"] = (
-        aggregated[("sentence_score", "mean")] *
-        (1 + np.log1p(aggregated[("sentence_score", "max")])) *
-        (1 + np.log1p(aggregated[("sentence_score", "count")]))
-    )
+    aggregated["relevance_score"] = aggregated[("sentence_score", "max")]
 
     return _assign_confidence_bins(aggregated, **binning_params)
 
@@ -319,37 +355,39 @@ def _search_batch(
     # Stack document embeddings
     doc_embeddings = np.vstack([doc["vector"] for doc in document_batch])
     doc_ids = [doc["id"] for doc in document_batch]
-    
+
     # Compute cosine similarity matrix
     # (num_docs, embedding_dim) @ (embedding_dim, num_labels) = (num_docs, num_labels)
     similarities = doc_embeddings @ taxonomy_embeddings.T
-    
+
     # Normalize for cosine similarity
     doc_norms = np.linalg.norm(doc_embeddings, axis=1, keepdims=True)
     tax_norms = np.linalg.norm(taxonomy_embeddings, axis=1, keepdims=True).T
     similarities = similarities / (doc_norms @ tax_norms)
-    
+
     # Get top N indices and scores for each document
     top_indices = np.argpartition(-similarities, top_n, axis=1)[:, :top_n]
-    
+
     results = []
     for i, doc_id in enumerate(doc_ids):
         top_idx = top_indices[i]
         scores = similarities[i, top_idx]
-        
+
         # Sort by score
         sort_idx = np.argsort(-scores)
         top_idx = top_idx[sort_idx]
         scores = scores[sort_idx]
-        
+
         results.append(
-            pd.DataFrame({
-                "document_id": doc_id,
-                "taxonomy_label_id": taxonomy_ids[top_idx],
-                "similarity_score": scores,
-            })
+            pd.DataFrame(
+                {
+                    "document_id": doc_id,
+                    "taxonomy_label_id": taxonomy_ids[top_idx],
+                    "similarity_score": scores,
+                }
+            )
         )
-    
+
     return pd.concat(results, ignore_index=True)
 
 
@@ -553,4 +591,3 @@ def prune_global_matches(
     )
 
     return pruned_matches
-

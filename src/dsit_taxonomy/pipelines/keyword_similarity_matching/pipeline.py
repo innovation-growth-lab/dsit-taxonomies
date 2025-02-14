@@ -100,13 +100,30 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     def scoring_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
+                # Add metadata
+                node(
+                    func=add_metadata,
+                    inputs={
+                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
+                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.raw",
+                        "sentence_db": "sentences.gtr_data.db",
+                        "keyword_db": "keywords.gtr_data.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
+                    },
+                    outputs=[
+                        f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
+                        f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
+                    ],
+                    name=f"add_metadata_{taxonomy_name}",
+                    tags="dev"
+                ),
                 # Prune global matches
                 node(
                     func=prune_raw_matches,
                     inputs={
-                        "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.raw",
+                        "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
                         "global_matches": f"projects.gtr_data.{taxonomy_name}_matches.raw",
-                        "keyword_matches": f"keywords.gtr_data.{taxonomy_name}_matches.raw",
+                        "keyword_matches": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                         "sentence_threshold": "params:similarity_matching.pruning.sentence_threshold",
                         "global_threshold": "params:similarity_matching.pruning.global_threshold",
                         "keyword_threshold": "params:similarity_matching.pruning.keyword_threshold",
@@ -118,10 +135,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     ],
                     name=f"prune_raw_matches_{taxonomy_name}",
                     tags=[
-                        "similarity_matching",
+                        f"similarity_matching_{taxonomy_name}",
                     ],
                 ),
-                # Aggregate sentence matches
                 # Combine sentence and keyword scores
                 node(
                     func=combine_scores,
@@ -132,11 +148,21 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
                         "global_weight": "params:similarity_matching.score_weights.global_weight",
                     },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.intermediate",
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.granular",
                     name=f"combine_scores_{taxonomy_name}",
                     tags=[
                         f"scores_{taxonomy_name}",
-                        "combine_scores_and_add_metadata",
+                        "combine_scores_and_aggregate",
+                    ],
+                ),
+                # Aggregate scores to labels
+                node(
+                    func=aggregate_scores_to_labels,
+                    inputs=f"projects.gtr_data.{taxonomy_name}_scores.granular",
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
+                    name=f"aggregate_scores_to_labels_{taxonomy_name}",
+                    tags=[
+                        "combine_scores_and_aggregate",
                     ],
                 ),
             ],
