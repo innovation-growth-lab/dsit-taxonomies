@@ -115,7 +115,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     ],
                     name=f"add_metadata_{taxonomy_name}",
-                    tags="dev"
+                    tags="dev",
                 ),
                 # Prune global matches
                 node(
@@ -158,7 +158,13 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 # Aggregate scores to labels
                 node(
                     func=aggregate_scores_to_labels,
-                    inputs=f"projects.gtr_data.{taxonomy_name}_scores.granular",
+                    inputs={
+                        "granular_scores": f"projects.gtr_data.{taxonomy_name}_scores.granular",
+                        "global_q2_threshold": "params:similarity_matching.binning.global_q2",
+                        "global_q3_threshold": "params:similarity_matching.binning.global_q3",
+                        "local_q2_threshold": "params:similarity_matching.binning.local_q2",
+                        "local_q3_threshold": "params:similarity_matching.binning.local_q3",
+                    },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_scores_to_labels_{taxonomy_name}",
                     tags=[

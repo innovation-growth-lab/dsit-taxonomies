@@ -23,10 +23,10 @@ similarity_matching:
 
   # Confidence binning parameters
   binning:
-    global_q2_threshold: 0.50    # Global threshold for medium confidence
-    global_q3_threshold: 0.75    # Global threshold for high confidence
-    local_q2_threshold: 0.50     # Project-level threshold for medium confidence
-    local_q3_threshold: 0.75     # Project-level threshold for high confidence
+    global_q2: 0.50    # Global threshold for medium confidence
+    global_q3: 0.75    # Global threshold for high confidence
+    local_q2: 0.50     # Project-level threshold for medium confidence
+    local_q3: 0.75     # Project-level threshold for high confidence
 
   # Global pruning threshold
   pruning:
