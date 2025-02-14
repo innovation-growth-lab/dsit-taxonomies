@@ -95,17 +95,19 @@ def prune_raw_matches(
     sentence_threshold: float,
     global_threshold: float,
     keyword_threshold: float,
+    use_quantile: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Prune low-scoring matches from all three sources based on quantile thresholds.
+    Prune low-scoring matches from all three sources based on quantile thresholds or direct score values.
 
     Args:
         sentence_matches: DataFrame with raw sentence similarity matches
         global_matches: DataFrame with raw project-level matches
         keyword_matches: DataFrame with raw keyword matches
-        sentence_threshold: Quantile threshold for sentence matches
-        global_threshold: Quantile threshold for global matches
-        keyword_threshold: Quantile threshold for keyword matches
+        sentence_threshold: Quantile threshold or score value for sentence matches
+        global_threshold: Quantile threshold or score value for global matches
+        keyword_threshold: Quantile threshold or score value for keyword matches
+        use_quantile: Boolean flag to use thresholds as quantiles (True) or direct score values (False)
 
     Returns:
         Tuple of (pruned_sentence_matches, pruned_global_matches, pruned_keyword_matches)
@@ -117,23 +119,39 @@ def prune_raw_matches(
         keyword_threshold,
     )
 
-    # Prune sentence matches
-    sent_threshold = sentence_matches["similarity_score"].quantile(sentence_threshold)
-    pruned_sentences = sentence_matches[
-        sentence_matches["similarity_score"] >= sent_threshold
-    ]
+    if use_quantile:
+        # Prune sentence matches using quantile
+        sent_threshold = sentence_matches["similarity_score"].quantile(sentence_threshold)
+        pruned_sentences = sentence_matches[
+            sentence_matches["similarity_score"] >= sent_threshold
+        ]
 
-    # Prune global matches
-    global_threshold_val = global_matches["similarity_score"].quantile(global_threshold)
-    pruned_global = global_matches[
-        global_matches["similarity_score"] >= global_threshold_val
-    ]
+        # Prune global matches using quantile
+        global_threshold_val = global_matches["similarity_score"].quantile(global_threshold)
+        pruned_global = global_matches[
+            global_matches["similarity_score"] >= global_threshold_val
+        ]
 
-    # Prune keyword matches
-    key_threshold = keyword_matches["similarity_score"].quantile(keyword_threshold)
-    pruned_keywords = keyword_matches[
-        keyword_matches["similarity_score"] >= key_threshold
-    ]
+        # Prune keyword matches using quantile
+        key_threshold = keyword_matches["similarity_score"].quantile(keyword_threshold)
+        pruned_keywords = keyword_matches[
+            keyword_matches["similarity_score"] >= key_threshold
+        ]
+    else:
+        # Prune sentence matches using direct score value
+        pruned_sentences = sentence_matches[
+            sentence_matches["similarity_score"] >= sentence_threshold
+        ]
+
+        # Prune global matches using direct score value
+        pruned_global = global_matches[
+            global_matches["similarity_score"] >= global_threshold
+        ]
+
+        # Prune keyword matches using direct score value
+        pruned_keywords = keyword_matches[
+            keyword_matches["similarity_score"] >= keyword_threshold
+        ]
 
     logger.info(
         "Pruning results:\n"
@@ -307,13 +325,26 @@ def aggregate_scores_to_labels(
         .agg(
             {
                 "sentence_score": ["max", "count"],
+                "taxonomy_label": "first",
+                "similarity_score_global": "first",
+                "similarity_score_key": "first",
+                "similarity_score": "first",
             }
         )
         .reset_index()
     )
 
-    # Compute final relevance incorporating all signals
-    aggregated["relevance_score"] = aggregated[("sentence_score", "max")]
+    # Rename columns
+    aggregated.columns = [
+        "project_id",
+        "taxonomy_label_id",
+        "relevance_score",
+        "num_sentences",
+        "taxonomy_label",
+        "similarity_score_global",
+        "similarity_score_key",
+        "similarity_score_sent",
+    ]
 
     return _assign_confidence_bins(aggregated, **binning_params)
 
@@ -459,12 +490,13 @@ def _assign_confidence_bins(
     df["local_bin"] = local_bins
 
     # 3. Final bin (minimum of global and local)
-    def _get_min_bin(row):
-        bin_order = {"high": 3, "medium": 2, "low": 1}
+    bin_order = {"high": 3, "medium": 2, "low": 1}
+
+    def _get_min_bin(row, bin_order):
         min_val = min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
         return {3: "high", 2: "medium", 1: "low"}[min_val]
 
-    df["final_bin"] = df.apply(_get_min_bin, axis=1)
+    df["final_bin"] = df.apply(lambda row: _get_min_bin(row, bin_order), axis=1)
 
     # Log summary statistics
     logger.info(

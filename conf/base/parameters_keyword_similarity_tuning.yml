@@ -78,7 +78,7 @@ expert_labeling:
     5. Focus on specificity and accuracy
 
 # Second step: Algorithmic results evaluation
-algo_evaluation:
+expert_assessment:
   system_prompt: |
     You are an expert research analyst. Your task is to evaluate whether proposed taxonomy labels accurately describe a research project.
 

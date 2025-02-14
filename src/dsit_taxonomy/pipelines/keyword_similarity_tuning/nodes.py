@@ -191,8 +191,8 @@ def prepare_tuning_data(
     return expert_df, algorithmic_df
 
 
-def evaluate_algorithmic_assignments(
-    scores: pd.DataFrame,
+def get_expert_assessment(
+    aggregated_scores: pd.DataFrame,
     data: pd.DataFrame,
     llm_model: str,
     max_retries: int,
@@ -248,24 +248,16 @@ def evaluate_algorithmic_assignments(
     )
 
     # get scores for the sample projects
-    scores = scores[scores["project_id"].isin(project_data["project_id"])]
-
-    aggregated_scores = aggregate_scores_to_labels(
-        scores.copy(),
-        sentence_weight=0.5,
-        similarity_quantile_threshold=0.25,
-        global_q2_threshold=0.25,
-        global_q3_threshold=0.5,
-        local_q2_threshold=0.25,
-        local_q3_threshold=0.5,
-    )
+    aggregated_scores = aggregated_scores[
+        aggregated_scores["project_id"].isin(project_data["project_id"])
+    ]
 
     for i, project_id in enumerate(aggregated_scores["project_id"].unique()):
 
         logger.info(
             "Getting project details. Project %d / %d",
             i + 1,
-            scores.project_id.nunique(),
+            aggregated_scores.project_id.nunique(),
         )
         # Get project details
         project_text = project_data[project_data["project_id"] == project_id][
@@ -330,291 +322,291 @@ def evaluate_algorithmic_assignments(
                     )
 
 
-def validate_predictions(
-    expert_df: pd.DataFrame,
-    algorithm_df: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Validate predictions by comparing expert high likelihood labels with algorithmic predictions.
-    Computes metrics for both strict (high only) and relaxed (high+medium) algorithmic confidence.
+# def validate_predictions(
+#     expert_df: pd.DataFrame,
+#     algorithm_df: pd.DataFrame,
+# ) -> pd.DataFrame:
+#     """
+#     Validate predictions by comparing expert high likelihood labels with algorithmic predictions.
+#     Computes metrics for both strict (high only) and relaxed (high+medium) algorithmic confidence.
 
-    True Positive: Algorithm predicts high confidence AND
-                  (expert validates as positive OR gave high likelihood)
-    False Positive: Algorithm predicts high confidence BUT
-                   (expert validates as negative OR didn't give high likelihood)
-    False Negative: Algorithm doesn't predict high confidence BUT
-                   (expert validates as positive OR gave high likelihood)
-    """
-    logger.info("Validating predictions against expert high likelihood labels")
+#     True Positive: Algorithm predicts high confidence AND
+#                   (expert validates as positive OR gave high likelihood)
+#     False Positive: Algorithm predicts high confidence BUT
+#                    (expert validates as negative OR didn't give high likelihood)
+#     False Negative: Algorithm doesn't predict high confidence BUT
+#                    (expert validates as positive OR gave high likelihood)
+#     """
+#     logger.info("Validating predictions against expert high likelihood labels")
 
-    # Remove hallucinated labels and convert to lowercase
-    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
+#     # Remove hallucinated labels and convert to lowercase
+#     expert_df["likelihood"] = expert_df["likelihood"].str.lower()
 
-    # Merge expert and algorithm predictions
-    data = pd.merge(
-        algorithm_df,
-        expert_df,
-        on=["project_id", "taxonomy_label_id"],
-        how="outer",
-    )
+#     # Merge expert and algorithm predictions
+#     data = pd.merge(
+#         algorithm_df,
+#         expert_df,
+#         on=["project_id", "taxonomy_label_id"],
+#         how="outer",
+#     )
 
-    # Clean up labels
-    data["label"] = data["label_x"].fillna(data["label_y"])
-    data = data.drop(columns=["label_x", "label_y"])
+#     # Clean up labels
+#     data["label"] = data["label_x"].fillna(data["label_y"])
+#     data = data.drop(columns=["label_x", "label_y"])
 
-    metrics = []
+#     metrics = []
 
-    # Calculate metrics for both strict and relaxed thresholds
-    for threshold in ["strict", "relaxed"]:
-        # Define algorithm condition based on threshold
-        algo_condition = (
-            (data["final_bin"] == "high")
-            if threshold == "strict"
-            else (data["final_bin"].isin(["high", "medium"]))
-        )
+#     # Calculate metrics for both strict and relaxed thresholds
+#     for threshold in ["strict", "relaxed"]:
+#         # Define algorithm condition based on threshold
+#         algo_condition = (
+#             (data["final_bin"] == "high")
+#             if threshold == "strict"
+#             else (data["final_bin"].isin(["high", "medium"]))
+#         )
 
-        # True positives: Algorithm predicts high AND expert agrees
-        expert_agreement = (data["positive"] is True) | (
-            data["likelihood"].isin(["high", "medium"])
-        )  # Positive often specified to odd ones maybe consider running True & ["high", "medium"]
-        true_positives = sum(algo_condition & expert_agreement)
+#         # True positives: Algorithm predicts high AND expert agrees
+#         expert_agreement = (data["positive"] is True) | (
+#             data["likelihood"].isin(["high", "medium"])
+#         )  # Positive often specified to odd ones maybe consider running True & ["high", "medium"]
+#         true_positives = sum(algo_condition & expert_agreement)
 
-        # False positives: Algorithm predicts high BUT expert disagrees
-        expert_disagreement = (data["positive"] is False) | (
-            ~data["likelihood"].isin(["high", "medium"])
-        )
-        false_positives = sum(algo_condition & expert_disagreement)
+#         # False positives: Algorithm predicts high BUT expert disagrees
+#         expert_disagreement = (data["positive"] is False) | (
+#             ~data["likelihood"].isin(["high", "medium"])
+#         )
+#         false_positives = sum(algo_condition & expert_disagreement)
 
-        # False negatives: Algorithm doesn't predict high (or is missing) BUT
-        # expert thinks it should
-        false_negatives = sum(
-            (~algo_condition | algo_condition.isna()) & expert_agreement
-        )
+#         # False negatives: Algorithm doesn't predict high (or is missing) BUT
+#         # expert thinks it should
+#         false_negatives = sum(
+#             (~algo_condition | algo_condition.isna()) & expert_agreement
+#         )
 
-        # Calculate metrics
-        precision = (
-            true_positives / (true_positives + false_positives)
-            if (true_positives + false_positives) > 0
-            else 0
-        )
-        recall = (
-            true_positives / (true_positives + false_negatives)
-            if (true_positives + false_negatives) > 0
-            else 0
-        )
-        f1 = (
-            2 * precision * recall / (precision + recall)
-            if (precision + recall) > 0
-            else 0
-        )
+#         # Calculate metrics
+#         precision = (
+#             true_positives / (true_positives + false_positives)
+#             if (true_positives + false_positives) > 0
+#             else 0
+#         )
+#         recall = (
+#             true_positives / (true_positives + false_negatives)
+#             if (true_positives + false_negatives) > 0
+#             else 0
+#         )
+#         f1 = (
+#             2 * precision * recall / (precision + recall)
+#             if (precision + recall) > 0
+#             else 0
+#         )
 
-        metrics.append(
-            {
-                "threshold": threshold,
-                "true_positives": true_positives,
-                "false_positives": false_positives,
-                "false_negatives": false_negatives,
-                "precision": precision,
-                "recall": recall,
-                "f1_score": f1,
-            }
-        )
+#         metrics.append(
+#             {
+#                 "threshold": threshold,
+#                 "true_positives": true_positives,
+#                 "false_positives": false_positives,
+#                 "false_negatives": false_negatives,
+#                 "precision": precision,
+#                 "recall": recall,
+#                 "f1_score": f1,
+#             }
+#         )
 
-        # Format threshold description for logging
-        threshold_desc = "high only" if threshold == "strict" else "high+medium"
+#         # Format threshold description for logging
+#         threshold_desc = "high only" if threshold == "strict" else "high+medium"
 
-        logger.info(
-            "%s Threshold Metrics (algo: %s):\n"
-            "Precision: %0.3f\n"
-            "Recall: %0.3f\n"
-            "F1 Score: %0.3f\n"
-            "True Positives: %d\n"
-            "False Positives: %d\n"
-            "False Negatives: %d",
-            threshold.title(),
-            threshold_desc,
-            precision,
-            recall,
-            f1,
-            true_positives,
-            false_positives,
-            false_negatives,
-        )
+#         logger.info(
+#             "%s Threshold Metrics (algo: %s):\n"
+#             "Precision: %0.3f\n"
+#             "Recall: %0.3f\n"
+#             "F1 Score: %0.3f\n"
+#             "True Positives: %d\n"
+#             "False Positives: %d\n"
+#             "False Negatives: %d",
+#             threshold.title(),
+#             threshold_desc,
+#             precision,
+#             recall,
+#             f1,
+#             true_positives,
+#             false_positives,
+#             false_negatives,
+#         )
 
-    return pd.DataFrame(metrics)
-
-
-def tune_matching_parameters(
-    scores: pd.DataFrame,
-    algorithm_df: pd.DataFrame,
-    expert_df: pd.DataFrame,
-    param_grid: dict,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
-
-    Args:
-        scores: Raw scores DataFrame
-        expert_df: Expert validation DataFrame
-        param_grid: Dictionary of parameters to try, e.g.:
-            {
-                "sentence_weight": [0.5, 0.66, 0.75],
-                "keyword_weight": [0.25, 0.33, 0.5],
-                "similarity_quantile_threshold": [0.7, 0.8, 0.9],
-                "global_q2_threshold": [0.4, 0.5, 0.6],
-                "global_q3_threshold": [0.7, 0.75, 0.8],
-                "local_q2_threshold": [0.4, 0.5, 0.6],
-                "local_q3_threshold": [0.7, 0.75, 0.8]
-            }
-
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]:
-            - DataFrame with parameter combinations and their validation metrics
-            - DataFrame with per-project metrics for each parameter combination
-    """
-    # Generate all parameter combinations
-    param_names = list(param_grid.keys())
-    param_values = list(product(*param_grid.values()))
-
-    results = []
-    project_results = []
-    total_combinations = len(param_values)
-
-    for i, values in enumerate(param_values, 1):
-        params = dict(zip(param_names, values))
-        logger.info("Testing combination %d/%d: %s", i, total_combinations, params)
-
-        # Aggregate scores with current parameters
-        aggregated_scores = aggregate_scores_to_labels(scores.copy(), **params)
-
-        # map the id to the label
-        grid_algorithmic_df = algorithm_df.merge(
-            aggregated_scores[["project_id", "taxonomy_label_id", "final_bin"]],
-            on=["project_id", "taxonomy_label_id"],
-            how="left",
-        )
-
-        # Get per-project metrics
-        project_metrics = _compute_per_project_metrics(
-            expert_df.copy(), grid_algorithmic_df.copy()
-        )
-
-        # Add parameters to project results
-        for param_name, param_value in params.items():
-            project_metrics[param_name] = param_value
-        project_results.append(project_metrics)
-
-        # Validate predictions for overall metrics
-        validation_metrics = validate_predictions(
-            expert_df.copy(), grid_algorithmic_df.copy()
-        )
-
-        # Add parameters to results
-        result = params.copy()
-        for _, row in validation_metrics.iterrows():
-            threshold = row["threshold"]
-            result.update(
-                {
-                    f"{threshold}_precision": row["precision"],
-                    f"{threshold}_recall": row["recall"],
-                    f"{threshold}_f1": row["f1_score"],
-                    f"{threshold}_tp": row["true_positives"],
-                    f"{threshold}_fp": row["false_positives"],
-                    f"{threshold}_fn": row["false_negatives"],
-                }
-            )
-
-        results.append(result)
-
-        # Log current best results
-        results_df = pd.DataFrame(results)
-        best_strict = results_df.nlargest(1, "strict_f1").iloc[0]
-        best_relaxed = results_df.nlargest(1, "relaxed_f1").iloc[0]
-
-        logger.info(
-            "Current best results:\n"
-            "Strict (F1=%0.3f):\n%s\n"
-            "Relaxed (F1=%0.3f):\n%s",
-            best_strict["strict_f1"],
-            {
-                k: v
-                for k, v in best_strict.items()
-                if not k.startswith(("strict_", "relaxed_"))
-            },
-            best_relaxed["relaxed_f1"],
-            {
-                k: v
-                for k, v in best_relaxed.items()
-                if not k.startswith(("strict_", "relaxed_"))
-            },
-        )
-
-    # Combine all project results
-    project_results_df = pd.concat(project_results, ignore_index=True)
-
-    return pd.DataFrame(results), project_results_df
+#     return pd.DataFrame(metrics)
 
 
-def _compute_per_project_metrics(
-    expert_df: pd.DataFrame, algorithm_df: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Compute true positives, false positives, and false negatives for each project.
+# def tune_matching_parameters(
+#     scores: pd.DataFrame,
+#     algorithm_df: pd.DataFrame,
+#     expert_df: pd.DataFrame,
+#     param_grid: dict,
+# ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+#     """
+#     Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
 
-    Args:
-        expert_df: DataFrame with expert labels
-        algorithm_df: DataFrame with algorithmic predictions
+#     Args:
+#         scores: Raw scores DataFrame
+#         expert_df: Expert validation DataFrame
+#         param_grid: Dictionary of parameters to try, e.g.:
+#             {
+#                 "sentence_weight": [0.5, 0.66, 0.75],
+#                 "keyword_weight": [0.25, 0.33, 0.5],
+#                 "similarity_quantile_threshold": [0.7, 0.8, 0.9],
+#                 "global_q2_threshold": [0.4, 0.5, 0.6],
+#                 "global_q3_threshold": [0.7, 0.75, 0.8],
+#                 "local_q2_threshold": [0.4, 0.5, 0.6],
+#                 "local_q3_threshold": [0.7, 0.75, 0.8]
+#             }
 
-    Returns:
-        DataFrame with per-project metrics
-    """
-    # Remove hallucinated labels and convert to lowercase
-    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
+#     Returns:
+#         Tuple[pd.DataFrame, pd.DataFrame]:
+#             - DataFrame with parameter combinations and their validation metrics
+#             - DataFrame with per-project metrics for each parameter combination
+#     """
+#     # Generate all parameter combinations
+#     param_names = list(param_grid.keys())
+#     param_values = list(product(*param_grid.values()))
 
-    # Merge expert and algorithm predictions
-    data = pd.merge(
-        algorithm_df,
-        expert_df,
-        on=["project_id", "taxonomy_label_id"],
-        how="outer",
-    )
+#     results = []
+#     project_results = []
+#     total_combinations = len(param_values)
 
-    data["label"] = data["label_x"].fillna(data["label_y"])
-    data = data.drop(columns=["label_x", "label_y"])
+#     for i, values in enumerate(param_values, 1):
+#         params = dict(zip(param_names, values))
+#         logger.info("Testing combination %d/%d: %s", i, total_combinations, params)
 
-    project_metrics = []
+#         # Aggregate scores with current parameters
+#         aggregated_scores = aggregate_scores_to_labels(scores.copy(), **params)
 
-    for project_id in data["project_id"].unique():
-        project_data = data[data["project_id"] == project_id]
+#         # map the id to the label
+#         grid_algorithmic_df = algorithm_df.merge(
+#             aggregated_scores[["project_id", "taxonomy_label_id", "final_bin"]],
+#             on=["project_id", "taxonomy_label_id"],
+#             how="left",
+#         )
 
-        # Define conditions for true/false positives/negatives
-        algo_high = project_data["final_bin"] == "high"
-        expert_agreement = (project_data["positive"] is True) | (
-            project_data["likelihood"] == "high"
-        )
-        expert_disagreement = (project_data["positive"] is False) | (
-            project_data["likelihood"] != "high"
-        )
+#         # Get per-project metrics
+#         project_metrics = _compute_per_project_metrics(
+#             expert_df.copy(), grid_algorithmic_df.copy()
+#         )
 
-        # Calculate metrics
-        true_positives = project_data[algo_high & expert_agreement]["label"].tolist()
-        false_positives = project_data[algo_high & expert_disagreement][
-            "label"
-        ].tolist()
-        false_negatives = project_data[
-            (~algo_high | algo_high.isna()) & expert_agreement
-        ]["label"].tolist()
+#         # Add parameters to project results
+#         for param_name, param_value in params.items():
+#             project_metrics[param_name] = param_value
+#         project_results.append(project_metrics)
 
-        project_metrics.append(
-            {
-                "project_id": project_id,
-                "num_true_positives": len(true_positives),
-                "true_positives": true_positives,
-                "num_false_positives": len(false_positives),
-                "false_positives": false_positives,
-                "num_false_negatives": len(false_negatives),
-                "false_negatives": false_negatives,
-            }
-        )
+#         # Validate predictions for overall metrics
+#         validation_metrics = validate_predictions(
+#             expert_df.copy(), grid_algorithmic_df.copy()
+#         )
 
-    return pd.DataFrame(project_metrics)
+#         # Add parameters to results
+#         result = params.copy()
+#         for _, row in validation_metrics.iterrows():
+#             threshold = row["threshold"]
+#             result.update(
+#                 {
+#                     f"{threshold}_precision": row["precision"],
+#                     f"{threshold}_recall": row["recall"],
+#                     f"{threshold}_f1": row["f1_score"],
+#                     f"{threshold}_tp": row["true_positives"],
+#                     f"{threshold}_fp": row["false_positives"],
+#                     f"{threshold}_fn": row["false_negatives"],
+#                 }
+#             )
+
+#         results.append(result)
+
+#         # Log current best results
+#         results_df = pd.DataFrame(results)
+#         best_strict = results_df.nlargest(1, "strict_f1").iloc[0]
+#         best_relaxed = results_df.nlargest(1, "relaxed_f1").iloc[0]
+
+#         logger.info(
+#             "Current best results:\n"
+#             "Strict (F1=%0.3f):\n%s\n"
+#             "Relaxed (F1=%0.3f):\n%s",
+#             best_strict["strict_f1"],
+#             {
+#                 k: v
+#                 for k, v in best_strict.items()
+#                 if not k.startswith(("strict_", "relaxed_"))
+#             },
+#             best_relaxed["relaxed_f1"],
+#             {
+#                 k: v
+#                 for k, v in best_relaxed.items()
+#                 if not k.startswith(("strict_", "relaxed_"))
+#             },
+#         )
+
+#     # Combine all project results
+#     project_results_df = pd.concat(project_results, ignore_index=True)
+
+#     return pd.DataFrame(results), project_results_df
+
+
+# def _compute_per_project_metrics(
+#     expert_df: pd.DataFrame, algorithm_df: pd.DataFrame
+# ) -> pd.DataFrame:
+#     """
+#     Compute true positives, false positives, and false negatives for each project.
+
+#     Args:
+#         expert_df: DataFrame with expert labels
+#         algorithm_df: DataFrame with algorithmic predictions
+
+#     Returns:
+#         DataFrame with per-project metrics
+#     """
+#     # Remove hallucinated labels and convert to lowercase
+#     expert_df["likelihood"] = expert_df["likelihood"].str.lower()
+
+#     # Merge expert and algorithm predictions
+#     data = pd.merge(
+#         algorithm_df,
+#         expert_df,
+#         on=["project_id", "taxonomy_label_id"],
+#         how="outer",
+#     )
+
+#     data["label"] = data["label_x"].fillna(data["label_y"])
+#     data = data.drop(columns=["label_x", "label_y"])
+
+#     project_metrics = []
+
+#     for project_id in data["project_id"].unique():
+#         project_data = data[data["project_id"] == project_id]
+
+#         # Define conditions for true/false positives/negatives
+#         algo_high = project_data["final_bin"] == "high"
+#         expert_agreement = (project_data["positive"] is True) | (
+#             project_data["likelihood"] == "high"
+#         )
+#         expert_disagreement = (project_data["positive"] is False) | (
+#             project_data["likelihood"] != "high"
+#         )
+
+#         # Calculate metrics
+#         true_positives = project_data[algo_high & expert_agreement]["label"].tolist()
+#         false_positives = project_data[algo_high & expert_disagreement][
+#             "label"
+#         ].tolist()
+#         false_negatives = project_data[
+#             (~algo_high | algo_high.isna()) & expert_agreement
+#         ]["label"].tolist()
+
+#         project_metrics.append(
+#             {
+#                 "project_id": project_id,
+#                 "num_true_positives": len(true_positives),
+#                 "true_positives": true_positives,
+#                 "num_false_positives": len(false_positives),
+#                 "false_positives": false_positives,
+#                 "num_false_negatives": len(false_negatives),
+#                 "false_negatives": false_negatives,
+#             }
+#         )
+
+#     return pd.DataFrame(project_metrics)
