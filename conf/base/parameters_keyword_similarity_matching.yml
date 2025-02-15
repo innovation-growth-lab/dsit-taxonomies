@@ -30,6 +30,7 @@ similarity_matching:
 
   # Global pruning threshold
   pruning:
+    use_quantile: True
     sentence_threshold: 0.75  # Keep top 25% of sentence matches
     global_threshold: 0.75    # Keep top 25% of global matches
     keyword_threshold: 0.75   # Keep top 25% of keyword matches

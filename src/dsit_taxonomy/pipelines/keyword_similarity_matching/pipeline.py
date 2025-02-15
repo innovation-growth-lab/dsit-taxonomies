@@ -127,6 +127,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "sentence_threshold": "params:similarity_matching.pruning.sentence_threshold",
                         "global_threshold": "params:similarity_matching.pruning.global_threshold",
                         "keyword_threshold": "params:similarity_matching.pruning.keyword_threshold",
+                        "use_quantile": "params:similarity_matching.pruning.use_quantile",
                     },
                     outputs=[
                         f"sentences.gtr_data.{taxonomy_name}_matches.pruned",

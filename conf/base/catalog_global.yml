@@ -173,6 +173,10 @@ gtr.projects.sample:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample.parquet
 
+"sample_data.{taxonomy_name}_scores.aggregated":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_scores/{taxonomy_name}_aggregated.parquet
+
 "gtr.projects.sample.expert_labels.{taxonomy_name}":
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/{taxonomy_name}/

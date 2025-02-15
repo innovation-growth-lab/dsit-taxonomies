@@ -114,9 +114,13 @@ expert_assessment:
 tuning:
   parameter_tuning:
     param_grid:
-      sentence_weight: [0.3, 0.4, 0.5]
-      similarity_quantile_threshold: [0.4, 0.5, 0.6]
-      global_q2_threshold: [0.3, 0.4, 0.5, 0.6]
-      global_q3_threshold: [0.7, 0.75, 0.8, 0.9]
-      local_q2_threshold: [0.3, 0.4, 0.5, 0.6]
-      local_q3_threshold: [0.7, 0.75, 0.8, 0.9]
+      use_quantile: [False, True]
+      sentence_threshold: [0.6, 0.7, 0.8]
+      global_threshold: [0.6, 0.7, 0.8]
+      keyword_threshold: [0.6, 0.7, 0.8]
+      sentence_weight: [0.5, 0.6, 0.7]
+      global_weight: [0.1, 0.2, 0.3]
+      global_q2_threshold: [0.4, 0.5, 0.6]
+      global_q3_threshold: [0.7, 0.8, 0.9]
+      local_q2_threshold: [0.4, 0.5, 0.6]
+      local_q3_threshold: [0.7, 0.8, 0.9]
