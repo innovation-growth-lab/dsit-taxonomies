@@ -377,19 +377,19 @@ def aggregate_scores_to_labels(
 
     # Normalise scores within projects
     def normalise_project_scores(group):
-        if normalise_by_matches:
-            # Weight by matching sentence ratio
-            group["relevance_score"] = group["relevance_score"] * (
-                group["num_matching_sentences"] / group["num_sentences"]
-            )
-
-        # Normalise to sum to 1
-        total_score = group["relevance_score"].sum()
-        if total_score > 0:
-            group["relevance_score"] = group["relevance_score"] / total_score
+        # Weight by matching sentence ratio
+        group["relevance_score"] = group["relevance_score"] * (
+            group["num_matching_sentences"] / group["num_sentences"]
+        )
         return group
 
-    aggregated = aggregated.groupby("project_id").apply(normalise_project_scores)
+    if normalise_by_matches:
+        logger.info("Normalising scores within projects")
+        aggregated = aggregated.groupby("project_id").apply(normalise_project_scores).reset_index(
+            drop=True
+        )
+
+    
 
     logger.info(
         "Score normalisation summary:\n"
@@ -401,22 +401,6 @@ def aggregate_scores_to_labels(
 
     # Complete binning with local thresholds only
     return _assign_local_bins(aggregated, **binning_params)
-
-
-def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
-    """Normalise scores within each project using min-max scaling."""
-    if len(group) == 1:
-        group["similarity_score"] = 1.0
-    else:
-        max_score = group["similarity_score"].max()
-        min_score = group["similarity_score"].min()
-        if max_score == min_score:
-            group["similarity_score"] = 1.0
-        else:
-            group["similarity_score"] = (group["similarity_score"] - min_score) / (
-                max_score - min_score
-            )
-    return group
 
 
 def _search_batch(
