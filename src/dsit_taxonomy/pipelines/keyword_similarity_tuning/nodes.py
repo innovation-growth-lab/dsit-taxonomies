@@ -119,7 +119,7 @@ def get_expert_labels(
 
 def prepare_tuning_data(
     expert_labels: AbstractDataset,
-    expert_tuning: AbstractDataset,
+    expert_assessment: AbstractDataset,
     taxonomy: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -149,7 +149,7 @@ def prepare_tuning_data(
             labels_data.append(
                 {
                     "project_id": project_id,
-                    "taxonomy_label": label_dict["taxonomy_label"],
+                    "label": label_dict.get("taxonomy_label", label_dict.get("label")),
                     "likelihood": label_dict["likelihood"],
                 }
             )
@@ -158,19 +158,22 @@ def prepare_tuning_data(
 
     # map the labels to the taxonomy_label_id
     expert_df = expert_df.merge(
-        taxonomy.drop_duplicates(subset=["taxonomy_label", "taxonomy_label_id"])[
-            ["taxonomy_label", "taxonomy_label_id"]
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
         ],
-        on="taxonomy_label",
+        on="label",
         how="left",
     )
+
+    # rename the label column
+    expert_df.rename(columns={"label": "taxonomy_label"}, inplace=True)
 
     # remove hallucinated labels
     expert_df = expert_df.dropna(subset=["taxonomy_label_id"])
 
     scores_data = []
-    for i, (project_id, loader_func) in enumerate(expert_tuning.items()):
-        logger.info("Processing validation: %d / %d", i + 1, len(expert_tuning))
+    for i, (project_id, loader_func) in enumerate(expert_assessment.items()):
+        logger.info("Processing validation: %d / %d", i + 1, len(expert_assessment))
         for label_dict in loader_func():
             scores_data.append(
                 {
@@ -185,12 +188,15 @@ def prepare_tuning_data(
 
     # map the id to the label
     assessment_df = assessment_df.merge(
-        taxonomy.drop_duplicates(subset=["taxonomy_label", "taxonomy_label_id"])[
-            ["taxonomy_label", "taxonomy_label_id"]
+        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
+            ["label", "taxonomy_label_id"]
         ],
         on="taxonomy_label_id",
         how="left",
     )
+
+    # rename the label column
+    assessment_df.rename(columns={"label": "taxonomy_label"}, inplace=True)
 
     return expert_df, assessment_df
 
@@ -327,9 +333,9 @@ def get_expert_assessment(
 
 
 def tune_matching_parameters(
-    sentences_raw: pd.DataFrame,
-    globals_raw: pd.DataFrame,
-    keywords_raw: pd.DataFrame,
+    sentence_matches: pd.DataFrame,
+    global_matches: pd.DataFrame,
+    keyword_matches: pd.DataFrame,
     assessment_df: pd.DataFrame,
     expert_df: pd.DataFrame,
     param_grid: dict,
@@ -338,7 +344,9 @@ def tune_matching_parameters(
     Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
 
     Args:
-        scores: Raw scores DataFrame
+        sentence_matches: DataFrame with sentence-level matches
+        global_matches: DataFrame with global matches
+        keyword_matches: DataFrame with keyword matches
         expert_df: Expert validation DataFrame
         param_grid: Dictionary of parameters to try, e.g.:
             {
@@ -373,9 +381,9 @@ def tune_matching_parameters(
 
         # prune raw matches
         pruned_sentences, pruned_globals, pruned_keywords = prune_raw_matches(
-            sentence_matches=sentences_raw.copy(),
-            global_matches=globals_raw.copy(),
-            keyword_matches=keywords_raw.copy(),
+            sentence_matches=sentence_matches.copy(),
+            global_matches=global_matches.copy(),
+            keyword_matches=keyword_matches.copy(),
             sentence_threshold=params["sentence_threshold"],
             global_threshold=params["global_threshold"],
             keyword_threshold=params["keyword_threshold"],

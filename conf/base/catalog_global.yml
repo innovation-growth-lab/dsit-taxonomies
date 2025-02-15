@@ -185,52 +185,19 @@ gtr.projects.sample:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_assessment/{taxonomy_name}/
 
-# gtr.projects.sample.expert_labels.goscience:
-#   <<: *_js_ptd
-#   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/goscience/
-
-# gtr.projects.sample.expert_labels.cwts:
-#   <<: *_js_ptd
-#   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/cwts/
-
-# gtr.projects.sample.expert_tuning.goscience:
-#   <<: *_js_ptd
-#   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_validation/goscience/
-
-# gtr.projects.sample.expert_tuning.cwts:
-#   <<: *_js_ptd
-#   path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_validation/cwts/
-
 # # tuning outputs
-# tuning.cwts.expert_labels.processed:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/expert_labels_processed.parquet
+"tuning.{taxonomy_name}.expert_labels.processed":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/expert_labels_processed.parquet
 
-# tuning.cwts.scores.processed:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/scores_processed.parquet
+"tuning.{taxonomy_name}.expert_assessment.processed":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/expert_assessment_processed.parquet
 
-# tuning.cwts.parameter_tuning_results:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/parameter_tuning_results.parquet
+"tuning.{taxonomy_name}.parameter_tuning_results":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/parameter_tuning_results.parquet
 
-# tuning.cwts.project_results:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/cwts/project_results.parquet
-
-# # goscience
-# tuning.goscience.expert_labels.processed:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/expert_labels_processed.parquet
-
-# tuning.goscience.scores.processed:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/scores_processed.parquet
-
-# tuning.goscience.parameter_tuning_results:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/parameter_tuning_results.parquet
-
-# tuning.goscience.project_results:
-#   <<: *_pq
-#   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/goscience/project_results.parquet
+"tuning.{taxonomy_name}.project_results":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/project_results.parquet

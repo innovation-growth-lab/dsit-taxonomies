@@ -5,9 +5,10 @@ from .nodes import (
     select_sample_projects,
     get_expert_labels,
     get_expert_assessment,
-    # prepare_tuning_data,
-    # tune_matching_parameters,
+    prepare_tuning_data,
+    tune_matching_parameters,
 )
+
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     sample_projects_pipeline = pipeline(
@@ -55,51 +56,57 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "question_prompt": "params:expert_assessment.question_prompt",
                     },
                     outputs=f"gtr.projects.sample.expert_assessment.{taxonomy_name}",
-                    name=f"evaluate_algorithmic_assignments_{taxonomy_name}",
-                    tags=[f"dev_{taxonomy_name}", "evaluate_algorithms", "get_expert_assessment"],
+                    name=f"evaluate_assessment_assignments_{taxonomy_name}",
+                    tags=[
+                        f"dev_{taxonomy_name}",
+                        "evaluate_assessments",
+                        "get_expert_assessment",
+                    ],
                 ),
             ],
             tags=["expert_labels"],
         )
 
-    # # Parameter tuning pipeline
-    # def tuning_pipeline(taxonomy_name: str) -> Pipeline:
-    #     return pipeline(
-    #         [
-    #             node(
-    #                 func=prepare_tuning_data,
-    #                 inputs={
-    #                     "expert_labels": f"gtr.projects.sample.expert_labels.{taxonomy_name}",
-    #                     "expert_tuning": f"gtr.projects.sample.expert_tuning.{taxonomy_name}",
-    #                     "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
-    #                 },
-    #                 outputs=[
-    #                     f"tuning.{taxonomy_name}.expert_labels.processed",
-    #                     f"tuning.{taxonomy_name}.scores.processed",
-    #                 ],
-    #                 name=f"prepare_tuning_data_{taxonomy_name}",
-    #                 tags=[f"dev_{taxonomy_name}", "dev"],
-    #             ),
-    #             node(
-    #                 func=tune_matching_parameters,
-    #                 inputs={
-    #                     "scores": f"projects.gtr_data.{taxonomy_name}_scores.detailed",
-    #                     "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
-    #                     "algorithm_df": f"tuning.{taxonomy_name}.scores.processed",
-    #                     "param_grid": "params:tuning.parameter_tuning.param_grid",
-    #                 },
-    #                 outputs=[
-    #                     f"tuning.{taxonomy_name}.parameter_tuning_results",
-    #                     f"tuning.{taxonomy_name}.project_results",
-    #                 ],
-    #                 name=f"tune_matching_parameters_{taxonomy_name}",
-    #                 tags=[f"tuning_{taxonomy_name}", "tuning"],
-    #             ),
-    #         ]
-    #     )
+    # Parameter tuning pipeline
+    def tuning_pipeline(taxonomy_name: str) -> Pipeline:
+        return pipeline(
+            [
+                node(
+                    func=prepare_tuning_data,
+                    inputs={
+                        "expert_labels": f"gtr.projects.sample.expert_labels.{taxonomy_name}",
+                        "expert_assessment": f"gtr.projects.sample.expert_assessment.{taxonomy_name}",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
+                    },
+                    outputs=[
+                        f"tuning.{taxonomy_name}.expert_labels.processed",
+                        f"tuning.{taxonomy_name}.expert_assessment.processed",
+                    ],
+                    name=f"prepare_tuning_data_{taxonomy_name}",
+                    tags=[f"tuning_{taxonomy_name}", "dev"],
+                ),
+                node(
+                    func=tune_matching_parameters,
+                    inputs={
+                        "sentence_matches": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
+                        "keyword_matches": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
+                        "global_matches": f"projects.gtr_data.{taxonomy_name}_matches.raw",
+                        "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
+                        "assessment_df": f"tuning.{taxonomy_name}.expert_assessment.processed",
+                        "param_grid": "params:tuning.parameter_tuning.param_grid",
+                    },
+                    outputs=[
+                        f"tuning.{taxonomy_name}.parameter_tuning_results",
+                        f"tuning.{taxonomy_name}.project_results",
+                    ],
+                    name=f"tune_matching_parameters_{taxonomy_name}",
+                    tags=[f"tuning_{taxonomy_name}", "tuning"],
+                ),
+            ]
+        )
 
     return (
         sample_projects_pipeline
         + sum(expert_labeling_pipeline(tax) for tax in ["cwts", "goscience"])
-        # + sum(tuning_pipeline(tax) for tax in ["cwts", "goscience"])
+        + sum(tuning_pipeline(tax) for tax in ["cwts", "goscience"])
     )
