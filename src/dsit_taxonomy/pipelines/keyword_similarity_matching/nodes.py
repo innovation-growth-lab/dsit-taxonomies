@@ -385,11 +385,11 @@ def aggregate_scores_to_labels(
 
     if normalise_by_matches:
         logger.info("Normalising scores within projects")
-        aggregated = aggregated.groupby("project_id").apply(normalise_project_scores).reset_index(
-            drop=True
+        aggregated = (
+            aggregated.groupby("project_id")
+            .apply(normalise_project_scores)
+            .reset_index(drop=True)
         )
-
-    
 
     logger.info(
         "Score normalisation summary:\n"
