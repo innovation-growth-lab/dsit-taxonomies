@@ -8,11 +8,6 @@ from .nodes import (
     # prepare_tuning_data,
     # tune_matching_parameters,
 )
-from ..keyword_similarity_matching.nodes import (
-    combine_scores,
-    aggregate_scores_to_labels,
-)
-
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
     sample_projects_pipeline = pipeline(
@@ -50,35 +45,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     name=f"get_expert_labels_{taxonomy_name}",
                 ),
                 node(
-                    func=combine_scores,
-                    inputs={
-                        "sentence_scores": f"sentences.gtr_data.{taxonomy_name}_matches.intermediate",
-                        "keyword_scores": f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
-                        "global_scores": f"projects.gtr_data.{taxonomy_name}_matches.raw",
-                        "sentence_weight": "params:similarity_matching.score_weights.sentence_weight",
-                        "global_weight": "params:similarity_matching.score_weights.global_weight",
-                    },
-                    outputs=f"sample_data.{taxonomy_name}_scores.granular",
-                    name=f"combine_sample_scores_{taxonomy_name}",
-                    tags=["combine_sample_scores_and_aggregate", "evaluate_algorithms"],
-                ),
-                node(
-                    func=aggregate_scores_to_labels,
-                    inputs={
-                        "granular_scores": f"sample_data.{taxonomy_name}_scores.granular",
-                        "global_q2_threshold": "params:similarity_matching.binning.global_q2",
-                        "global_q3_threshold": "params:similarity_matching.binning.global_q3",
-                        "local_q2_threshold": "params:similarity_matching.binning.local_q2",
-                        "local_q3_threshold": "params:similarity_matching.binning.local_q3",
-                    },
-                    outputs=f"sample_data.{taxonomy_name}_scores.aggregated",
-                    name=f"aggregate_sample_scores_to_labels_{taxonomy_name}",
-                    tags=["combine_sample_scores_and_aggregate", "evaluate_algorithms"],
-                ),
-                node(
                     func=get_expert_assessment,
                     inputs={
-                        "aggregated_scores": f"sample_data.{taxonomy_name}_scores.aggregated",
+                        "aggregated_scores": f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                         "data": "gtr.projects.sample",
                         "llm_model": "params:llm.model",
                         "max_retries": "params:llm.max_retries",
@@ -87,7 +56,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"gtr.projects.sample.expert_assessment.{taxonomy_name}",
                     name=f"evaluate_algorithmic_assignments_{taxonomy_name}",
-                    tags=[f"dev_{taxonomy_name}", "evaluate_algorithms"],
+                    tags=[f"dev_{taxonomy_name}", "evaluate_algorithms", "get_expert_assessment"],
                 ),
             ],
             tags=["expert_labels"],

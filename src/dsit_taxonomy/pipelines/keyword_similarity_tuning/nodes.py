@@ -63,7 +63,7 @@ def get_expert_labels(
     embeddings = OpenAIEmbeddings(model=embedding_model)
     vector_store = InMemoryVectorStore(embeddings)
 
-    loader = DataFrameLoader(taxonomy, page_content_column="label")
+    loader = DataFrameLoader(taxonomy, page_content_column="taxonomy_label")
     _ = vector_store.add_documents(loader.load())
     retriever = vector_store.as_retriever(search_kwargs={"k": retriever_k})
 
@@ -149,7 +149,7 @@ def prepare_tuning_data(
             labels_data.append(
                 {
                     "project_id": project_id,
-                    "label": label_dict["label"],
+                    "taxonomy_label": label_dict["taxonomy_label"],
                     "likelihood": label_dict["likelihood"],
                 }
             )
@@ -158,10 +158,10 @@ def prepare_tuning_data(
 
     # map the labels to the taxonomy_label_id
     expert_df = expert_df.merge(
-        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
-            ["label", "taxonomy_label_id"]
+        taxonomy.drop_duplicates(subset=["taxonomy_label", "taxonomy_label_id"])[
+            ["taxonomy_label", "taxonomy_label_id"]
         ],
-        on="label",
+        on="taxonomy_label",
         how="left",
     )
 
@@ -185,8 +185,8 @@ def prepare_tuning_data(
 
     # map the id to the label
     assessment_df = assessment_df.merge(
-        taxonomy.drop_duplicates(subset=["label", "taxonomy_label_id"])[
-            ["label", "taxonomy_label_id"]
+        taxonomy.drop_duplicates(subset=["taxonomy_label", "taxonomy_label_id"])[
+            ["taxonomy_label", "taxonomy_label_id"]
         ],
         on="taxonomy_label_id",
         how="left",
@@ -274,7 +274,7 @@ def get_expert_assessment(
         # Format labels text with IDs
         labels_text = "\n".join(
             [
-                f"- {row['label']} (ID: {row['taxonomy_label_id']})"
+                f"- {row["taxonomy_label"]} (ID: {row["taxonomy_label_id"]})"
                 for _, row in project_predictions.iterrows()
             ]
         )
@@ -491,8 +491,8 @@ def _compute_per_project_metrics(
         how="outer",
     )
 
-    data["label"] = data["label_x"].fillna(data["label_y"])
-    data = data.drop(columns=["label_x", "label_y"])
+    data["taxonomy_label"] = data["taxonomy_label_x"].fillna(data["taxonomy_label_y"])
+    data = data.drop(columns=["taxonomy_label_x", "taxonomy_label_y"])
 
     project_metrics = []
 
@@ -509,13 +509,13 @@ def _compute_per_project_metrics(
         )
 
         # Calculate metrics
-        true_positives = project_data[algo_high & expert_agreement]["label"].tolist()
+        true_positives = project_data[algo_high & expert_agreement]["taxonomy_label"].tolist()
         false_positives = project_data[algo_high & expert_disagreement][
-            "label"
+            "taxonomy_label"
         ].tolist()
         false_negatives = project_data[
             (~algo_high | algo_high.isna()) & expert_agreement
-        ]["label"].tolist()
+        ]["taxonomy_label"].tolist()
 
         project_metrics.append(
             {
@@ -561,8 +561,8 @@ def _validate_predictions(
     )
 
     # Clean up labels
-    data["label"] = data["label_x"].fillna(data["label_y"])
-    data = data.drop(columns=["label_x", "label_y"])
+    data["taxonomy_label"] = data["taxonomy_label_x"].fillna(data["taxonomy_label_y"])
+    data = data.drop(columns=["taxonomy_label_x", "taxonomy_label_y"])
 
     metrics = []
 
