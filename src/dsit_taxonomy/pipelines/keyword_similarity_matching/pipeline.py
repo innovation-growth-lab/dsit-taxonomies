@@ -161,6 +161,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     func=aggregate_scores_to_labels,
                     inputs={
                         "granular_scores": f"projects.gtr_data.{taxonomy_name}_scores.granular",
+                        "normalise_by_matches": "params:similarity_matching.normalise_by_matches",
                         "global_q2_threshold": "params:similarity_matching.binning.global_q2",
                         "global_q3_threshold": "params:similarity_matching.binning.global_q3",
                         "local_q2_threshold": "params:similarity_matching.binning.local_q2",

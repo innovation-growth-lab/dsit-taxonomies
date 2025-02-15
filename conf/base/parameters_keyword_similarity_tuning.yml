@@ -120,6 +120,7 @@ tuning:
       keyword_threshold: [0.6, 0.7, 0.8]
       sentence_weight: [0.6, 0.7]
       global_weight: [0.2, 0.3]
+      normalise_by_matches: [False, True]
       global_q2_threshold: [0.5]
       global_q3_threshold: [0.75]
       local_q2_threshold: [0.5]

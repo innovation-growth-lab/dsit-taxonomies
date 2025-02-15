@@ -121,13 +121,17 @@ def prune_raw_matches(
 
     if use_quantile:
         # Prune sentence matches using quantile
-        sent_threshold = sentence_matches["similarity_score"].quantile(sentence_threshold)
+        sent_threshold = sentence_matches["similarity_score"].quantile(
+            sentence_threshold
+        )
         pruned_sentences = sentence_matches[
             sentence_matches["similarity_score"] >= sent_threshold
         ]
 
         # Prune global matches using quantile
-        global_threshold_val = global_matches["similarity_score"].quantile(global_threshold)
+        global_threshold_val = global_matches["similarity_score"].quantile(
+            global_threshold
+        )
         pruned_global = global_matches[
             global_matches["similarity_score"] >= global_threshold_val
         ]
@@ -312,12 +316,25 @@ def combine_scores(
 
 
 def aggregate_scores_to_labels(
-    granular_scores: pd.DataFrame, **binning_params
+    granular_scores: pd.DataFrame, normalise_by_matches: bool = False, **binning_params
 ) -> pd.DataFrame:
     """
     Aggregate sentence-level scores to project-label pairs.
+
+    Args:
+        granular_scores: DataFrame with sentence-level scores
+        normalise_by_matches: If True, weight scores by ratio of matching sentences
+        **binning_params: Parameters for confidence binning
     """
     logger.info("Aggregating sentence-level scores to project-label pairs")
+
+    # Get total sentences per project
+    project_sentence_counts = (
+        granular_scores.groupby("project_id")["sentence_id"]
+        .nunique()
+        .reset_index()
+        .rename(columns={"sentence_id": "num_sentences"})
+    )
 
     # Aggregate to project-label level
     aggregated = (
@@ -339,14 +356,51 @@ def aggregate_scores_to_labels(
         "project_id",
         "taxonomy_label_id",
         "relevance_score",
-        "num_sentences",
+        "num_matching_sentences",
         "taxonomy_label",
         "similarity_score_global",
         "similarity_score_key",
         "similarity_score_sent",
     ]
 
-    return _assign_confidence_bins(aggregated, **binning_params)
+    # Add total sentence count per project
+    aggregated = pd.merge(
+        aggregated, project_sentence_counts, on="project_id", how="left"
+    )
+
+    # Apply global binning first
+    q2 = aggregated["relevance_score"].quantile(binning_params["global_q2_threshold"])
+    q3 = aggregated["relevance_score"].quantile(binning_params["global_q3_threshold"])
+    aggregated["global_bin"] = aggregated["relevance_score"].apply(
+        lambda x: "high" if x > q3 else ("medium" if x > q2 else "low")
+    )
+
+    # Normalise scores within projects
+    def normalise_project_scores(group):
+        if normalise_by_matches:
+            # Weight by matching sentence ratio
+            group["relevance_score"] = group["relevance_score"] * (
+                group["num_matching_sentences"] / group["num_sentences"]
+            )
+
+        # Normalise to sum to 1
+        total_score = group["relevance_score"].sum()
+        if total_score > 0:
+            group["relevance_score"] = group["relevance_score"] / total_score
+        return group
+
+    aggregated = aggregated.groupby("project_id").apply(normalise_project_scores)
+
+    logger.info(
+        "Score normalisation summary:\n"
+        "Mean project score sum: %.3f\n"
+        "Score distribution:\n%s",
+        aggregated.groupby("project_id")["relevance_score"].sum().mean(),
+        aggregated["relevance_score"].describe().to_string(),
+    )
+
+    # Complete binning with local thresholds only
+    return _assign_local_bins(aggregated, **binning_params)
 
 
 def _normalise_within_projects(group: pd.DataFrame) -> pd.DataFrame:
@@ -391,7 +445,7 @@ def _search_batch(
     # (num_docs, embedding_dim) @ (embedding_dim, num_labels) = (num_docs, num_labels)
     similarities = doc_embeddings @ taxonomy_embeddings.T
 
-    # Normalize for cosine similarity
+    # Normalise for cosine similarity
     doc_norms = np.linalg.norm(doc_embeddings, axis=1, keepdims=True)
     tax_norms = np.linalg.norm(taxonomy_embeddings, axis=1, keepdims=True).T
     similarities = similarities / (doc_norms @ tax_norms)
@@ -422,103 +476,10 @@ def _search_batch(
     return pd.concat(results, ignore_index=True)
 
 
-def _compute_shannon_entropy(similarity_scores):
-    """Compute the Shannon entropy for a given list of similarity scores."""
-    return entropy(similarity_scores, base=2)
-
-
 def _split_sentences(document: str, nlp: English) -> List[str]:
     """Split a document into sentences."""
     doc = nlp(document)
     return [sent.text for sent in doc.sents]
-
-
-def _assign_confidence_bins(
-    df: pd.DataFrame,
-    global_q2_threshold: float,
-    global_q3_threshold: float,
-    local_q2_threshold: float,
-    local_q3_threshold: float,
-    n_jobs: int = 8,
-) -> pd.DataFrame:
-    """
-    Assign confidence bins to taxonomy labels based on global and local binning strategies.
-    Uses parallel processing for faster computation.
-
-    Args:
-        df: Input DataFrame with relevance scores
-        global_q2_threshold: Global threshold for medium confidence
-        global_q3_threshold: Global threshold for high confidence
-        local_q2_threshold: Project-level threshold for medium confidence
-        local_q3_threshold: Project-level threshold for high confidence
-        n_jobs: Number of parallel jobs (-1 for all cores)
-    """
-    logger.info("Assigning confidence bins to taxonomy labels")
-
-    # 1. Global binning (using provided thresholds)
-    q2 = df["relevance_score"].quantile(global_q2_threshold)
-    q3 = df["relevance_score"].quantile(global_q3_threshold)
-
-    def _assign_global_bin(score):
-        if score > q3:
-            return "high"
-        elif score > q2:
-            return "medium"
-        return "low"
-
-    df["global_bin"] = df["relevance_score"].apply(_assign_global_bin)
-
-    # 2. Local binning - prepare data for parallel processing
-    project_groups = [group for _, group in df.groupby("project_id")]
-
-    # Create partial function with fixed parameters
-    _assign_local_bins_partial = partial(
-        _process_project_group,
-        local_q2_threshold=local_q2_threshold,
-        local_q3_threshold=local_q3_threshold,
-    )
-
-    # Process groups in parallel
-    logger.info("Processing %d projects in parallel", len(project_groups))
-    results = Parallel(n_jobs=n_jobs)(
-        delayed(_assign_local_bins_partial)(group) for group in project_groups
-    )
-
-    # Combine results
-    local_bins = pd.concat(results)
-
-    df["local_bin"] = local_bins
-
-    # 3. Final bin (minimum of global and local)
-    bin_order = {"high": 3, "medium": 2, "low": 1}
-
-    def _get_min_bin(row, bin_order):
-        min_val = min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
-        return {3: "high", 2: "medium", 1: "low"}[min_val]
-
-    df["final_bin"] = df.apply(lambda row: _get_min_bin(row, bin_order), axis=1)
-
-    # Log summary statistics
-    logger.info(
-        "Binning summary:\n"
-        "Global thresholds - Q2: %0.3f, Q3: %0.3f\n"
-        "Global distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%\n"
-        "Local distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%\n"
-        "Final distribution - high: %0.1f%%, medium: %0.1f%%, low: %0.1f%%",
-        q2,
-        q3,
-        100 * (df["global_bin"] == "high").mean(),
-        100 * (df["global_bin"] == "medium").mean(),
-        100 * (df["global_bin"] == "low").mean(),
-        100 * (df["local_bin"] == "high").mean(),
-        100 * (df["local_bin"] == "medium").mean(),
-        100 * (df["local_bin"] == "low").mean(),
-        100 * (df["final_bin"] == "high").mean(),
-        100 * (df["final_bin"] == "medium").mean(),
-        100 * (df["final_bin"] == "low").mean(),
-    )
-
-    return df
 
 
 def _process_project_group(
@@ -623,3 +584,38 @@ def prune_global_matches(
     )
 
     return pruned_matches
+
+
+def _assign_local_bins(
+    df: pd.DataFrame,
+    local_q2_threshold: float,
+    local_q3_threshold: float,
+    n_jobs: int = 8,
+    **unused_params
+) -> pd.DataFrame:
+    """Assign confidence bins using only local thresholds."""
+    # Process groups in parallel
+    project_groups = [group for _, group in df.groupby("project_id")]
+
+    _assign_local_bins_partial = partial(
+        _process_project_group,
+        local_q2_threshold=local_q2_threshold,
+        local_q3_threshold=local_q3_threshold,
+    )
+
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(_assign_local_bins_partial)(group) for group in project_groups
+    )
+
+    df["local_bin"] = pd.concat(results)
+
+    # Final bin (minimum of global and local)
+    bin_order = {"high": 3, "medium": 2, "low": 1}
+    df["final_bin"] = df.apply(
+        lambda row: {3: "high", 2: "medium", 1: "low"}[
+            min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
+        ],
+        axis=1,
+    )
+
+    return df

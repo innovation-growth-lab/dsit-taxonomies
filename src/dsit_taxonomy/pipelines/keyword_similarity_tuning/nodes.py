@@ -401,6 +401,7 @@ def tune_matching_parameters(
         # Aggregate scores with current parameters
         aggregated_scores = aggregate_scores_to_labels(
             granular_scores,
+            normalise_by_matches=params["normalise_by_matches"],
             global_q2_threshold=params["global_q2_threshold"],
             global_q3_threshold=params["global_q3_threshold"],
             local_q2_threshold=params["local_q2_threshold"],

@@ -21,6 +21,8 @@ similarity_matching:
 
   similarity_quantile_threshold: 0.8  # Filter out bottom X% of scores
 
+  normalise_by_matches: True
+
   # Confidence binning parameters
   binning:
     global_q2: 0.50    # Global threshold for medium confidence
