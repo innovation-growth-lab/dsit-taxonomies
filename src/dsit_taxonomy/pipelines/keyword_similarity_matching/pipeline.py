@@ -1,32 +1,41 @@
 """
-This pipeline fetches data from the GtR API and preprocesses it into a format
-that can be used by the rest of the project.
+This pipeline performs semantic similarity matching between research projects
+and taxonomy labels at multiple levels.
 
-Pipelines:
-    - data_collection_gtr:
-        Fetches and preprocesses data from the GtR API.
+The pipeline consists of three main steps:
+1. Document Preprocessing
+   - Combines text fields from research projects
+   - Splits documents into sentences
+   - Generates unique IDs for tracking
+
+2. Similarity Computation
+   - Computes similarity scores between texts and taxonomy labels
+   - Processes at three levels:
+     * Global project-level matching
+     * Sentence-level matching for granular evidence
+     * Keyword-level matching for term overlap
+
+3. Score Combination
+   - Combines scores from different matching approaches
+   - Applies weights to balance different evidence types
+   - Produces granular scores for each (project, label) pair
 
 Dependencies:
-    - Kedro
     - pandas
-    - requests
-    - logging
+    - numpy
+    - spacy
+    - joblib
+    - torch
 
-Usage:
-    Run the pipeline to fetch and preprocess data from the GtR API.
-
-Command Line Example:
+Example:
+    Run the complete matching pipeline:
     ```
-    kedro run --pipeline data_collection_gtr
+    kedro run --pipeline keyword_similarity_matching
     ```
-    Alternatively, you can run this pipeline for a single endpoint:
+    Or run specific steps:
     ```
-    kedro run --pipeline ___ --tags projects
+    kedro run --pipeline keyword_similarity_matching --tags compute_similarities
     ```
-
-Note:
-    In regards to the use of namespaces, note that these are appended as
-    prefixes to the outputs of the nodes in the pipeline.
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
@@ -35,9 +44,7 @@ from .nodes import (
     compute_similarities,
     combine_scores,
     add_metadata,
-    aggregate_scores_to_labels,
     prune_raw_matches,
-    enhance_with_zeroshot,
 )
 
 
@@ -156,37 +163,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"scores_{taxonomy_name}",
                         "combine_scores_and_aggregate",
                     ],
-                ),
-                # Aggregate scores to labels
-                node(
-                    func=aggregate_scores_to_labels,
-                    inputs={
-                        "granular_scores": f"projects.gtr_data.{taxonomy_name}_scores.granular",
-                        "normalise_by_matches": "params:similarity_matching.normalise_by_matches",
-                        "global_q2_threshold": "params:similarity_matching.binning.global_q2",
-                        "global_q3_threshold": "params:similarity_matching.binning.global_q3",
-                        "local_q2_threshold": "params:similarity_matching.binning.local_q2",
-                        "local_q3_threshold": "params:similarity_matching.binning.local_q3",
-                    },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
-                    name=f"aggregate_scores_to_labels_{taxonomy_name}",
-                    tags=[
-                        "combine_scores_and_aggregate",
-                        "aggregate"
-                    ],
-                ),
-                # Validate with zero-shot classification
-                node(
-                    func=enhance_with_zeroshot,
-                    inputs={
-                        "aggregated_scores": f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
-                        "project_texts": "projects.gtr_data.db",
-                        "batch_size": "params:similarity_matching.zeroshot.batch_size",
-                        "model_name": "params:similarity_matching.zeroshot.model_name",
-                    },
-                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
-                    name=f"validate_zeroshot_{taxonomy_name}",
-                    tags=["validation"],
                 ),
             ],
             tags=[

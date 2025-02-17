@@ -1,32 +1,44 @@
 """
-This pipeline fetches data from the GtR API and preprocesses it into a format
-that can be used by the rest of the project.
+This pipeline processes and standardises multiple research taxonomies for
+use in project classification.
 
-Pipelines:
-    - data_collection_gtr:
-        Fetches and preprocesses data from the GtR API.
+The pipeline processes three taxonomies:
+1. CWTS Topics
+   - Research topics from the CWTS Leiden Ranking
+   - Hierarchical structure with multiple levels
+   - Includes topic descriptions and keywords
+
+2. GO-SCIENCE Areas
+   - UK government research classification
+   - Structured hierarchy of research areas
+   - Contains detailed area descriptions
+
+3. Open Alex Concepts
+   - Research concept ontology from OpenAlex
+   - Covers broad range of academic disciplines
+   - Includes concept relationships and levels
+
+For each taxonomy, the pipeline:
+- Standardises the format and structure
+- Extracts relevant metadata
+- Generates two versions:
+  * Full hierarchy with all levels
+  * Bottom-level terms only for direct matching
 
 Dependencies:
-    - Kedro
     - pandas
-    - requests
-    - logging
+    - numpy
+    - uuid
 
-Usage:
-    Run the pipeline to fetch and preprocess data from the GtR API.
-
-Command Line Example:
+Example:
+    Run the complete taxonomy processing:
     ```
-    kedro run --pipeline data_collection_gtr
+    kedro run --pipeline data_processing_taxonomies
     ```
-    Alternatively, you can run this pipeline for a single endpoint:
+    Or process a specific taxonomy:
     ```
-    kedro run --pipeline ___ --tags projects
+    kedro run --pipeline data_processing_taxonomies --nodes preprocess_cwts_topics
     ```
-
-Note:
-    In regards to the use of namespaces, note that these are appended as
-    prefixes to the outputs of the nodes in the pipeline.
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
@@ -38,10 +50,14 @@ from .nodes import (
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
-    """Pipeline for data collection.
+    """
+    Creates a pipeline for processing multiple research taxonomies.
+
+    The pipeline standardises three different taxonomies (CWTS, GO-SCIENCE,
+    OpenAlex) into a consistent format for downstream matching.
 
     Returns:
-        Pipeline: The data collection pipeline.
+        Pipeline: A pipeline containing nodes for processing each taxonomy
     """
     taxonomy_keywords_pipeline = pipeline(
         [

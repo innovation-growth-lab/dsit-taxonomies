@@ -1,6 +1,13 @@
 """
-This is a boilerplate pipeline 'data_annotation_gtr'
-generated using Kedro 0.19.6
+This module contains nodes for extracting keywords from research project texts
+using multiple extraction methods.
+
+The nodes implement:
+- DBpedia Spotlight for entity linking
+- RAKE for statistical keyword extraction
+- YAKE for unsupervised keyword extraction
+- KeyBERT for transformer-based extraction
+- Utilities for result aggregation and processing
 """
 
 import logging
@@ -25,15 +32,27 @@ def dbp_keywords(
     dataframe: pd.DataFrame, processed_projects: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Annotates the text data with DBpedia keywords.
+    Extract keywords using DBpedia Spotlight entity linking.
+
+    This function:
+    1. Combines text fields from each project
+    2. Links text entities to DBpedia concepts
+    3. Filters and processes the linked entities
+    4. Handles incremental processing with checkpointing
 
     Args:
-        dataframe (pd.DataFrame): The input GtR data.
-        processed_projects (pd.DataFrame): The projects that have already been processed.
+        dataframe: Input data containing:
+            - project_id: Unique project identifier
+            - title: Project title
+            - abstract_text: Main abstract
+            - tech_abstract_text: Technical abstract
+            - potential_impact: Impact statement
+        processed_projects: Previously processed results for incremental updates
 
     Returns:
-        pd.DataFrame: The annotated data.
-
+        DataFrame containing:
+            - project_id: Project identifier
+            - dbp_keywords: List of extracted DBpedia concepts
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
     dataframe["input_text"] = (
@@ -65,15 +84,20 @@ def rake_keywords(
     dataframe: pd.DataFrame, processed_projects: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Annotates the text data with RAKE keywords.
+    Extract keywords using the RAKE algorithm.
+
+    This function:
+    1. Combines title and abstract text
+    2. Applies RAKE to identify key phrases
+    3. Scores and ranks the extracted phrases
+    4. Handles incremental processing
 
     Args:
-        dataframe (pd.DataFrame): The input GtR data.
-        processed_projects (pd.DataFrame): The projects that have already been processed.
+        dataframe: Input data with text fields
+        processed_projects: Previously processed results
 
     Returns:
-        pd.DataFrame: The annotated data.
-
+        DataFrame with project_id and rake_keywords columns
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
     dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
@@ -97,15 +121,20 @@ def yake_keywords(
     dataframe: pd.DataFrame, processed_projects: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Annotates the text data with YAKE keywords.
+    Extract keywords using the YAKE algorithm.
+
+    This function:
+    1. Combines title and abstract text
+    2. Applies YAKE for keyword extraction
+    3. Processes results with custom parameters
+    4. Handles incremental updates
 
     Args:
-        dataframe (pd.DataFrame): The input GtR data.
-        processed_projects (pd.DataFrame): The projects that have already been processed.
+        dataframe: Input data with text fields
+        processed_projects: Previously processed results
 
     Returns:
-        pd.DataFrame: The annotated data.
-
+        DataFrame with project_id and yake_keywords columns
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
     dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
@@ -129,15 +158,22 @@ def keybert_keywords(
     dataframe: pd.DataFrame, processed_projects: pd.DataFrame
 ) -> Generator[pd.DataFrame, None, None]:
     """
-    Annotates the text data with KeyBERT keywords.
+    Extract keywords using KeyBERT transformer model.
+
+    This function:
+    1. Initialises KeyBERT with specified model
+    2. Processes texts in batches for memory efficiency
+    3. Uses semantic similarity for keyword ranking
+    4. Yields results incrementally with timestamps
 
     Args:
-        dataframe (pd.DataFrame): The input GtR data.
-        processed_projects (pd.DataFrame): The projects that have already been processed.
+        dataframe: Input data with text fields
+        processed_projects: Previously processed results
 
-    Returns:
-        pd.DataFrame: The annotated data.
-
+    Yields:
+        Dictionary mapping partition ID to DataFrame with:
+            - project_id: Project identifier
+            - keybert_keywords: Extracted keywords
     """
     kw_extractor = KeyBERT("all-MiniLM-L6-v2")
     dataframe = _filter_processed_projects(dataframe, processed_projects)
@@ -169,13 +205,19 @@ def concatenate_partitions(
     partitioned_dataset: Dict[str, AbstractDataset]
 ) -> pd.DataFrame:
     """
-    Concatenate the partitions from the given inputs.
+    Combine partitioned KeyBERT results into a single dataset.
+
+    This function:
+    1. Loads partitioned results in parallel
+    2. Concatenates all results
+    3. Removes duplicate project entries
+    4. Handles errors in individual partitions
 
     Args:
-        partitioned_dataset (Dict[str, AbstractDataset]): The partitioned dataset.
+        partitioned_dataset: Dictionary mapping partition IDs to datasets
 
     Returns:
-        pd.DataFrame: The concatenated dataset.
+        DataFrame containing combined and deduplicated results
     """
 
     def load_dataset(dataset: AbstractDataset) -> pd.DataFrame:
@@ -208,15 +250,14 @@ def _filter_processed_projects(
     gtr_data: pd.DataFrame, processed_projects: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Filter out projects that have already been processed.
+    Filter out already processed projects for incremental updates.
 
     Args:
-        gtr_data (pd.DataFrame): The input GtR data.
-        processed_projects (pd.DataFrame): The projects that have already been processed.
+        gtr_data: Complete dataset to process
+        processed_projects: Previously processed results
 
     Returns:
-        pd.DataFrame: The filtered data.
-
+        DataFrame containing only unprocessed projects
     """
     if processed_projects.empty:
         return gtr_data

@@ -13,16 +13,6 @@ Functions:
         API and preprocesses it.
     concatenate_endpoint(abstract_dict): Concatenates DataFrames from a single
         endpoint into a single DataFrame.
-
-Dependencies:
-    - logging
-    - random
-    - time
-    - datetime
-    - numpy
-    - pandas
-    - requests
-    - kedro
 """
 
 import logging

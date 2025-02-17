@@ -1,32 +1,34 @@
 """
-This pipeline fetches data from the GtR API and preprocesses it into a format
-that can be used by the rest of the project.
+This pipeline processes and combines keywords extracted from research projects
+using multiple keyword extraction methods.
 
-Pipelines:
-    - data_collection_gtr:
-        Fetches and preprocesses data from the GtR API.
+The pipeline performs two main steps:
+1. Keyword Aggregation
+   - Combines keywords from multiple extractors (DBP, RAKE, YAKE, KeyBERT)
+   - Counts appearances across different extractors
+   - Filters keywords based on extractor agreement
+   - Maps keywords to their source projects
+
+2. Embedding Generation
+   - Generates semantic embeddings for filtered keywords
+   - Uses sentence transformers for embedding computation
+   - Prepares keywords for similarity matching
 
 Dependencies:
-    - Kedro
     - pandas
-    - requests
-    - logging
+    - numpy
+    - sentence-transformers
+    - uuid
 
-Usage:
-    Run the pipeline to fetch and preprocess data from the GtR API.
-
-Command Line Example:
+Example:
+    Run the complete keyword processing pipeline:
     ```
-    kedro run --pipeline data_collection_gtr
+    kedro run --pipeline keyword_processing_gtr
     ```
-    Alternatively, you can run this pipeline for a single endpoint:
+    Or run specific nodes:
     ```
-    kedro run --pipeline data_collection_gtr --tags projects
+    kedro run --pipeline keyword_processing_gtr --nodes aggregate_keyword_annotators
     ```
-
-Note:
-    In regards to the use of namespaces, note that these are appended as
-    prefixes to the outputs of the nodes in the pipeline.
 """
 
 from kedro.pipeline import Pipeline, node, pipeline
@@ -34,10 +36,14 @@ from .nodes import aggregate_keyword_annotators, generate_keyword_embeddings
 
 
 def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
-    """Pipeline for data collection.
+    """
+    Creates a pipeline for processing and embedding keywords.
+
+    The pipeline aggregates keywords from multiple extractors and generates
+    embeddings for downstream similarity matching.
 
     Returns:
-        Pipeline: The data collection pipeline.
+        Pipeline: A pipeline containing keyword aggregation and embedding nodes
     """
     aggregate_keywords_pipeline = pipeline(
         [

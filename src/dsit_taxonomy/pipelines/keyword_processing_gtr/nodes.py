@@ -1,3 +1,13 @@
+"""
+This module contains nodes for processing and embedding keywords extracted
+from research projects.
+
+The nodes handle:
+- Aggregating keywords from multiple extraction methods
+- Filtering keywords based on extractor agreement
+- Generating semantic embeddings for keywords
+"""
+
 import logging
 import uuid
 import pandas as pd
@@ -11,16 +21,25 @@ logger = logging.getLogger(__name__)
 
 def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
     """
-    Aggregate the number of distinct annotator classes each keyword appears in.
+    Aggregate keywords from multiple extractors and count their appearances.
+
+    This function:
+    1. Processes keywords from each extractor
+    2. Counts how many extractors found each keyword
+    3. Maps keywords to their source projects
+    4. Filters out keywords found by only one extractor
 
     Args:
-        dataframes (pd.DataFrame): The dataframes to process.
+        *dataframes: Variable number of DataFrames, each containing:
+            - project_id: ID of the research project
+            - {extractor}_keywords: List of keywords from each extractor
 
     Returns:
-        pd.DataFrame: A dataframe with three columns:
-            - 'label': The unique keyword.
-            - 'num_annotators': The number of distinct annotator classes the keyword appears in.
-            - 'project_ids': A list of project_ids each keyword appears in.
+        DataFrame containing:
+            - keyword: The unique keyword
+            - num_annotators: Number of extractors that found this keyword
+            - project_ids: List of projects where the keyword appears
+            - uuid: Unique identifier for the keyword
     """
     keyword_to_annotators = {}
     keyword_to_projects = {}
@@ -70,24 +89,23 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
-    """Preprocess the keywords by lowercasing and removing trailing spaces."""
-    return keywords.str.lower().str.strip()
-
-
 def generate_keyword_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame:
     """
-    Generate embeddings for each keyword in the dataframe.
+    Generate semantic embeddings for keywords using sentence transformers.
+
+    This function converts keywords into dense vector representations that
+    can be used for similarity matching.
 
     Args:
-        keyword_dataframe: The dataframe containing the keywords.
+        keyword_dataframe: DataFrame containing:
+            - keyword: Text of the keyword to embed
+            - Other metadata columns (ignored)
 
     Returns:
-        pd.DataFrame: A dataframe with two columns:
-            - 'keyword': The unique keyword.
-            - 'embedding': The corresponding embedding as a list of float32 values.
+        DataFrame containing:
+            - keyword: Original keyword text
+            - embedding: Dense vector representation as float32 array
     """
-
     # generate embeddings for the keywords
     embeddings = model.encode(
         keyword_dataframe["keyword"].tolist(),
@@ -107,6 +125,14 @@ def generate_keyword_embeddings(keyword_dataframe: pd.DataFrame) -> pd.DataFrame
     return result_df
 
 
-def _preprocess_keywords(keywords):
-    # Assuming this function is defined elsewhere in your code
-    return keywords
+def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
+    """
+    Preprocess keywords for consistency.
+
+    Args:
+        keywords: Series of keyword strings
+
+    Returns:
+        Series of preprocessed keywords (lowercase, stripped)
+    """
+    return keywords.str.lower().str.strip()
