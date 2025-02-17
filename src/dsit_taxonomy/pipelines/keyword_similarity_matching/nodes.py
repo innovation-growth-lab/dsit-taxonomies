@@ -609,7 +609,6 @@ def _assign_local_bins(
 def validate_with_zeroshot(
     aggregated_scores: pd.DataFrame,
     project_texts: pd.DataFrame,
-    confidence_threshold: float = 0.3,
     batch_size: int = 32,
     model_name: str = "tasksource/ModernBERT-large-nli",
 ) -> pd.DataFrame:
@@ -650,7 +649,7 @@ def validate_with_zeroshot(
 
     logger.info("Running zero-shot classification for %d projects", len(project_groups))
 
-    project_groups = project_groups.head(50)
+    project_groups = project_groups.head(150)
     results = []
     for _, row in tqdm(project_groups.iterrows(), total=len(project_groups)):
         try:
@@ -689,7 +688,7 @@ def validate_with_zeroshot(
             else (
                 "high"
                 if x >= 0.7
-                else "medium" if x >= 0.5 else "low" if x < 0.5 else np.nan
+                else "medium" if x >= 0.5 else "low" if x >=0.25 else "very low"
             )
         )
     )

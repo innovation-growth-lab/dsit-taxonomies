@@ -40,5 +40,4 @@ similarity_matching:
   # Zero-shot validation settings  
   zeroshot:
     model_name: "tasksource/ModernBERT-large-nli"
-    confidence_threshold: 0.3
     batch_size: 32

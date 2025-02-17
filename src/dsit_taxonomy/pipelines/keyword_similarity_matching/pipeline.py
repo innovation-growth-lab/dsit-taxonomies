@@ -181,7 +181,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "aggregated_scores": f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                         "project_texts": "projects.gtr_data.db",
-                        "confidence_threshold": "params:similarity_matching.zeroshot.confidence_threshold",
                         "batch_size": "params:similarity_matching.zeroshot.batch_size",
                         "model_name": "params:similarity_matching.zeroshot.model_name",
                     },
