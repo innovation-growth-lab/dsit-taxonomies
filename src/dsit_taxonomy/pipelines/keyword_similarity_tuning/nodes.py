@@ -1,6 +1,31 @@
 """
-This is a boilerplate pipeline 'keyword_similarity_validation'
-generated using Kedro 0.19.10
+This module contains nodes for tuning and validating taxonomy matching parameters.
+
+The nodes handle:
+- Sampling projects for expert validation
+- Getting expert labels using RAG models
+- Parameter tuning using expert feedback
+- Computing validation metrics
+
+The module provides functionality for:
+1. Sample Selection
+   - Selecting representative projects for validation
+   - Balancing across different project types
+
+2. Expert Labeling
+   - Using retrieval-augmented generation
+   - Providing structured taxonomy assignments
+   - Handling multiple rounds of validation
+
+3. Parameter Optimization
+   - Grid search over parameter space
+   - Computing metrics for each parameter set
+   - Finding optimal weights and thresholds
+
+4. Validation Metrics
+   - Computing precision, recall, F1 scores
+   - Tracking true/false positives/negatives
+   - Providing per-project and global metrics
 """
 
 import ast, json
