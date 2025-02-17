@@ -58,7 +58,7 @@ from .nodes import (
 )
 
 
-def create_pipeline(**kwargs) -> Pipeline:
+def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
     """
     Creates a pipeline for extracting keywords from research project texts.
 
