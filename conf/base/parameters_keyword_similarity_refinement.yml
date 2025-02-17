@@ -1,0 +1,15 @@
+similarity_refinement:
+  # Binning parameters
+  binning:
+    global_q2: 0.5  # Medium confidence threshold
+    global_q3: 0.75 # High confidence threshold
+    local_q2: 0.5   # Project-level medium threshold
+    local_q3: 0.75  # Project-level high threshold
+  
+  # Score normalization
+  normalise_by_matches: True
+
+  # Zero-shot validation
+  zeroshot:
+    batch_size: 32
+    model_name: "tasksource/ModernBERT-large-nli" 

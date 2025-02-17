@@ -19,23 +19,9 @@ similarity_matching:
     global_weight: 0.3    # Weight for global matches (beta)
     # Remaining 0.1 goes to keyword matches (1-alpha-beta)
 
-  normalise_by_matches: False
-
-  # Confidence binning parameters
-  binning:
-    global_q2: 0.50    # Global threshold for medium confidence
-    global_q3: 0.75    # Global threshold for high confidence
-    local_q2: 0.50     # Project-level threshold for medium confidence
-    local_q3: 0.75     # Project-level threshold for high confidence
-
   # Global pruning threshold
   pruning:
     use_quantile: True
     sentence_threshold: 0.6
     global_threshold: 0.6
     keyword_threshold: 0.6
-
-  # Zero-shot validation settings  
-  zeroshot:
-    model_name: "tasksource/ModernBERT-large-nli"
-    batch_size: 32
