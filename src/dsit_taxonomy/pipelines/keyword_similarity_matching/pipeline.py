@@ -37,6 +37,7 @@ from .nodes import (
     add_metadata,
     aggregate_scores_to_labels,
     prune_raw_matches,
+    validate_with_zeroshot,
 )
 
 
@@ -173,6 +174,20 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "combine_scores_and_aggregate",
                         "aggregate"
                     ],
+                ),
+                # Validate with zero-shot classification
+                node(
+                    func=validate_with_zeroshot,
+                    inputs={
+                        "aggregated_scores": f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
+                        "project_texts": "projects.gtr_data.db",
+                        "confidence_threshold": "params:similarity_matching.zeroshot.confidence_threshold",
+                        "batch_size": "params:similarity_matching.zeroshot.batch_size",
+                        "model_name": "params:similarity_matching.zeroshot.model_name",
+                    },
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
+                    name=f"validate_zeroshot_{taxonomy_name}",
+                    tags=["validation"],
                 ),
             ],
             tags=[

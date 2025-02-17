@@ -2,11 +2,12 @@ import logging
 import uuid
 from typing import List, Dict
 import pandas as pd
-from scipy.stats import entropy
 from spacy.lang.en import English
 from joblib import Parallel, delayed
 from functools import partial
 import numpy as np
+from transformers import pipeline
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -603,3 +604,102 @@ def _assign_local_bins(
     )
 
     return df
+
+
+def validate_with_zeroshot(
+    aggregated_scores: pd.DataFrame,
+    project_texts: pd.DataFrame,
+    confidence_threshold: float = 0.3,
+    batch_size: int = 32,
+    model_name: str = "tasksource/ModernBERT-large-nli",
+) -> pd.DataFrame:
+    """
+    Validate taxonomy assignments using zero-shot classification.
+
+    Args:
+        aggregated_scores: DataFrame with project-label pairs and confidence bins
+        project_texts: DataFrame with project_id and text columns
+        confidence_threshold: Minimum confidence score for zero-shot predictions
+        batch_size: Number of projects to process at once
+        model_name: HuggingFace model to use for zero-shot classification
+    """
+    logger.info("Initializing zero-shot classifier with model: %s", model_name)
+    classifier = pipeline(
+        "zero-shot-classification",
+        model=model_name,
+        multi_label=True,
+        batch_size=batch_size,
+        truncation=True,
+    )
+
+    # Merge project texts efficiently
+    scores_with_text = pd.merge(
+        aggregated_scores[["project_id", "taxonomy_label"]],
+        project_texts[["project_id", "text"]],
+        on="project_id",
+        how="inner",
+    )
+
+    # Group and prepare batches
+    project_groups = (
+        scores_with_text.groupby("project_id")
+        .agg({"text": "first", "taxonomy_label": list})
+        .reset_index()
+        .rename(columns={"taxonomy_label": "candidate_labels"})
+    )
+
+    logger.info("Running zero-shot classification for %d projects", len(project_groups))
+
+    project_groups = project_groups.head(50)
+    results = []
+    for _, row in tqdm(project_groups.iterrows(), total=len(project_groups)):
+        try:
+            # Get predictions for single text and its candidate labels
+            prediction = classifier(
+                row["text"],
+                candidate_labels=row["candidate_labels"],
+                hypothesis_template="This research project is about {}.",
+            )
+
+            # Add results for each label
+            for label, score in zip(prediction["labels"], prediction["scores"]):
+                results.append(
+                    {
+                        "project_id": row["project_id"],
+                        "taxonomy_label": label,
+                        "zeroshot_score": score,
+                    }
+                )
+
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning(
+                "Failed to classify project %s: %s", row["project_id"], str(e)
+            )
+
+    # Convert and merge results efficiently
+    zeroshot_df = pd.DataFrame(results)
+    final_scores = pd.merge(
+        aggregated_scores, zeroshot_df, on=["project_id", "taxonomy_label"], how="left"
+    )
+
+    final_scores["zeroshot_bin"] = final_scores["zeroshot_score"].apply(
+        lambda x: (
+            "very high"
+            if x >= 0.9
+            else (
+                "high"
+                if x >= 0.7
+                else "medium" if x >= 0.5 else "low" if x < 0.5 else np.nan
+            )
+        )
+    )
+
+    logger.info(
+        "Zero-shot classification complete:\n"
+        "Mean score: %.3f\n"
+        "Score distribution:\n%s",
+        final_scores["zeroshot_score"].mean(),
+        final_scores["zeroshot_score"].describe().to_string(),
+    )
+
+    return final_scores

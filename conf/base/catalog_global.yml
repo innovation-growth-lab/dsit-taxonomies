@@ -168,6 +168,11 @@ keywords.gtr_data.embeddings:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_aggregated.parquet
 
+# Zero-shot filtered scores
+"projects.gtr_data.{taxonomy_name}_scores.zeroshot":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_zeroshot.parquet
+
 # # -> 5. GTR Fine Tuning Data:
 gtr.projects.sample:
   <<: *_pq
