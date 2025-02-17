@@ -1,6 +1,51 @@
 """
-This is a boilerplate pipeline 'data_annotation_gtr'
-generated using Kedro 0.19.6
+This pipeline extracts and processes keywords from research project texts
+using multiple keyword extraction methods.
+
+The pipeline uses four different extractors:
+1. DBpedia Spotlight
+   - Entity linking to DBpedia concepts
+   - Identifies domain-specific terminology
+   - Provides structured knowledge base links
+
+2. RAKE (Rapid Automatic Keyword Extraction)
+   - Statistical approach using word co-occurrences
+   - Identifies multi-word phrases
+   - Scores based on word frequency and co-occurrence
+
+3. YAKE (Yet Another Keyword Extractor)
+   - Unsupervised approach for multilingual keyword extraction
+   - Uses text features like word position and case
+   - Handles domain-specific content well
+
+4. KeyBERT
+   - Transformer-based keyword extraction
+   - Uses semantic similarity with BERT embeddings
+   - Identifies contextually relevant terms
+
+The pipeline processes each project incrementally and handles:
+- Batched processing for memory efficiency
+- Parallel extraction where possible
+- Progress tracking and checkpointing
+- Result aggregation and deduplication
+
+Dependencies:
+    - pandas
+    - keybert
+    - dbpedia-spotlight
+    - rake-nltk
+    - yake
+    - concurrent.futures
+
+Example:
+    Run the complete annotation pipeline:
+    ```
+    kedro run --pipeline data_annotation_gtr
+    ```
+    Or run a specific extractor:
+    ```
+    kedro run --pipeline data_annotation_gtr --nodes dbp_annotate_data
+    ```
 """
 
 from kedro.pipeline import Pipeline, pipeline, node
@@ -13,9 +58,18 @@ from .nodes import (
 )
 
 
-def create_pipeline(  # pylint: disable=unused-argument&missing-function-docstring
-    **kwargs,
-) -> Pipeline:
+def create_pipeline(**kwargs) -> Pipeline:
+    """
+    Creates a pipeline for extracting keywords from research project texts.
+
+    The pipeline runs multiple keyword extractors in parallel and combines
+    their results. It includes checkpointing to handle large datasets
+    efficiently.
+
+    Returns:
+        Pipeline: A pipeline containing nodes for each keyword extractor
+        and result aggregation
+    """
     annotation_pipeline = pipeline(
         [
             node(
