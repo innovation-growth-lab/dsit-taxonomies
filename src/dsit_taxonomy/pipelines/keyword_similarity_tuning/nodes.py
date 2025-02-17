@@ -17,7 +17,7 @@ The module provides functionality for:
    - Providing structured taxonomy assignments
    - Handling multiple rounds of validation
 
-3. Parameter Optimization
+3. Parameter Optimisation
    - Grid search over parameter space
    - Computing metrics for each parameter set
    - Finding optimal weights and thresholds
@@ -366,7 +366,7 @@ def tune_matching_parameters(
     param_grid: dict,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Tune parameters for aggregate_scores_to_labels to maximize validation metrics.
+    Tune parameters for aggregate_scores_to_labels to maximise validation metrics.
 
     Args:
         sentence_matches: DataFrame with sentence-level matches
