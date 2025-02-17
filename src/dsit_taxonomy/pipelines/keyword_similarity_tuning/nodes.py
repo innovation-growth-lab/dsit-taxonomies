@@ -18,8 +18,8 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from ..keyword_similarity_matching.nodes import (
     prune_raw_matches,
     combine_scores,
-    aggregate_scores_to_labels,
 )
+from ..keyword_similarity_refinement.nodes import aggregate_scores_to_labels
 
 logger = logging.getLogger(__name__)
 
@@ -518,7 +518,9 @@ def _compute_per_project_metrics(
         )
 
         # Calculate metrics
-        true_positives = project_data[algo_high & expert_agreement]["taxonomy_label"].tolist()
+        true_positives = project_data[algo_high & expert_agreement][
+            "taxonomy_label"
+        ].tolist()
         false_positives = project_data[algo_high & expert_disagreement][
             "taxonomy_label"
         ].tolist()
