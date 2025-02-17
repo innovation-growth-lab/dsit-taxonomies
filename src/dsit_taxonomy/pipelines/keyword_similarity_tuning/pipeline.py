@@ -83,7 +83,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"tuning.{taxonomy_name}.expert_assessment.processed",
                     ],
                     name=f"prepare_tuning_data_{taxonomy_name}",
-                    tags=[f"tuning_{taxonomy_name}", "dev"],
+                    tags=[f"tuning_{taxonomy_name}", "dev", "tuning"],
                 ),
                 node(
                     func=tune_matching_parameters,

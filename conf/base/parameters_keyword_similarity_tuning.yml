@@ -115,13 +115,13 @@ tuning:
   parameter_tuning:
     param_grid:
       use_quantile: [False, True]
-      sentence_threshold: [0.6, 0.7, 0.8]
-      global_threshold: [0.6, 0.7, 0.8]
-      keyword_threshold: [0.6, 0.7, 0.8]
+      sentence_threshold: [0.5, 0.55, 0.6] #, 0.7, 0.8]
+      global_threshold: [0.5, 0.55, 0.6] #, 0.7, 0.8]
+      keyword_threshold: [0.5, 0.55, 0.6] #, 0.7, 0.8]
       sentence_weight: [0.6, 0.7]
       global_weight: [0.2, 0.3]
       normalise_by_matches: [False, True]
-      global_q2_threshold: [0.5]
-      global_q3_threshold: [0.75]
+      global_q2_threshold: [0.25]
+      global_q3_threshold: [0.5]
       local_q2_threshold: [0.5]
       local_q3_threshold: [0.75]
