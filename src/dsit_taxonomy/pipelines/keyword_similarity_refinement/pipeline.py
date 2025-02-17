@@ -5,13 +5,14 @@ and zero-shot classification.
 The pipeline performs two main steps:
 1. Score Aggregation
    - Combines sentence-level scores into project-level assignments
-   - Applies confidence binning based on score distributions
+   - Assigns initial confidence bins based on score distributions
    - Uses both global and project-level thresholds
 
 2. Zero-Shot Validation
-   - Validates taxonomy assignments using a language model
-   - Provides additional confidence scores for each assignment
+   - Validates initial confidence assignments
+   - Provides additional validation scores
    - Helps filter out spurious matches
+   - Produces final confidence assignments
 
 Dependencies:
     - pandas

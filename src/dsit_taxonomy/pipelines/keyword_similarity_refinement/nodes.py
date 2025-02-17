@@ -42,7 +42,9 @@ def aggregate_scores_to_labels(
             - relevance_score: Combined relevance score
             - global_bin: Confidence bin based on global thresholds
             - local_bin: Confidence bin based on project-level thresholds
-            - final_bin: Final confidence bin (minimum of global and local)
+            - confidence_bin: Combined confidence bin (minimum of global and local)
+            - num_matching_sentences: Count of sentences matching this label
+            - num_sentences: Total sentences in the project
     """
     logger.info("Aggregating sentence-level scores to project-label pairs")
 

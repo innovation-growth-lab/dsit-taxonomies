@@ -26,7 +26,7 @@ def assign_local_bins(
     1. Computes local quantile thresholds based on score distribution
     2. Assigns initial bins based on quantiles
     3. Refines bins based on relative score gaps
-    4. Takes minimum of global and local bins for final assignment
+    4. Takes minimum of global and local bins for confidence assignment
 
     Args:
         df: DataFrame with project-label scores containing:
@@ -41,7 +41,7 @@ def assign_local_bins(
     Returns:
         DataFrame with additional columns:
             - local_bin: Confidence bin based on project-level thresholds
-            - final_bin: Final confidence bin (minimum of global and local)
+            - confidence_bin: Combined confidence bin (minimum of global and local)
     """
     # Process groups in parallel
     project_groups = [group for _, group in df.groupby("project_id")]
@@ -58,7 +58,7 @@ def assign_local_bins(
 
     df["local_bin"] = pd.concat(results)
     bin_order = {"high": 3, "medium": 2, "low": 1}
-    df["final_bin"] = df.apply(
+    df["confidence_bin"] = df.apply(
         lambda row: {3: "high", 2: "medium", 1: "low"}[
             min(bin_order[row["global_bin"]], bin_order[row["local_bin"]])
         ],

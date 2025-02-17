@@ -435,7 +435,7 @@ def tune_matching_parameters(
 
         # map the id to the label
         grid_assessment_df = assessment_df.merge(
-            aggregated_scores[["project_id", "taxonomy_label_id", "final_bin"]],
+            aggregated_scores[["project_id", "taxonomy_label_id", "confidence_bin"]],
             on=["project_id", "taxonomy_label_id"],
             how="left",
         )
@@ -534,7 +534,7 @@ def _compute_per_project_metrics(
         project_data = data[data["project_id"] == project_id]
 
         # Define conditions for true/false positives/negatives
-        algo_high = project_data["final_bin"] == "high"
+        algo_high = project_data["confidence_bin"] == "high"
         expert_agreement = (project_data["positive"] is True) | (
             project_data["likelihood"] == "high"
         )
@@ -606,9 +606,9 @@ def _validate_predictions(
     for threshold in ["strict", "relaxed"]:
         # Define assessment condition based on threshold
         algo_condition = (
-            (data["final_bin"] == "high")
+            (data["confidence_bin"] == "high")
             if threshold == "strict"
-            else (data["final_bin"].isin(["high", "medium"]))
+            else (data["confidence_bin"].isin(["high", "medium"]))
         )
 
         # True positives: Algorithm predicts high AND expert agrees
