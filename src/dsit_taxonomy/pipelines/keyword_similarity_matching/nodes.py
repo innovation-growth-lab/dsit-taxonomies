@@ -8,6 +8,7 @@ from functools import partial
 import numpy as np
 from transformers import pipeline
 from tqdm import tqdm
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -618,17 +619,19 @@ def validate_with_zeroshot(
     Args:
         aggregated_scores: DataFrame with project-label pairs and confidence bins
         project_texts: DataFrame with project_id and text columns
-        confidence_threshold: Minimum confidence score for zero-shot predictions
         batch_size: Number of projects to process at once
         model_name: HuggingFace model to use for zero-shot classification
     """
     logger.info("Initializing zero-shot classifier with model: %s", model_name)
+
+    # Initialize with memory-efficient settings
     classifier = pipeline(
         "zero-shot-classification",
         model=model_name,
         multi_label=True,
         batch_size=batch_size,
         truncation=True,
+        torch_dtype=torch.float16,
     )
 
     # Merge project texts efficiently
@@ -648,57 +651,72 @@ def validate_with_zeroshot(
     )
 
     logger.info("Running zero-shot classification for %d projects", len(project_groups))
-
-    project_groups = project_groups.head(150)
     results = []
-    for _, row in tqdm(project_groups.iterrows(), total=len(project_groups)):
-        try:
-            # Get predictions for single text and its candidate labels
-            prediction = classifier(
-                row["text"],
-                candidate_labels=row["candidate_labels"],
-                hypothesis_template="This research project is about {}.",
-            )
 
-            # Add results for each label
-            for label, score in zip(prediction["labels"], prediction["scores"]):
-                results.append(
-                    {
+    # Process in smaller chunks to manage memory
+    chunk_size = 100  # Process 100 projects at a time
+    for chunk_start in range(0, len(project_groups), chunk_size):
+        chunk_end = min(chunk_start + chunk_size, len(project_groups))
+        chunk = project_groups.iloc[chunk_start:chunk_end]
+        
+        logger.info(
+            "Processing projects %d to %d of %d",
+            chunk_start, chunk_end, len(project_groups)
+        )
+
+        for _, row in tqdm(chunk.iterrows(), total=len(chunk)):
+            try:
+                # Get predictions
+                prediction = classifier(
+                    row["text"],
+                    candidate_labels=row["candidate_labels"],
+                    hypothesis_template="This research project is about {}.",
+                )
+
+                # Store results
+                for label, score in zip(prediction["labels"], prediction["scores"]):
+                    results.append({
                         "project_id": row["project_id"],
                         "taxonomy_label": label,
                         "zeroshot_score": score,
-                    }
-                )
+                    })
 
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.warning(
-                "Failed to classify project %s: %s", row["project_id"], str(e)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.warning(
+                    "Failed to classify project %s: %s",
+                    row["project_id"],
+                    str(e),
+                )
+                continue
+
+        # Clear memory after each chunk
+        torch.cuda.empty_cache()
+        
+        # Log progress
+        if len(results) > 0:
+            logger.info(
+                "Processed %d projects. Current memory usage: %.1f GB",
+                len(results),
+                torch.cuda.max_memory_allocated() / 1e9
             )
 
-    # Convert and merge results efficiently
+    # Process results
     zeroshot_df = pd.DataFrame(results)
     final_scores = pd.merge(
-        aggregated_scores, zeroshot_df, on=["project_id", "taxonomy_label"], how="left"
+        aggregated_scores,
+        zeroshot_df,
+        on=["project_id", "taxonomy_label"],
+        how="left",
     )
 
     final_scores["zeroshot_bin"] = final_scores["zeroshot_score"].apply(
         lambda x: (
-            "very high"
-            if x >= 0.9
-            else (
-                "high"
-                if x >= 0.7
-                else "medium" if x >= 0.5 else "low" if x >=0.25 else "very low"
-            )
+            "very high" if x >= 0.9
+            else "high" if x >= 0.7
+            else "medium" if x >= 0.5
+            else "low" if x >= 0.25
+            else "very low"
         )
-    )
-
-    logger.info(
-        "Zero-shot classification complete:\n"
-        "Mean score: %.3f\n"
-        "Score distribution:\n%s",
-        final_scores["zeroshot_score"].mean(),
-        final_scores["zeroshot_score"].describe().to_string(),
     )
 
     return final_scores
