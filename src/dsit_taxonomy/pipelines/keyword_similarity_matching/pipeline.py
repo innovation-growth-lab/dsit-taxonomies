@@ -37,7 +37,7 @@ from .nodes import (
     add_metadata,
     aggregate_scores_to_labels,
     prune_raw_matches,
-    validate_with_zeroshot,
+    enhance_with_zeroshot,
 )
 
 
@@ -177,7 +177,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 ),
                 # Validate with zero-shot classification
                 node(
-                    func=validate_with_zeroshot,
+                    func=enhance_with_zeroshot,
                     inputs={
                         "aggregated_scores": f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                         "project_texts": "projects.gtr_data.db",

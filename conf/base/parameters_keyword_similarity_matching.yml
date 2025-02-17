@@ -15,13 +15,11 @@ similarity_matching:
 
   # Score combination weights
   score_weights:
-    sentence_weight: 0.66  # Weight for sentence-based matches (alpha)
-    global_weight: 0.20    # Weight for global matches (beta)
-    # Remaining 0.14 goes to keyword matches (1-alpha-beta)
+    sentence_weight: 0.6  # Weight for sentence-based matches (alpha)
+    global_weight: 0.3    # Weight for global matches (beta)
+    # Remaining 0.1 goes to keyword matches (1-alpha-beta)
 
-  similarity_quantile_threshold: 0.8  # Filter out bottom X% of scores
-
-  normalise_by_matches: True
+  normalise_by_matches: False
 
   # Confidence binning parameters
   binning:
@@ -33,9 +31,9 @@ similarity_matching:
   # Global pruning threshold
   pruning:
     use_quantile: True
-    sentence_threshold: 0.75
-    global_threshold: 0.75
-    keyword_threshold: 0.75
+    sentence_threshold: 0.6
+    global_threshold: 0.6
+    keyword_threshold: 0.6
 
   # Zero-shot validation settings  
   zeroshot:

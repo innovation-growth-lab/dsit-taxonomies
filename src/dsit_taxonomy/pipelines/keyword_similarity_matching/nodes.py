@@ -607,7 +607,7 @@ def _assign_local_bins(
     return df
 
 
-def validate_with_zeroshot(
+def enhance_with_zeroshot(
     aggregated_scores: pd.DataFrame,
     project_texts: pd.DataFrame,
     batch_size: int = 32,
