@@ -55,7 +55,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_scores_to_labels_{taxonomy_name}",
-                    tags=["combine_scores_and_aggregate", "aggregate"],
+                    tags=["aggregate"],
                 ),
                 node(
                     func=enhance_with_zeroshot,
