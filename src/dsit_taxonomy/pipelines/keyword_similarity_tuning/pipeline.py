@@ -7,6 +7,7 @@ from .nodes import (
     get_expert_assessment,
     prepare_tuning_data,
     tune_matching_parameters,
+    evaluate_zeroshot_quality,
 )
 
 
@@ -68,7 +69,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
         )
 
     # Parameter tuning pipeline
-    def tuning_pipeline(taxonomy_name: str) -> Pipeline:
+    def tuning_confidence_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
                 node(
@@ -105,8 +106,26 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             ]
         )
 
+    def evaluate_zeroshot_pipeline(taxonomy_name: str) -> Pipeline:
+        return pipeline(
+            [
+                node(
+                    func=evaluate_zeroshot_quality,
+                    inputs={
+                        "zeroshot_scores": f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
+                        "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
+                        "assessment_df": f"tuning.{taxonomy_name}.expert_assessment.processed",
+                    },
+                    outputs=f"tuning.{taxonomy_name}.zeroshot_quality_metrics",
+                    name=f"evaluate_zeroshot_quality_{taxonomy_name}",
+                    tags=[f"tuning_{taxonomy_name}", "evaluate_zeroshot"],
+                ),
+            ]
+        )
+
     return (
         sample_projects_pipeline
         + sum(expert_labeling_pipeline(tax) for tax in ["cwts", "goscience"])
-        + sum(tuning_pipeline(tax) for tax in ["cwts", "goscience"])
+        + sum(tuning_confidence_pipeline(tax) for tax in ["cwts", "goscience"])
+        + sum(evaluate_zeroshot_pipeline(tax) for tax in ["cwts", "goscience"])
     )

@@ -1,3 +1,20 @@
+"""
+This module contains functions for processing and standardizing research taxonomies.
+
+It provides utilities to transform taxonomy data from different sources (CWTS, GO-SCIENCE, OpenAlex)
+into a standardized format with hierarchical labels and IDs. The processed taxonomies are used
+for project classification and analysis.
+
+The main functions:
+- preprocess_cwts_topics: Process CWTS Leiden Ranking topics
+- preprocess_goscience_taxonomy: Process GO-SCIENCE research areas  
+- preprocess_oa_concepts: Process OpenAlex research concepts
+
+Each function takes a raw taxonomy DataFrame and returns:
+1. A full hierarchical taxonomy with all levels
+2. A bottom-level only version for direct matching
+"""
+
 import logging
 import uuid
 import pandas as pd

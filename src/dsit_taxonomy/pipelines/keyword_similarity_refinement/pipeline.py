@@ -66,8 +66,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "model_name": "params:similarity_refinement.zeroshot.model_name",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
-                    name=f"validate_zeroshot_{taxonomy_name}",
-                    tags=["validation"],
+                    name=f"enhance_zeroshot_{taxonomy_name}",
+                    tags=["zeroshot"],
                 ),
             ],
             tags=[

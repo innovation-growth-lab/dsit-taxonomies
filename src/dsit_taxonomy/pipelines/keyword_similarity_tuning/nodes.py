@@ -17,7 +17,7 @@ The module provides functionality for:
    - Providing structured taxonomy assignments
    - Handling multiple rounds of validation
 
-3. Parameter Optimisation
+3. Confidence Bin Parameter Optimisation
    - Grid search over parameter space
    - Computing metrics for each parameter set
    - Finding optimal weights and thresholds
@@ -45,6 +45,11 @@ from ..keyword_similarity_matching.nodes import (
     combine_scores,
 )
 from ..keyword_similarity_refinement.nodes import aggregate_scores_to_labels
+from .utils import (
+    compute_likelihood_agreement,
+    compute_per_project_metrics,
+    validate_predictions,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -441,7 +446,7 @@ def tune_matching_parameters(
         )
 
         # Get per-project metrics
-        project_metrics = _compute_per_project_metrics(
+        project_metrics = compute_per_project_metrics(
             expert_df.copy(), grid_assessment_df.copy()
         )
 
@@ -451,7 +456,7 @@ def tune_matching_parameters(
         project_results.append(project_metrics)
 
         # Validate predictions for overall metrics
-        validation_metrics = _validate_predictions(
+        validation_metrics = validate_predictions(
             expert_df.copy(), grid_assessment_df.copy()
         )
 
@@ -501,182 +506,146 @@ def tune_matching_parameters(
     return pd.DataFrame(results), project_results_df
 
 
-def _compute_per_project_metrics(
-    expert_df: pd.DataFrame, assessment_df: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Compute true positives, false positives, and false negatives for each project.
-
-    Args:
-        expert_df: DataFrame with expert labels
-        assessment_df: DataFrame with assessment predictions
-
-    Returns:
-        DataFrame with per-project metrics
-    """
-    # Remove hallucinated labels and convert to lowercase
-    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
-
-    # Merge expert and assessment predictions
-    data = pd.merge(
-        assessment_df,
-        expert_df,
-        on=["project_id", "taxonomy_label_id"],
-        how="outer",
-    )
-
-    data["taxonomy_label"] = data["taxonomy_label_x"].fillna(data["taxonomy_label_y"])
-    data = data.drop(columns=["taxonomy_label_x", "taxonomy_label_y"])
-
-    project_metrics = []
-
-    for project_id in data["project_id"].unique():
-        project_data = data[data["project_id"] == project_id]
-
-        # Define conditions for true/false positives/negatives
-        algo_high = project_data["confidence_bin"] == "high"
-        expert_agreement = (project_data["positive"] is True) | (
-            project_data["likelihood"] == "high"
-        )
-        expert_disagreement = (project_data["positive"] is False) | (
-            project_data["likelihood"] != "high"
-        )
-
-        # Calculate metrics
-        true_positives = project_data[algo_high & expert_agreement][
-            "taxonomy_label"
-        ].tolist()
-        false_positives = project_data[algo_high & expert_disagreement][
-            "taxonomy_label"
-        ].tolist()
-        false_negatives = project_data[
-            (~algo_high | algo_high.isna()) & expert_agreement
-        ]["taxonomy_label"].tolist()
-
-        project_metrics.append(
-            {
-                "project_id": project_id,
-                "num_true_positives": len(true_positives),
-                "true_positives": true_positives,
-                "num_false_positives": len(false_positives),
-                "false_positives": false_positives,
-                "num_false_negatives": len(false_negatives),
-                "false_negatives": false_negatives,
-            }
-        )
-
-    return pd.DataFrame(project_metrics)
-
-
-def _validate_predictions(
+def evaluate_zeroshot_quality(
+    zeroshot_scores: pd.DataFrame,
     expert_df: pd.DataFrame,
     assessment_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Validate predictions by comparing expert high likelihood labels with assessment predictions.
-    Computes metrics for both strict (high only) and relaxed (high+medium) assessment confidence.
+    Evaluate the quality of zero-shot confidence scores against expert labels.
 
-    True Positive: assessment predicts high confidence AND
-                  (expert validates as positive OR gave high likelihood)
-    False Positive: assessment predicts high confidence BUT
-                   (expert validates as negative OR didn't give high likelihood)
-    False Negative: assessment doesn't predict high confidence BUT
-                   (expert validates as positive OR gave high likelihood)
+    This function:
+    1. Compares zero-shot bins with expert likelihood ratings
+    2. Compares zero-shot bins with expert assessment validations
+    3. Computes agreement metrics and confusion matrices
+    4. Analyses false positives and negatives
+
+    Args:
+        zeroshot_scores: DataFrame containing:
+            - project_id: Project identifier
+            - taxonomy_label_id: Label identifier
+            - zeroshot_score: Raw zero-shot confidence score
+            - zeroshot_bin: Binned confidence ('very high', 'high', etc.)
+        expert_df: DataFrame with expert labels containing:
+            - project_id: Project identifier
+            - taxonomy_label_id: Label identifier
+            - likelihood: Expert assigned likelihood ('high', 'medium', 'low')
+        assessment_df: DataFrame with expert assessments containing:
+            - project_id: Project identifier
+            - taxonomy_label_id: Label identifier
+            - positive: Boolean indicating expert validation
+
+    Returns:
+        DataFrame containing quality metrics:
+            - metric_type: Type of metric (agreement, precision, recall, etc.)
+            - threshold: Confidence threshold used ('strict', 'relaxed')
+            - value: Metric value
+            - details: Additional information about the metric
     """
-    logger.info("Validating predictions against expert high likelihood labels")
+    logger.info("Evaluating zero-shot classification quality")
 
-    # Remove hallucinated labels and convert to lowercase
-    expert_df["likelihood"] = expert_df["likelihood"].str.lower()
-
-    # Merge expert and assessment predictions
-    data = pd.merge(
-        assessment_df,
+    # Merge datasets
+    merged_expert = pd.merge(
+        zeroshot_scores,
         expert_df,
         on=["project_id", "taxonomy_label_id"],
-        how="outer",
+        how="inner",
+        suffixes=("", "_expert"),
     )
 
-    # Clean up labels
-    data["taxonomy_label"] = data["taxonomy_label_x"].fillna(data["taxonomy_label_y"])
-    data = data.drop(columns=["taxonomy_label_x", "taxonomy_label_y"])
+    merged_assessment = pd.merge(
+        zeroshot_scores,
+        assessment_df,
+        on=["project_id", "taxonomy_label_id"],
+        how="inner",
+        suffixes=("", "_assessment"),
+    )
 
     metrics = []
 
-    # Calculate metrics for both strict and relaxed thresholds
+    merged_expert["agreement"] = merged_expert.apply(
+        compute_likelihood_agreement, axis=1
+    )
+
+    agreement_stats = merged_expert["agreement"].value_counts(normalize=True)
+    for agreement_type in ["strong", "weak", "disagree"]:
+        metrics.append(
+            {
+                "metric_type": "expert_likelihood_agreement",
+                "threshold": agreement_type,
+                "value": agreement_stats.get(agreement_type, 0),
+                "details": f"Proportion of {agreement_type} agreement with expert likelihood",
+            }
+        )
+
+    # Analyse agreement with expert assessment
     for threshold in ["strict", "relaxed"]:
-        # Define assessment condition based on threshold
-        algo_condition = (
-            (data["confidence_bin"] == "high")
-            if threshold == "strict"
-            else (data["confidence_bin"].isin(["high", "medium"]))
-        )
+        # Define what counts as a positive prediction
+        if threshold == "strict":
+            zeroshot_positive = merged_assessment["zeroshot_bin"].isin(
+                ["very high", "high"]
+            )
+        else:
+            zeroshot_positive = merged_assessment["zeroshot_bin"].isin(
+                ["very high", "high", "medium"]
+            )
 
-        # True positives: Algorithm predicts high AND expert agrees
-        expert_agreement = (data["positive"] is True) | (
-            data["likelihood"].isin(["high", "medium"])
-        )  # Positive often specified to odd ones maybe consider running True & ["high", "medium"]
-        true_positives = sum(algo_condition & expert_agreement)
+        true_pos = sum(zeroshot_positive & merged_assessment["positive"])
+        false_pos = sum(zeroshot_positive & ~merged_assessment["positive"])
+        false_neg = sum(~zeroshot_positive & merged_assessment["positive"])
+        true_neg = sum(~zeroshot_positive & ~merged_assessment["positive"])
 
-        # False positives: Algorithm predicts high BUT expert disagrees
-        expert_disagreement = (data["positive"] is False) | (
-            ~data["likelihood"].isin(["high", "medium"])
-        )
-        false_positives = sum(algo_condition & expert_disagreement)
-
-        # False negatives: Algorithm doesn't predict high (or is missing) BUT
-        # expert thinks it should
-        false_negatives = sum(
-            (~algo_condition | algo_condition.isna()) & expert_agreement
-        )
-
-        # Calculate metrics
         precision = (
-            true_positives / (true_positives + false_positives)
-            if (true_positives + false_positives) > 0
-            else 0
+            true_pos / (true_pos + false_pos) if (true_pos + false_pos) > 0 else 0
         )
-        recall = (
-            true_positives / (true_positives + false_negatives)
-            if (true_positives + false_negatives) > 0
-            else 0
-        )
+        recall = true_pos / (true_pos + false_neg) if (true_pos + false_neg) > 0 else 0
         f1 = (
-            2 * precision * recall / (precision + recall)
+            2 * (precision * recall) / (precision + recall)
             if (precision + recall) > 0
             else 0
         )
 
-        metrics.append(
-            {
-                "threshold": threshold,
-                "true_positives": true_positives,
-                "false_positives": false_positives,
-                "false_negatives": false_negatives,
-                "precision": precision,
-                "recall": recall,
-                "f1_score": f1,
-            }
+        metrics.extend(
+            [
+                {
+                    "metric_type": "precision",
+                    "threshold": threshold,
+                    "value": precision,
+                    "details": f"Precision using {threshold} threshold",
+                },
+                {
+                    "metric_type": "recall",
+                    "threshold": threshold,
+                    "value": recall,
+                    "details": f"Recall using {threshold} threshold",
+                },
+                {
+                    "metric_type": "f1",
+                    "threshold": threshold,
+                    "value": f1,
+                    "details": f"F1 score using {threshold} threshold",
+                },
+            ]
         )
 
-        # Format threshold description for logging
-        threshold_desc = "high only" if threshold == "strict" else "high+medium"
-
+        # Log detailed results
         logger.info(
-            "%s Threshold Metrics (algo: %s):\n"
-            "Precision: %0.3f\n"
-            "Recall: %0.3f\n"
-            "F1 Score: %0.3f\n"
+            "%s threshold metrics:\n"
+            "Precision: %.3f\n"
+            "Recall: %.3f\n"
+            "F1: %.3f\n"
             "True Positives: %d\n"
             "False Positives: %d\n"
-            "False Negatives: %d",
+            "False Negatives: %d\n"
+            "True Negatives: %d",
             threshold.title(),
-            threshold_desc,
             precision,
             recall,
             f1,
-            true_positives,
-            false_positives,
-            false_negatives,
+            true_pos,
+            false_pos,
+            false_neg,
+            true_neg,
         )
 
     return pd.DataFrame(metrics)
