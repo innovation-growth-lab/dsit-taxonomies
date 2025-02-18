@@ -206,3 +206,7 @@ gtr.projects.sample:
 "tuning.{taxonomy_name}.project_results":
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/project_results.parquet
+
+"validate.{taxonomy_name}.zeroshot_quality_metrics":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/zeroshot_quality_metrics.parquet
