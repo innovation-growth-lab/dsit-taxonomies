@@ -506,146 +506,164 @@ def tune_matching_parameters(
     return pd.DataFrame(results), project_results_df
 
 
-def evaluate_zeroshot_quality(
+def evaluate_scoring_quality(
     zeroshot_scores: pd.DataFrame,
     expert_df: pd.DataFrame,
     assessment_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Evaluate the quality of zero-shot confidence scores against expert labels.
-
-    This function:
-    1. Compares zero-shot bins with expert likelihood ratings
-    2. Compares zero-shot bins with expert assessment validations
-    3. Computes agreement metrics and confusion matrices
-    4. Analyses false positives and negatives
+    Evaluate the quality of zero-shot and combined confidence scores against expert labels.
 
     Args:
-        zeroshot_scores: DataFrame containing:
-            - project_id: Project identifier
-            - taxonomy_label_id: Label identifier
-            - zeroshot_score: Raw zero-shot confidence score
-            - zeroshot_bin: Binned confidence ('very high', 'high', etc.)
-        expert_df: DataFrame with expert labels containing:
-            - project_id: Project identifier
-            - taxonomy_label_id: Label identifier
-            - likelihood: Expert assigned likelihood ('high', 'medium', 'low')
-        assessment_df: DataFrame with expert assessments containing:
-            - project_id: Project identifier
-            - taxonomy_label_id: Label identifier
-            - positive: Boolean indicating expert validation
+        zeroshot_scores: DataFrame containing zero-shot scores and confidence bins
+        expert_df: DataFrame with expert labels
+        assessment_df: DataFrame with expert assessments
 
     Returns:
-        DataFrame containing quality metrics:
-            - metric_type: Type of metric (agreement, precision, recall, etc.)
-            - threshold: Confidence threshold used ('strict', 'relaxed')
-            - value: Metric value
-            - details: Additional information about the metric
+        DataFrame containing quality metrics for zero-shot and combined approaches
     """
-    logger.info("Evaluating zero-shot classification quality")
+    logger.info("Evaluating classification quality")
 
-    # Merge datasets
-    merged_expert = pd.merge(
-        zeroshot_scores,
-        expert_df,
-        on=["project_id", "taxonomy_label_id"],
-        how="inner",
-        suffixes=("", "_expert"),
+    # Create combined scores using max of zeroshot and confidence
+    combined_scores = zeroshot_scores.copy()
+
+    # Map confidence bins to numeric scores for comparison
+    confidence_map = {
+        "very high": 0.95,
+        "high": 0.75,
+        "medium": 0.5,
+        "low": 0.25,
+    }
+
+    combined_scores["confidence_score"] = combined_scores["confidence_bin"].map(
+        confidence_map
     )
+    combined_scores["combined_score"] = combined_scores[
+        ["zeroshot_score", "confidence_score"]
+    ].max(axis=1)
 
-    merged_assessment = pd.merge(
-        zeroshot_scores,
-        assessment_df,
-        on=["project_id", "taxonomy_label_id"],
-        how="inner",
-        suffixes=("", "_assessment"),
+    # Create combined bins
+    combined_scores["combined_bin"] = pd.cut(
+        combined_scores["combined_score"],
+        bins=[-float("inf"), 0.5, 0.7, 0.9, float("inf")],
+        labels=["low", "medium", "high", "very high"],
     )
 
     metrics = []
 
-    merged_expert["agreement"] = merged_expert.apply(
-        compute_likelihood_agreement, axis=1
-    )
+    # Evaluate each approach: zeroshot, confidence, and combined
+    for approach in ["zeroshot", "confidence", "combined"]:
+        bin_column = f"{approach}_bin"
 
-    agreement_stats = merged_expert["agreement"].value_counts(normalize=True)
-    for agreement_type in ["strong", "weak", "disagree"]:
-        metrics.append(
-            {
-                "metric_type": "expert_likelihood_agreement",
-                "threshold": agreement_type,
-                "value": agreement_stats.get(agreement_type, 0),
-                "details": f"Proportion of {agreement_type} agreement with expert likelihood",
-            }
+        # Merge with expert datasets
+        merged_expert = pd.merge(
+            combined_scores,
+            expert_df,
+            on=["project_id", "taxonomy_label_id"],
+            how="inner",
+            suffixes=("", "_expert"),
         )
 
-    # Analyse agreement with expert assessment
-    for threshold in ["strict", "relaxed"]:
-        # Define what counts as a positive prediction
-        if threshold == "strict":
-            zeroshot_positive = merged_assessment["zeroshot_bin"].isin(
-                ["very high", "high"]
+        merged_assessment = pd.merge(
+            combined_scores,
+            assessment_df,
+            on=["project_id", "taxonomy_label_id"],
+            how="inner",
+            suffixes=("", "_assessment"),
+        )
+
+        # Calculate agreement with expert likelihood
+        merged_expert["agreement"] = merged_expert.apply(
+            lambda x: compute_likelihood_agreement(x, bin_column=bin_column),
+            axis=1,
+        )
+
+        agreement_stats = merged_expert["agreement"].value_counts(normalize=True)
+
+        # Add agreement metrics
+        for agreement_type in ["strong", "weak", "disagree"]:
+            metrics.append(
+                {
+                    "metric_type": "expert_likelihood_agreement",
+                    "approach": approach,
+                    "threshold": agreement_type,
+                    "value": agreement_stats.get(agreement_type, 0),
+                    "details": f"Proportion of {agreement_type} agreement with expert likelihood",
+                }
             )
-        else:
-            zeroshot_positive = merged_assessment["zeroshot_bin"].isin(
-                ["very high", "high", "medium"]
+
+        # Evaluate against expert assessment
+        for threshold in ["strict", "relaxed"]:
+            if threshold == "strict":
+                positive_pred = merged_assessment[bin_column].isin(
+                    ["very high", "high"]
+                )
+            else:
+                positive_pred = merged_assessment[bin_column].isin(
+                    ["very high", "high", "medium"]
+                )
+
+            true_pos = sum(positive_pred & merged_assessment["positive"])
+            false_pos = sum(positive_pred & ~merged_assessment["positive"])
+            false_neg = sum(~positive_pred & merged_assessment["positive"])
+            true_neg = sum(~positive_pred & ~merged_assessment["positive"])
+
+            precision = (
+                true_pos / (true_pos + false_pos) if (true_pos + false_pos) > 0 else 0
+            )
+            recall = (
+                true_pos / (true_pos + false_neg) if (true_pos + false_neg) > 0 else 0
+            )
+            f1 = (
+                2 * (precision * recall) / (precision + recall)
+                if (precision + recall) > 0
+                else 0
             )
 
-        true_pos = sum(zeroshot_positive & merged_assessment["positive"])
-        false_pos = sum(zeroshot_positive & ~merged_assessment["positive"])
-        false_neg = sum(~zeroshot_positive & merged_assessment["positive"])
-        true_neg = sum(~zeroshot_positive & ~merged_assessment["positive"])
+            metrics.extend(
+                [
+                    {
+                        "metric_type": "precision",
+                        "approach": approach,
+                        "threshold": threshold,
+                        "value": precision,
+                        "details": f"Precision using {threshold} threshold",
+                    },
+                    {
+                        "metric_type": "recall",
+                        "approach": approach,
+                        "threshold": threshold,
+                        "value": recall,
+                        "details": f"Recall using {threshold} threshold",
+                    },
+                    {
+                        "metric_type": "f1",
+                        "approach": approach,
+                        "threshold": threshold,
+                        "value": f1,
+                        "details": f"F1 score using {threshold} threshold",
+                    },
+                ]
+            )
 
-        precision = (
-            true_pos / (true_pos + false_pos) if (true_pos + false_pos) > 0 else 0
-        )
-        recall = true_pos / (true_pos + false_neg) if (true_pos + false_neg) > 0 else 0
-        f1 = (
-            2 * (precision * recall) / (precision + recall)
-            if (precision + recall) > 0
-            else 0
-        )
-
-        metrics.extend(
-            [
-                {
-                    "metric_type": "precision",
-                    "threshold": threshold,
-                    "value": precision,
-                    "details": f"Precision using {threshold} threshold",
-                },
-                {
-                    "metric_type": "recall",
-                    "threshold": threshold,
-                    "value": recall,
-                    "details": f"Recall using {threshold} threshold",
-                },
-                {
-                    "metric_type": "f1",
-                    "threshold": threshold,
-                    "value": f1,
-                    "details": f"F1 score using {threshold} threshold",
-                },
-            ]
-        )
-
-        # Log detailed results
-        logger.info(
-            "%s threshold metrics:\n"
-            "Precision: %.3f\n"
-            "Recall: %.3f\n"
-            "F1: %.3f\n"
-            "True Positives: %d\n"
-            "False Positives: %d\n"
-            "False Negatives: %d\n"
-            "True Negatives: %d",
-            threshold.title(),
-            precision,
-            recall,
-            f1,
-            true_pos,
-            false_pos,
-            false_neg,
-            true_neg,
-        )
+            logger.info(
+                "%s approach - %s threshold metrics:\n"
+                "Precision: %.3f\n"
+                "Recall: %.3f\n"
+                "F1: %.3f\n"
+                "True Positives: %d\n"
+                "False Positives: %d\n"
+                "False Negatives: %d\n"
+                "True Negatives: %d",
+                approach.title(),
+                threshold,
+                precision,
+                recall,
+                f1,
+                true_pos,
+                false_pos,
+                false_neg,
+                true_neg,
+            )
 
     return pd.DataFrame(metrics)

@@ -194,23 +194,25 @@ def validate_predictions(
     return pd.DataFrame(metrics)
 
 
-def compute_likelihood_agreement(row: pd.Series) -> str:
+def compute_likelihood_agreement(
+    row: pd.Series, bin_column: str = "zeroshot_bin"
+) -> str:
     """
-    Compute agreement level between zero-shot and expert likelihood ratings.
+    Compute agreement level between model predictions and expert likelihood ratings.
 
     Args:
         row: Series containing:
             - likelihood: Expert assigned likelihood
-            - zeroshot_bin: Zero-shot confidence bin
+            - bin_column: Column name for model predictions (zeroshot_bin, confidence_bin, or combined_bin)
 
     Returns:
         Agreement level ('strong', 'weak', or 'disagree')
     """
-    if pd.isna(row["likelihood"]) or pd.isna(row["zeroshot_bin"]):
+    if pd.isna(row["likelihood"]) or pd.isna(row[bin_column]):
         return None
 
     # Map bins to numeric values
-    zeroshot_strength = {
+    model_strength = {
         "very high": 4,
         "high": 3,
         "medium": 2,
@@ -219,13 +221,15 @@ def compute_likelihood_agreement(row: pd.Series) -> str:
     }
     expert_strength = {"high": 3, "medium": 2, "low": 1}
 
-    z_val = zeroshot_strength[row["zeroshot_bin"]]
+    # Get model prediction value
+    m_val = model_strength[row[bin_column]]
+    # Get expert value (convert to lowercase to handle any inconsistencies)
     e_val = expert_strength[row["likelihood"].lower()]
 
     # Strong agreement: Difference ≤ 1
     # Weak agreement: Difference = 2
     # Disagreement: Difference > 2
-    diff = abs(z_val - e_val)
+    diff = abs(m_val - e_val)
     if diff <= 1:
         return "strong"
     elif diff == 2:

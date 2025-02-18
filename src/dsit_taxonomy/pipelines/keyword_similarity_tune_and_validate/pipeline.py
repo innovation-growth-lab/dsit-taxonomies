@@ -7,7 +7,7 @@ from .nodes import (
     get_expert_assessment,
     prepare_tuning_data,
     tune_matching_parameters,
-    evaluate_zeroshot_quality,
+    evaluate_scoring_quality,
 )
 
 
@@ -110,15 +110,15 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
         return pipeline(
             [
                 node(
-                    func=evaluate_zeroshot_quality,
+                    func=evaluate_scoring_quality,
                     inputs={
                         "zeroshot_scores": f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
                         "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
                         "assessment_df": f"tuning.{taxonomy_name}.expert_assessment.processed",
                     },
-                    outputs=f"tuning.{taxonomy_name}.zeroshot_quality_metrics",
-                    name=f"evaluate_zeroshot_quality_{taxonomy_name}",
-                    tags=[f"tuning_{taxonomy_name}", "evaluate_zeroshot"],
+                    outputs=f"validate.{taxonomy_name}.zeroshot_quality_metrics",
+                    name=f"evaluate_scoring_quality_{taxonomy_name}",
+                    tags=[f"validate_{taxonomy_name}", "evaluate_scoring_quality"],
                 ),
             ]
         )
