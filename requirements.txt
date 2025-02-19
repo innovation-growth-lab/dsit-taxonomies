@@ -16,5 +16,5 @@ keybert~=0.8.5
 transformers~=4.48.3
 sentence-transformers~=3.4.1
 accelerate~=1.2.1
-# langchain-openai 
-# langchain-community
+langchain-openai # comment out if not planning to validate with LLM
+langchain-community # comment out if not planning to validate with LLM
