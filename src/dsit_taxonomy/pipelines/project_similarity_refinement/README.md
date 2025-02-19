@@ -105,7 +105,7 @@ This approach provides several advantages:
 
 ## Validation Results
 
-The pipeline has been validated against expert-labelled samples for two taxonomies (OpenAlex's CWTS topics and the GOScience technology taxonomy), comparing three approaches:
+The pipeline has been validated against AI expert-labelled samples for two taxonomies (OpenAlex's CWTS topics and the GOScience technology taxonomy), comparing three approaches:
 1. **Similarity**: Core embedding-based matching using sentence and project-level similarities
 2. **Zero-shot**: Natural language inference using explicit label descriptions
 3. **Combined**: Integration of both approaches
