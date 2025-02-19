@@ -34,7 +34,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 node(
                     func=get_expert_labels,
                     inputs={
-                        "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                         "data": "gtr.projects.sample",
                         "llm_model": "params:llm.model",
                         "embedding_model": "params:llm.embedding_model",
@@ -77,7 +77,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     inputs={
                         "expert_labels": f"gtr.projects.sample.expert_labels.{taxonomy_name}",
                         "expert_assessment": f"gtr.projects.sample.expert_assessment.{taxonomy_name}",
-                        "taxonomy": f"taxonomy.{taxonomy_name}.bottom.db",
+                        "taxonomy": f"taxonomy.{taxonomy_name}.full.db",
                     },
                     outputs=[
                         f"tuning.{taxonomy_name}.expert_labels.processed",

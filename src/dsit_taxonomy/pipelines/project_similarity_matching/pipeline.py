@@ -56,6 +56,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 inputs="gtr.projects.documents",
                 outputs=["projects.gtr_data.db", "sentences.gtr_data.db"],
                 name="document_preprocessing",
+                tags=["matching"],
             )
         ]
     )
@@ -73,8 +74,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_global_matches_{taxonomy_name}",
+                    tags=[taxonomy_name, "matching"],
                 ),
-                # Compute sentence matches
                 node(
                     func=compute_similarities,
                     inputs={
@@ -85,8 +86,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"sentences.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_sentence_matches_{taxonomy_name}",
+                    tags=[taxonomy_name, "matching"],
                 ),
-                # Compute keyword matches
                 node(
                     func=compute_similarities,
                     inputs={
@@ -97,18 +98,14 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"keywords.gtr_data.{taxonomy_name}_matches.raw",
                     name=f"compute_keyword_matches_{taxonomy_name}",
+                    tags=[taxonomy_name, "matching"],
                 ),
-            ],
-            tags=[
-                f"similarity_matching_{taxonomy_name}",
-                "similarity_matching",
-            ],
+            ]
         )
 
     def scoring_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
-                # Add metadata
                 node(
                     func=add_metadata,
                     inputs={
@@ -123,9 +120,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"keywords.gtr_data.{taxonomy_name}_matches.intermediate",
                     ],
                     name=f"add_metadata_{taxonomy_name}",
-                    tags="dev",
+                    tags=[taxonomy_name, "matching"],
                 ),
-                # Prune global matches
                 node(
                     func=prune_raw_matches,
                     inputs={
@@ -143,11 +139,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"keywords.gtr_data.{taxonomy_name}_matches.pruned",
                     ],
                     name=f"prune_raw_matches_{taxonomy_name}",
-                    tags=[
-                        f"similarity_matching_{taxonomy_name}",
-                    ],
+                    tags=[taxonomy_name, "matching"],
                 ),
-                # Combine sentence and keyword scores
                 node(
                     func=combine_scores,
                     inputs={
@@ -159,15 +152,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.granular",
                     name=f"combine_scores_{taxonomy_name}",
-                    tags=[
-                        f"scores_{taxonomy_name}",
-                        "combine_scores",
-                    ],
+                    tags=[taxonomy_name, "matching"],
                 ),
-            ],
-            tags=[
-                f"similarity_matching_{taxonomy_name}",
-            ],
+            ]
         )
 
     return (

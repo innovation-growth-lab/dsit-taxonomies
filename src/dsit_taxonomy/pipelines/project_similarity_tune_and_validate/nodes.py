@@ -40,11 +40,11 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from ..keyword_similarity_matching.nodes import (
+from ..project_similarity_matching.nodes import (
     prune_raw_matches,
     combine_scores,
 )
-from ..keyword_similarity_refinement.nodes import aggregate_scores_to_labels
+from ..project_similarity_refinement.nodes import aggregate_scores_to_labels
 from .utils import (
     compute_likelihood_agreement,
     compute_per_project_metrics,
