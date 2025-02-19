@@ -1,39 +1,93 @@
-# Here you can define all your data sets by using simple YAML syntax.
-#
+# Catalog Entries:
+
+#### Data Collection ####
+
+# 1. GTR Data Collection:
+#    - Collection of project data from GTR API.
+#    - Pipeline: data_collection_gtr
+#     1.1. Raw Projects:
+#         - Dataset: gtr.data_collection.projects.raw
+#         - Content: JSON data from API
+#     1.2. Intermediate Projects:
+#         - Dataset: gtr.data_collection.projects.intermediate
+#         - Content: Preprocessed project data
+#     1.3. Project Documents:
+#         - Dataset: gtr.projects.documents
+#         - Content: Text fields (title, abstracts, impact)
+
+# #### Taxonomy Processing ####
+
+# 2. Taxonomy Data:
+#    - Processing multiple research taxonomies.
+#    - Pipeline: data_processing_taxonomies
+#     2.1. Raw Taxonomies:
+#         - Datasets: 
+#             - taxonomy.cwts.raw
+#             - taxonomy.goscience.raw
+#             - taxonomy.oa_concepts.raw
+#         - Content: Original taxonomy structures
+#     2.2. Processed Taxonomies:
+#         - Datasets:
+#             - taxonomy.{taxonomy_name}.full.db
+#             - taxonomy.{taxonomy_name}.bottom.db
+#         - Content: Standardised hierarchical format
+
+# #### Keyword Processing ####
+
+# 3. Keyword Extraction:
+#    - Multiple keyword extraction methods.
+#    - Pipeline: data_annotation_gtr
+#     3.1. Annotator Results:
+#         - Datasets: {annotator}.gtr_data.annotated
+#         - Annotators: dbp, rake, yake, keybert
+#         - Oracle Datasets: {annotator}.gtr_data.annotated.oracle
+#     3.2. KeyBERT Partitions:
+#         - Dataset: keybert.gtr_data.annotated.ptd
+#         - Content: Partitioned extraction results
+
+# 4. Keyword Processing:
+#    - Aggregating and embedding keywords.
+#    - Pipeline: keyword_processing_gtr
+#     4.1. Processed Keywords:
+#         - Dataset: keywords.gtr_data.db
+#         - Content: Aggregated, filtered keywords
+#     4.2. Keyword Embeddings:
+#         - Dataset: keywords.gtr_data.embeddings
+#         - Content: Dense vector representations
+
+# #### Similarity Matching ####
+
+# 5. Similarity Scores:
+#     5.1. Project Documents:
+#         - Dataset: projects.gtr_data.db
+#         - Content: Global project texts
+#     5.2. Sentence Documents:
+#         - Dataset: sentences.gtr_data.db
+#         - Content: Split sentences
+#    - Computing similarity between projects and taxonomies.
+#    - Pipeline: keyword_similarity_matching
+#     5.3. Raw Matches:
+#         - Datasets: {group}.gtr_data.{taxonomy_name}_matches.raw
+#         - Groups: projects, sentences, keywords
+#     5.4. Intermediate Matches:
+#         - Datasets: {group}.gtr_data.{taxonomy_name}_matches.intermediate
+#     5.5. Pruned Matches:
+#         - Datasets: {group}.gtr_data.{taxonomy_name}_matches.pruned
+#     5.6. Granular Scores:
+#         - Dataset: projects.gtr_data.{taxonomy_name}_scores.granular
+
+# 6. Final Scores:
+#    - Refined and validated taxonomy assignments.
+#    - Pipeline: keyword_similarity_refinement
+#     6.1. Aggregated Scores:
+#         - Dataset: projects.gtr_data.{taxonomy_name}_scores.aggregated
+#     6.2. Zeroshot Scores:
+#         - Dataset: projects.gtr_data.{taxonomy_name}_scores.zeroshot 
+
 # Documentation for this file format can be found in "The Data Catalog"
 # Link: https://docs.kedro.org/en/stable/data/data_catalog.html
 
-# -> 0. Global catalog variables:
-_pq: &_pq
-  type: pandas.ParquetDataset
-  credentials: s3_credentials
-  filepath: None
-  load_args:
-    engine: pyarrow
-
-_xlsx: &_xlsx
-  type: pandas.ExcelDataset
-  credentials: s3_credentials
-  filepath: None
-
-_pq_ptd: &_pq_ptd
-  type: partitions.PartitionedDataset
-  dataset:
-    type: pandas.ParquetDataset
-    save_args:
-      engine: pyarrow
-    load_args:
-      engine: pyarrow
-  filename_suffix: ".parquet"
-  credentials: s3_credentials
-
-_js_ptd: &_js_ptd
-  type: partitions.PartitionedDataset
-  dataset: json.JSONDataset
-  filename_suffix: ".json"
-  credentials: s3_credentials
-
-# -> 1a. GTR Data Collection:
+# -> 1. GTR Data Collection:
 gtr.data_collection.projects.raw:
   <<: *_js_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/
@@ -60,18 +114,10 @@ sentences.gtr_data.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/main.parquet
 
-# -> 1b. Taxonomies
+# -> 2. Taxonomies
 taxonomy.cwts.raw:
   <<: *_xlsx
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/cwts_oa_topics.xlsx
-
-taxonomy.cwts.full.db:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/cwts_oa_topics.parquet
-
-taxonomy.cwts.bottom.db:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/cwts_oa_topics_bottom_level.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/cwts.xlsx
 
 taxonomy.goscience.raw:
   <<: *_xlsx
@@ -92,50 +138,34 @@ taxonomy.goscience.raw:
       - hidden_labels
       - search_terms
       - extra_column_1
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/go_science_topics.xlsx
-
-taxonomy.goscience.full.db:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/go_science_topics.parquet
-
-taxonomy.goscience.bottom.db:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/go_science_topics_bottom_level.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/goscience.xlsx
 
 taxonomy.oa_concepts.raw:
   <<: *_xlsx
   filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/oa_concepts.xlsx
 
-taxonomy.oa_concepts.full.db:
+"taxonomy.{taxonomy_name}.full.db":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/oa_concepts.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}.parquet
 
-taxonomy.oa_concepts.bottom.db:
+"taxonomy.{taxonomy_name}.bottom.db":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/oa_concepts_bottom_level.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}_bottom_level.parquet
 
-# -> 2. GTR Data Annotations:
-dbp.gtr_data.annotated:
+# -> 3. GTR Data Annotations:
+"{annotator}.gtr_data.annotated":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/dbp.parquet
-
-rake.gtr_data.annotated:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/rake.parquet
-
-yake.gtr_data.annotated:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/yake.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
 
 keybert.gtr_data.annotated.ptd:
   <<: *_pq_ptd
   path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert/
 
-keybert.gtr_data.annotated:
-  <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert.parquet
-
-# -> 3. GTR Processed Annotations:
+"{annotator}.gtr_data.annotated.oracle":
+  <<: *_dpq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
+  
+# -> 4. GTR Processed Annotations:
 keywords.gtr_data.db:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/preprocessed.parquet
@@ -144,7 +174,7 @@ keywords.gtr_data.embeddings:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet
 
-# -> 4. Taxonomy matching candidates:
+# -> 5. Similarity Scores:
 "{group}.gtr_data.{taxonomy_name}_matches.raw":
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/{group}/matches/{taxonomy_name}.parquet
@@ -163,17 +193,16 @@ keywords.gtr_data.embeddings:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_granular.parquet
 
-# Final scores
+# -> 6. Final scores
 "projects.gtr_data.{taxonomy_name}_scores.aggregated":
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_aggregated.parquet
 
-# Zero-shot filtered scores
 "projects.gtr_data.{taxonomy_name}_scores.zeroshot":
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_zeroshot.parquet
 
-# # -> 5. GTR Fine Tuning Data:
+# # -> 7. Validation Data:
 gtr.projects.sample:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample.parquet
