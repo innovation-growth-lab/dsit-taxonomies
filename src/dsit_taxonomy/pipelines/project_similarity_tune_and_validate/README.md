@@ -1,91 +1,136 @@
-# Taxonomy matching parameter tuning pipeline
+# Taxonomy matching tuning and validation pipeline
 
-This pipeline fine-tunes the parameters of our taxonomy matching algorithm using expert LLM evaluations as ground truth. The key innovation is using two independent LLM evaluations to establish both algorithm-agnostic "true" labels and evaluate algorithm-proposed labels, enabling robust measurement of matching performance.
+This pipeline fine-tunes the taxonomy matching algorithm and validates its performance using expert LLM evaluations. The key innovation is using two independent evaluation approaches to establish both algorithm-agnostic "true" labels and assess algorithm-proposed labels.
 
-## Features
+## Methodology
 
-### Two-Stage Expert Evaluation
-1. **Algorithm-Agnostic Expert Labels**
-   - LLM evaluates projects independently of algorithm results
-   - Uses RAG to access full taxonomy context
-   - Assigns confidence levels (high/medium/low) to chosen labels
-   - Provides baseline "true" labels unbiased by algorithm choices
+### 1. Expert Label Generation
+Uses GPT-4 with retrieval-augmented generation to independently identify relevant taxonomy labels:
 
-2. **Algorithm Result Evaluation**
-   - LLM evaluates labels proposed by matching algorithm
-   - Binary classification (true/false positive) with explanations
-   - Allows identification of algorithm errors and biases
-   - Provides direct feedback on algorithm performance
+- **Input**: Project descriptions + retrieved taxonomy context
+- **Process**:
+  - RAG setup retrieves top-20 candidate labels
+  - LLM evaluates each candidate's relevance
+  - Assigns confidence levels (high/medium/low)
+- **Output**: JSON array of `{label, likelihood}` pairs
 
-### Performance Measurement
-By combining both evaluations, we can identify:
-- **True Positives**: Algorithm proposes high-confidence label that expert agrees with
-- **False Positives**: Algorithm proposes high-confidence label that expert rejects
-- **False Negatives**: Expert identifies high-confidence label that algorithm missed
+Example prompt structure:
+```yaml
+system: |
+  You are an expert research taxonomy analyst...
+  CONFIDENCE LEVELS:
+  - HIGH: Perfect match with project's core focus
+  - MEDIUM: Related or partially overlapping field
+  - LOW: Tangential connection
+```
 
-This helps estimate precision, recall, and F1 scores for parameter tuning.
+### 2. Algorithm Result Assessment
+Evaluates labels proposed by our matching algorithm:
 
-### Parameter Space
-Key algorithmic parameters being tuned:
-- **Weighting balance**: Relative importance of sentence-level vs keyword-level matching
-- **Similarity thresholds**: Minimum required similarity scores
-- **Confidence thresholds**: 
-  - Global: Dataset-wide thresholds for similarity scores
-  - Local: Project-specific thresholds accounting for relative label strengths
+- **Input**: Project + algorithm's high-confidence labels
+- **Process**: 
+  - LLM evaluates each proposed label
+  - Provides binary classification (true/false positive)
+  - Includes explanation for decision
+- **Output**: JSON array of `{label_id, positive, explanation}`
 
-## Nodes Overview
+### 3. Parameter Tuning
+Optimizes key parameters using grid search over:
 
-1. `select_sample_projects`  
-  Creates a stratified sample of projects for expert evaluation, ensuring representation across different research areas.
-   
-2. `get_expert_labels`  
-  Generates algorithm-agnostic expert labels using RAG-enhanced LLM evaluation. Returns confidence-scored taxonomy assignments for each project.
+1. **Similarity thresholds**:
+   ```yaml
+   sentence_threshold: [0.5, 0.55, 0.6]  # Best: 0.55
+   global_threshold: [0.5, 0.55, 0.6]    # Best: 0.55
+   keyword_threshold: [0.5, 0.55, 0.6]   # Best: 0.55
+   ```
 
-3. `evaluate_algorithmic_assignments`  
-  Evaluates algorithm-proposed labels using LLM, providing binary classification and explanations for each label.
+2. **Score weights**:
+   ```yaml
+   sentence_weight: [0.6, 0.7]  # Best: 0.6
+   global_weight: [0.2, 0.3]    # Best: 0.3
+   # keyword_weight is implicit: 1 - sentence - global
+   ```
 
-4. `prepare_tuning_data`  
-  Processes and aligns expert labels with algorithm evaluations, handling label mapping and data cleaning.
+3. **Confidence binning**:
+   ```yaml
+   global_q2_threshold: [0.25]  # Medium confidence
+   global_q3_threshold: [0.5]   # High confidence
+   ```
 
-5. `tune_matching_parameters`  
-  Performs grid search over parameter space, computing performance metrics for each combination. Returns both aggregate and per-project results.
+4. **Other parameters**:
+   ```yaml
+   use_quantile: [False, True]           # Best: True
+   normalise_by_matches: [False, True]   # Best: False
+   ```
 
-## Key Datasets
+## Pipeline Components
 
-### Raw Inputs:
-- `gtr.projects.documents`: Project metadata including abstracts and descriptions
-- `taxonomy.{name}.bottom.db`: Taxonomy labels and hierarchical structure
+### Nodes
 
-### Intermediate Outputs:
-- `gtr.projects.sample`: Stratified sample of projects for evaluation
-- `gtr.projects.sample.expert_labels.{taxonomy}`: Expert-assigned labels with confidence scores
-- `gtr.projects.sample.expert_validation.{taxonomy}`: LLM evaluation of algorithm assignments
+1. `select_sample_projects`
+   - Creates stratified sample (n=300)
+   - Ensures representation across research areas
+   - Uses fixed random seed for reproducibility
 
-### Final Outputs:
-- `validation.{taxonomy}.expert_labels.processed`: Processed expert labels
-- `validation.{taxonomy}.scores.processed`: Processed algorithm evaluations
-- `validation.{taxonomy}.parameter_tuning_results`: Parameter tuning results and metrics
+2. `get_expert_labels`
+   - Generates algorithm-agnostic expert labels
+   - Uses RAG-enhanced LLM evaluation
+   - Returns confidence-scored assignments
 
-## Configuration
+3. `get_expert_assessment`
+   - Evaluates algorithm-proposed labels
+   - Provides binary classification
+   - Includes explanatory feedback
 
-The pipeline is configured through several YAML files:
+4. `prepare_tuning_data`
+   - Processes expert labels and assessments
+   - Handles label mapping and cleaning
+   - Prepares data for parameter tuning
 
-### Sample Selection
-- `sample.size`: Number of projects to evaluate
-- `sample.random_state`: Random seed for reproducibility
+5. `tune_matching_parameters`
+   - Performs grid search
+   - Computes performance metrics
+   - Returns optimal parameters
 
-### LLM Settings
-- `llm.model`: GPT-4 model specification
-- `llm.embedding_model`: Embedding model for RAG
-- `llm.max_retries`: API retry attempts
+6. `evaluate_scoring_quality`
+   - Validates final performance
+   - Computes precision, recall, F1
+   - Analyzes different confidence thresholds
 
-### Expert Labeling
-- `expert_labeling.retriever_k`: Number of labels to retrieve for RAG
-- `expert_labeling.system_prompt`: System prompt for label generation
-- `expert_labeling.question_prompt`: Project evaluation prompt
+### Key Datasets
 
-### Parameter Tuning
-- `tuning.parameter_grid`: Grid of parameters to evaluate
-  - Weighting parameters
-  - Similarity thresholds
-  - Confidence thresholds
+1. **Input Data**:
+   - `gtr.projects.documents`: Project descriptions
+   - `taxonomy.{name}.full.db`: Complete taxonomies
+
+2. **Expert Labels**:
+   - `gtr.projects.sample.expert_labels.{taxonomy}`: Independent expert labels
+   - `gtr.projects.sample.expert_assessment.{taxonomy}`: Assessment of algorithm labels
+
+3. **Results**:
+   - `tuning.{taxonomy}.parameter_tuning_results`: Parameter optimization results
+   - `validate.{taxonomy}.zeroshot_quality_metrics`: Final validation metrics
+
+## Usage
+
+### Running full pipeline
+```bash
+kedro run --pipeline project_similarity_tune_and_validate
+```
+
+### Running specific taxonomies
+```bash
+kedro run --pipeline project_similarity_tune_and_validate --tags cwts
+kedro run --pipeline project_similarity_tune_and_validate --tags goscience
+```
+
+### Configuration
+Parameters are defined in:
+```yaml
+conf/base/parameters_project_similarity_tune_and_validate.yml
+```
+
+## Dependencies
+- **Core libraries**: pandas, numpy, transformers
+- **LLM**: GPT-4 via OpenAI API
+- **Embeddings**: text-embedding-3-small
