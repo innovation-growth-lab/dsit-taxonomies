@@ -23,11 +23,11 @@ Dependencies:
 Example:
     Run the refinement pipeline:
     ```
-    kedro run --pipeline keyword_similarity_refinement
+    kedro run --pipeline project_similarity_refinement
     ```
     Or run specific tags:
     ```
-    kedro run --pipeline keyword_similarity_refinement --tags aggregate
+    kedro run --pipeline project_similarity_refinement --tags aggregate
     ```
 """
 
@@ -55,7 +55,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_scores_to_labels_{taxonomy_name}",
-                    tags=["aggregate"],
+                    tags=["refinement", taxonomy_name],
                 ),
                 node(
                     func=enhance_with_zeroshot,
@@ -67,11 +67,11 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
                     name=f"enhance_zeroshot_{taxonomy_name}",
-                    tags=["zeroshot"],
+                    tags=["refinement", taxonomy_name],
                 ),
             ],
             tags=[
-                f"similarity_matching_{taxonomy_name}",
+                "refinement",
             ],
         )
 

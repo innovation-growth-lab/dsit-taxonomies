@@ -66,12 +66,14 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 inputs="taxonomy.cwts.raw",
                 outputs=["taxonomy.cwts.full.db", "taxonomy.cwts.bottom.db"],
                 name="preprocess_cwts_topics",
+                tags=["cwts"],
             ),
             node(
                 func=preprocess_goscience_taxonomy,
                 inputs="taxonomy.goscience.raw",
                 outputs=["taxonomy.goscience.full.db", "taxonomy.goscience.bottom.db"],
                 name="preprocess_goscience_taxonomy",
+                tags=["goscience"],
             ),
             node(
                 func=preprocess_oa_concepts,
@@ -81,8 +83,10 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                     "taxonomy.oa_concepts.bottom.db",
                 ],
                 name="preprocess_oa_concepts",
+                tags=["oa_concepts"],
             ),
-        ]
+        ],
+        tags="taxonomy_processing"
     )
 
     return taxonomy_keywords_pipeline

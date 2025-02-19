@@ -1,4 +1,4 @@
-"""Utility functions for the keyword similarity matching pipeline."""
+"""Utility functions for the project similarity matching pipeline."""
 
 import numpy as np
 import pandas as pd

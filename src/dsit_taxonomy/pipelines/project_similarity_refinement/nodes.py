@@ -6,7 +6,7 @@ The module provides functionality for:
 - Assigning confidence bins based on score distributions 
 - Validating assignments using zero-shot classification
 
-The nodes in this module are used in the keyword_similarity_refinement pipeline
+The nodes in this module are used in the project_similarity_refinement pipeline
 to process the raw similarity scores and produce final taxonomy assignments.
 """
 

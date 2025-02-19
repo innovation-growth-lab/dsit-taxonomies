@@ -64,7 +64,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 outputs="keywords.gtr_data.embeddings",
                 name="generate_keyword_embeddings",
             ),
-        ]
+        ],
+        tags="keyword_processing"
     )
 
     return aggregate_keywords_pipeline

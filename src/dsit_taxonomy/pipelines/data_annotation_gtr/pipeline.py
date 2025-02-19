@@ -114,7 +114,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=W0613
                 outputs="keybert.gtr_data.annotated",
                 name="concatenate_keybert_partitions",
             ),
-        ]
+        ],
+        tags="annotation"
     )
 
     return annotation_pipeline

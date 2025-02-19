@@ -1,4 +1,32 @@
-"""Pipeline for expert labeling and fine-tuning of taxonomy matching parameters."""
+"""
+This pipeline handles expert labeling and parameter tuning for taxonomy matching.
+
+The pipeline performs three main steps:
+
+1. Sample Selection
+   - Selects a representative sample of projects for expert validation
+   - Balances across different project types and sizes
+   - Uses stratified sampling to ensure coverage
+
+2. Expert Labeling
+   - Uses LLM-based retrieval-augmented generation to get expert labels
+   - Provides structured taxonomy assignments with explanations
+   - Handles multiple rounds of validation if needed
+   - Includes confidence scores and rationales
+
+3. Parameter Tuning
+   - Optimizes matching parameters using expert feedback
+   - Performs grid search over parameter space
+   - Computes validation metrics for each parameter set
+   - Finds optimal weights and thresholds
+   - Validates results on holdout set
+
+The pipeline outputs:
+- Expert-labeled validation dataset
+- Optimized matching parameters
+- Validation metrics and analysis
+- Parameter sensitivity analysis
+"""
 
 from kedro.pipeline import Pipeline, pipeline, node
 from .nodes import (
@@ -24,7 +52,8 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                 outputs="gtr.projects.sample",
                 name="select_sample_projects",
             ),
-        ]
+        ],
+        tags="tune_and_validate"
     )
 
     # Expert labeling pipeline
@@ -58,14 +87,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"gtr.projects.sample.expert_assessment.{taxonomy_name}",
                     name=f"evaluate_assessment_assignments_{taxonomy_name}",
-                    tags=[
-                        f"dev_{taxonomy_name}",
-                        "evaluate_assessments",
-                        "get_expert_assessment",
-                    ],
                 ),
             ],
-            tags=["expert_labels"],
+            tags=["tune_and_validate", taxonomy_name],
         )
 
     # Parameter tuning pipeline
@@ -84,7 +108,6 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"tuning.{taxonomy_name}.expert_assessment.processed",
                     ],
                     name=f"prepare_tuning_data_{taxonomy_name}",
-                    tags=[f"tuning_{taxonomy_name}", "dev", "tuning"],
                 ),
                 node(
                     func=tune_matching_parameters,
@@ -101,9 +124,9 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         f"tuning.{taxonomy_name}.project_results",
                     ],
                     name=f"tune_matching_parameters_{taxonomy_name}",
-                    tags=[f"tuning_{taxonomy_name}", "tuning"],
                 ),
-            ]
+            ],
+            tags=["tune_and_validate", taxonomy_name],
         )
 
     def evaluate_zeroshot_pipeline(taxonomy_name: str) -> Pipeline:
@@ -118,7 +141,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"validate.{taxonomy_name}.zeroshot_quality_metrics",
                     name=f"evaluate_scoring_quality_{taxonomy_name}",
-                    tags=[f"validate_{taxonomy_name}", "evaluate_scoring_quality"],
+                    tags=["tune_and_validate", taxonomy_name],
                 ),
             ]
         )

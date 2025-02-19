@@ -1,5 +1,5 @@
 """
-Utility functions for the keyword similarity refinement pipeline.
+Utility functions for the project similarity refinement pipeline.
 
 This module provides helper functions for:
 - Processing project groups for confidence binning
