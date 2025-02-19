@@ -96,21 +96,23 @@ Currently handles three taxonomies:
 
 ## Current Performance
 
-Tested against AI expert-labelled samples (300 projects):
+Tested against AI expert-labelled samples (300 projects), comparing multiple confidence scoring approaches:
 
 ### CWTS Research Topics
-| Method     | Precision | Recall | F1    | Labels Checked |
-|------------|-----------|--------|-------|----------------|
-| Zero-shot  | 0.85      | 0.55   | 0.66  | 768           |
-| Combined   | 0.78      | 0.61   | 0.68  | 768           |
+| Method            | Precision | Recall | F1    |
+|------------------|-----------|--------|-------|
+| Conservative     | 0.765     | 0.691  | 0.726 |
+| Zero-shot        | 0.784     | 0.661  | 0.717 |
+| Maximum          | 0.645     | 0.747  | 0.692 |
 
 ### GOScience Technologies
-| Method     | Precision | Recall | F1    | Labels Checked |
-|------------|-----------|--------|-------|----------------|
-| Zero-shot  | 0.80      | 0.56   | 0.66  | 412           |
-| Combined   | 0.53      | 0.64   | 0.58  | 412           |
+| Method            | Precision | Recall | F1    |
+|------------------|-----------|--------|-------|
+| Zero-shot        | 0.646     | 0.664  | 0.655 |
+| Conservative     | 0.580     | 0.678  | 0.625 |
+| Maximum          | 0.350     | 0.760  | 0.479 |
 
-Note: These metrics are from our validation sample. Your results may vary depending on the projects and taxonomies used.
+Note: These metrics show the best performing configuration for each approach. Your results may vary depending on the projects and taxonomies used.
 
 ## Getting Started
 

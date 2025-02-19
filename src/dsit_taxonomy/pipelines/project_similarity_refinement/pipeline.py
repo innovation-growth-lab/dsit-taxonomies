@@ -35,6 +35,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     aggregate_scores_to_labels,
     enhance_with_zeroshot,
+    refine_confidence_bins,
 )
 
 
@@ -67,6 +68,13 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
                     name=f"enhance_zeroshot_{taxonomy_name}",
+                    tags=["refinement", taxonomy_name],
+                ),
+                node(
+                    func=refine_confidence_bins,
+                    inputs=f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
+                    outputs=f"projects.gtr_data.{taxonomy_name}_scores.final",
+                    name=f"refine_confidence_bins_{taxonomy_name}",
                     tags=["refinement", taxonomy_name],
                 ),
             ],

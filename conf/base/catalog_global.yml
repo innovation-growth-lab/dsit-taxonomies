@@ -241,6 +241,10 @@ keywords.gtr_data.embeddings:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_zeroshot.parquet
 
+"projects.gtr_data.{taxonomy_name}_scores.final":
+  <<: *_pq
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_final.parquet
+
 # # -> 7. Validation Data:
 gtr.projects.sample:
   <<: *_pq
@@ -275,6 +279,6 @@ gtr.projects.sample:
   <<: *_pq
   filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/project_results.parquet
 
-"validate.{taxonomy_name}.zeroshot_quality_metrics":
+"validate.{taxonomy_name}.score_quality_metrics":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/zeroshot_quality_metrics.parquet
+  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/score_quality_metrics.parquet

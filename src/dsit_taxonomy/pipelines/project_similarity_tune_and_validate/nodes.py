@@ -508,76 +508,103 @@ def tune_matching_parameters(
 
 
 def evaluate_scoring_quality(
-    zeroshot_scores: pd.DataFrame,
+    final_scores: pd.DataFrame,
     expert_df: pd.DataFrame,
     assessment_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Evaluate quality of zero-shot and combined confidence scores against expert labels.
-    """
-    logger.info("Evaluating classification quality")
-
-    # Create combined scores
-    combined_scores = zeroshot_scores.copy()
-    confidence_map = {
-        "very high": 0.95,
-        "high": 0.75,
-        "medium": 0.5,
-        "low": 0.25,
-    }
+    Evaluate quality of different confidence binning approaches against expert labels.
     
-    combined_scores["confidence_score"] = combined_scores["confidence_bin"].map(
-        confidence_map
-    )
-    combined_scores["combined_score"] = combined_scores[
-        ["zeroshot_score", "confidence_score"]
-    ].max(axis=1)
-    combined_scores["combined_bin"] = pd.cut(
-        combined_scores["combined_score"],
-        bins=[-float("inf"), 0.5, 0.7, 0.9, float("inf")],
-        labels=["low", "medium", "high", "very high"],
-    )
+    Evaluates:
+    - Sentence-based confidence (sentence_bin)
+    - Zero-shot confidence (zeroshot_bin)
+    - Maximum confidence (max_confidence)
+    - Conservative approach (conservative_confidence)
+    - Sentence-favoring approach (sentence_favoring_confidence)
+
+    Args:
+        final_scores: DataFrame with all confidence scores and bins
+        expert_df: DataFrame with expert-suggested labels
+        assessment_df: DataFrame with binary assessment of proposed labels
+
+    Returns:
+        DataFrame with validation metrics for each approach and threshold
+    """
+    logger.info("Evaluating classification quality for different confidence approaches")
 
     results = []
     
-    # Evaluate each approach
-    for approach in ["zeroshot", "confidence", "combined"]:
-        bin_column = f"{approach}_bin"
+    # Define the approaches to evaluate
+    approaches = {
+        'sentence': 'sentence_bin',
+        'zeroshot': 'zeroshot_bin',
+        'max': 'max_confidence',
+        'conservative': 'conservative_confidence',
+        'sentence_favoring': 'sentence_favoring_confidence'
+    }
+    
+    for approach_name, bin_column in approaches.items():
+        logger.info("Evaluating %s approach", approach_name)
         
-        for threshold in ["strict", "relaxed"]:
-            high_conf = ["very high", "high"]
-            positive_bins = (
-                high_conf if threshold == "strict" else high_conf + ["medium"]
-            )
+        # Evaluate with strict threshold (only high/very high)
+        metrics_strict = compute_validation_metrics(
+            predictions=final_scores,
+            expert_df=expert_df,
+            assessment_df=assessment_df,
+            bin_column=bin_column,
+            positive_bins=['very high', 'high']
+        )
+        
+        results.append({
+            'approach': approach_name,
+            'threshold': 'strict',
+            **metrics_strict
+        })
+        
+        # Evaluate with relaxed threshold (high/very high/medium)
+        metrics_relaxed = compute_validation_metrics(
+            predictions=final_scores,
+            expert_df=expert_df,
+            assessment_df=assessment_df,
+            bin_column=bin_column,
+            positive_bins=['very high', 'high', 'medium']
+        )
+        
+        results.append({
+            'approach': approach_name,
+            'threshold': 'relaxed',
+            **metrics_relaxed
+        })
+        
+        logger.info(
+            "%s approach results:\n"
+            "Strict threshold - P: %.3f, R: %.3f, F1: %.3f\n"
+            "Relaxed threshold - P: %.3f, R: %.3f, F1: %.3f",
+            approach_name.title(),
+            metrics_strict['precision'],
+            metrics_strict['recall'],
+            metrics_strict['f1'],
+            metrics_relaxed['precision'],
+            metrics_relaxed['recall'],
+            metrics_relaxed['f1']
+        )
 
-            metrics = compute_validation_metrics(
-                predictions=combined_scores,
-                expert_df=expert_df,
-                assessment_df=assessment_df,
-                bin_column=bin_column,
-                positive_bins=positive_bins,
-            )
-            
-            results.append({
-                "approach": approach,
-                "threshold": threshold,
-                **metrics,  # Unpack all metrics
-            })
-            
-            logger.info(
-                "%s approach - %s threshold:\n"
-                "Precision: %.3f\n"
-                "Recall: %.3f\n"
-                "F1: %.3f\n"
-                "TP: %d, FP: %d, FN: %d",
-                approach.title(),
-                threshold,
-                metrics["precision"],
-                metrics["recall"],
-                metrics["f1"],
-                metrics["true_positives"],
-                metrics["false_positives"],
-                metrics["false_negatives"],
-            )
+    results_df = pd.DataFrame(results)
+    
+    # Log best performing approaches
+    for threshold in ['strict', 'relaxed']:
+        best_f1 = results_df[results_df['threshold'] == threshold].nlargest(1, 'f1')
+        logger.info(
+            "\nBest performing approach for %s threshold:\n"
+            "Approach: %s\n"
+            "F1 Score: %.3f\n"
+            "Precision: %.3f\n"
+            "Recall: %.3f",
+            threshold,
+            best_f1['approach'].iloc[0],
+            best_f1['f1'].iloc[0],
+            best_f1['precision'].iloc[0],
+            best_f1['recall'].iloc[0]
+        )
 
-    return pd.DataFrame(results)
+    return results_df

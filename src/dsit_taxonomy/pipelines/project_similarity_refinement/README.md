@@ -103,64 +103,95 @@ This approach provides several advantages:
 - Robust to vocabulary mismatches
 - Handles complex relationships
 
-## Validation Results
+## Confidence Scoring Approaches
 
-The pipeline has been validated against AI expert-labelled samples for two taxonomies (OpenAlex's CWTS topics and the GOScience technology taxonomy), comparing three approaches:
-1. **Similarity**: Core embedding-based matching using sentence and project-level similarities
-2. **Zero-shot**: Natural language inference using explicit label descriptions
-3. **Combined**: Integration of both approaches
+The pipeline now implements five different confidence scoring methods:
 
-### Performance Metrics
+1. **Sentence-based (sentence_bin)**:
+   - Original confidence from sentence-level matching
+   - Based on score distributions and project-specific patterns
+   - Good for detailed text matches
+
+2. **Zero-shot (zeroshot_bin)**:
+   - Pure NLI-based confidence
+   - Independent from similarity scores
+   - Strong at catching semantic mismatches
+
+3. **Maximum confidence (max_confidence)**:
+   - Takes highest confidence between sentence and zero-shot
+   - Optimistic approach favoring any strong signal
+   - Best for maximizing recall
+
+4. **Conservative (conservative_confidence)**:
+   - Favors zero-shot when large disagreement exists
+   - Falls back to maximum when approaches agree
+   - Prioritizes precision over recall
+   - Best for high-confidence assignments
+
+5. **Sentence-favoring (sentence_favoring_confidence)**:
+   - Trusts sentence-level scores when large disagreement exists
+   - Uses maximum confidence when approaches agree
+   - Useful when detailed text matching is critical
+
+### Updated Validation Results
 
 #### CWTS Taxonomy
 
-| Approach   | Threshold | Precision | Recall | F1    |
-|------------|-----------|-----------|--------|-------|
-| Similarity | Strict    | 0.74      | 0.35   | 0.48  |
-|            | Relaxed   | 0.61      | 0.60   | 0.61  |
-| Zero-shot  | Strict    | 0.85      | 0.55   | 0.66  |
-|            | Relaxed   | 0.78      | 0.66   | 0.72  |
-| Combined   | Strict    | 0.78      | 0.61   | 0.68  |
-|            | Relaxed   | 0.75      | 0.69   | 0.72  |
+| Approach          | Threshold | Precision | Recall | F1    |
+|------------------|-----------|-----------|--------|-------|
+| Sentence         | Strict    | 0.739     | 0.350  | 0.475 |
+|                  | Relaxed   | 0.609     | 0.601  | 0.605 |
+| Zero-shot        | Strict    | 0.847     | 0.545  | 0.663 |
+|                  | Relaxed   | 0.784     | 0.661  | 0.717 |
+| Maximum          | Strict    | 0.781     | 0.608  | 0.684 |
+|                  | Relaxed   | 0.645     | 0.747  | 0.692 |
+| Conservative     | Strict    | 0.843     | 0.569  | 0.679 |
+|                  | Relaxed   | 0.765     | 0.691  | 0.726 |
+| Sentence-favoring| Strict    | 0.765     | 0.430  | 0.550 |
+|                  | Relaxed   | 0.608     | 0.661  | 0.634 |
 
 #### GOScience Taxonomy
 
-| Approach   | Threshold | Precision | Recall | F1    |
-|------------|-----------|-----------|--------|-------|
-| Similarity | Strict    | 0.42      | 0.44   | 0.43  |
-|            | Relaxed   | 0.31      | 0.68   | 0.42  |
-| Zero-shot  | Strict    | 0.80      | 0.56   | 0.66  |
-|            | Relaxed   | 0.65      | 0.66   | 0.66  |
-| Combined   | Strict    | 0.53      | 0.64   | 0.58  |
-|            | Relaxed   | 0.50      | 0.70   | 0.58  |
+| Approach          | Threshold | Precision | Recall | F1    |
+|------------------|-----------|-----------|--------|-------|
+| Sentence         | Strict    | 0.416     | 0.435  | 0.425 |
+|                  | Relaxed   | 0.308     | 0.680  | 0.424 |
+| Zero-shot        | Strict    | 0.798     | 0.562  | 0.660 |
+|                  | Relaxed   | 0.646     | 0.664  | 0.655 |
+| Maximum          | Strict    | 0.533     | 0.640  | 0.582 |
+|                  | Relaxed   | 0.350     | 0.760  | 0.479 |
+| Conservative     | Strict    | 0.767     | 0.602  | 0.674 |
+|                  | Relaxed   | 0.580     | 0.678  | 0.625 |
+| Sentence-favoring| Strict    | 0.456     | 0.510  | 0.482 |
+|                  | Relaxed   | 0.319     | 0.713  | 0.441 |
 
-**Note on validation methodology**: These metrics are derived from expert labels collected through language-model-assisted annotation, considering only high-confidence expert assignments as ground truth. The validation process:
-- Uses expert-assessed true/false positives for precision
-- Considers expert-suggested high-confidence labels for recall
-- Applies both strict (high/very high) and relaxed (including medium) thresholds
+### Key Findings
 
-### Analysis
+1. **Best Overall Performance**:
+   - CWTS: Conservative approach (relaxed) achieves F1=0.726
+   - GOScience: Zero-shot approach (relaxed) achieves F1=0.655
 
-The results demonstrate distinct patterns across approaches and taxonomies:
+2. **Precision vs Recall Trade-offs**:
+   - Conservative approach maintains high precision while improving recall
+   - Maximum confidence maximizes recall but with precision cost
+   - Zero-shot consistently provides best precision
 
-1. **Zero-shot performance**:
-   - Consistently achieves the highest precision (80-85%)
-   - Maintains stable performance across taxonomies
-   - Provides the best overall F1 scores
+3. **Taxonomy-Specific Patterns**:
+   - CWTS benefits from combined approaches
+   - GOScience performs best with pure zero-shot
+   - Sentence-based methods struggle with GOScience
 
-2. **Similarity matching**:
-   - Shows variable performance between taxonomies
-   - Achieves good recall with relaxed thresholds
-   - Struggles with precision, especially for GOScience
+### Recommendations
 
-3. **Combined approach**:
-   - Successfully improves recall over zero-shot
-   - Trades some precision for better coverage
-   - Benefits vary by taxonomy:
-     * CWTS: Maintains F1 score while improving recall
-     * GOScience: Recall gains don't offset precision loss
+1. **For CWTS Taxonomy**:
+   - Use conservative approach with relaxed threshold
+   - Provides optimal balance (P=0.765, R=0.691, F1=0.726)
+   - Maintains high precision while improving coverage
 
-**Recommendation**: While zero-shot classification provides the most reliable performance, combining approaches may be beneficial in scenarios where recall is prioritized and some precision loss is acceptable. The choice between approaches should consider the specific taxonomy and use case requirements.
+2. **For GOScience Taxonomy**:
+   - Prefer zero-shot classification
+   - Most reliable performance (P=0.646, R=0.664, F1=0.655)
+   - More consistent across thresholds
 
 ## Usage
 

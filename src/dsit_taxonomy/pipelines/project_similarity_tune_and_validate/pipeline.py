@@ -129,17 +129,17 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
             tags=["tune_and_validate", taxonomy_name],
         )
 
-    def evaluate_zeroshot_pipeline(taxonomy_name: str) -> Pipeline:
+    def evaluate_scores_pipeline(taxonomy_name: str) -> Pipeline:
         return pipeline(
             [
                 node(
                     func=evaluate_scoring_quality,
                     inputs={
-                        "zeroshot_scores": f"projects.gtr_data.{taxonomy_name}_scores.zeroshot",
+                        "final_scores": f"projects.gtr_data.{taxonomy_name}_scores.final",
                         "expert_df": f"tuning.{taxonomy_name}.expert_labels.processed",
                         "assessment_df": f"tuning.{taxonomy_name}.expert_assessment.processed",
                     },
-                    outputs=f"validate.{taxonomy_name}.zeroshot_quality_metrics",
+                    outputs=f"validate.{taxonomy_name}.score_quality_metrics",
                     name=f"evaluate_scoring_quality_{taxonomy_name}",
                     tags=["tune_and_validate", taxonomy_name],
                 ),
@@ -150,5 +150,5 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
         sample_projects_pipeline
         + sum(expert_labeling_pipeline(tax) for tax in ["cwts", "goscience"])
         + sum(tuning_confidence_pipeline(tax) for tax in ["cwts", "goscience"])
-        + sum(evaluate_zeroshot_pipeline(tax) for tax in ["cwts", "goscience"])
+        + sum(evaluate_scores_pipeline(tax) for tax in ["cwts", "goscience"])
     )
