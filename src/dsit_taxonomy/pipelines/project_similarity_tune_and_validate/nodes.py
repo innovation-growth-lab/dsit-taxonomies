@@ -28,7 +28,8 @@ The module provides functionality for:
    - Providing per-project and global metrics
 """
 
-import ast, json
+import ast
+import json
 import logging
 from typing import Generator, Tuple
 from itertools import product
@@ -49,6 +50,7 @@ from .utils import (
     compute_likelihood_agreement,
     compute_per_project_metrics,
     validate_predictions,
+    compute_validation_metrics,
 )
 
 logger = logging.getLogger(__name__)
@@ -512,157 +514,71 @@ def evaluate_scoring_quality(
     assessment_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Evaluate the quality of zero-shot and combined confidence scores against expert labels.
-
-    Args:
-        zeroshot_scores: DataFrame containing zero-shot scores and confidence bins
-        expert_df: DataFrame with expert labels
-        assessment_df: DataFrame with expert assessments
-
-    Returns:
-        DataFrame containing quality metrics for zero-shot and combined approaches
+    Evaluate quality of zero-shot and combined confidence scores against expert labels.
     """
     logger.info("Evaluating classification quality")
 
-    # Create combined scores using max of zeroshot and confidence
+    # Create combined scores
     combined_scores = zeroshot_scores.copy()
-
-    # Map confidence bins to numeric scores for comparison
     confidence_map = {
         "very high": 0.95,
         "high": 0.75,
         "medium": 0.5,
         "low": 0.25,
     }
-
+    
     combined_scores["confidence_score"] = combined_scores["confidence_bin"].map(
         confidence_map
     )
     combined_scores["combined_score"] = combined_scores[
         ["zeroshot_score", "confidence_score"]
     ].max(axis=1)
-
-    # Create combined bins
     combined_scores["combined_bin"] = pd.cut(
         combined_scores["combined_score"],
         bins=[-float("inf"), 0.5, 0.7, 0.9, float("inf")],
         labels=["low", "medium", "high", "very high"],
     )
 
-    metrics = []
-
-    # Evaluate each approach: zeroshot, confidence, and combined
+    results = []
+    
+    # Evaluate each approach
     for approach in ["zeroshot", "confidence", "combined"]:
-
-        # Merge with expert datasets
-        merged_expert = pd.merge(
-            combined_scores,
-            expert_df,
-            on=["project_id", "taxonomy_label_id"],
-            how="inner",
-            suffixes=("", "_expert"),
-        )
-
-        merged_assessment = pd.merge(
-            combined_scores,
-            assessment_df,
-            on=["project_id", "taxonomy_label_id"],
-            how="inner",
-            suffixes=("", "_assessment"),
-        )
-
-        # Calculate agreement with expert likelihood
-        merged_expert["agreement"] = merged_expert.apply(
-            lambda x: compute_likelihood_agreement(x, bin_column=f"{approach}_bin"),
-            axis=1,
-        )
-
-        agreement_stats = merged_expert["agreement"].value_counts(normalize=True)
-
-        # Add agreement metrics
-        for agreement_type in ["strong", "weak", "disagree"]:
-            metrics.append(
-                {
-                    "metric_type": "expert_likelihood_agreement",
-                    "approach": approach,
-                    "threshold": agreement_type,
-                    "value": agreement_stats.get(agreement_type, 0),
-                    "details": f"Proportion of {agreement_type} agreement with expert likelihood",
-                }
-            )
-
-        # Evaluate against expert assessment
+        bin_column = f"{approach}_bin"
+        
         for threshold in ["strict", "relaxed"]:
-            if threshold == "strict":
-                positive_pred = merged_assessment[f"{approach}_bin"].isin(
-                    ["very high", "high"]
-                )
-            else:
-                positive_pred = merged_assessment[f"{approach}_bin"].isin(
-                    ["very high", "high", "medium"]
-                )
-
-            true_pos = sum(positive_pred & merged_assessment["positive"])
-            false_pos = sum(positive_pred & ~merged_assessment["positive"])
-            false_neg = sum(~positive_pred & merged_assessment["positive"])
-            true_neg = sum(~positive_pred & ~merged_assessment["positive"])
-
-            precision = (
-                true_pos / (true_pos + false_pos) if (true_pos + false_pos) > 0 else 0
-            )
-            recall = (
-                true_pos / (true_pos + false_neg) if (true_pos + false_neg) > 0 else 0
-            )
-            f1 = (
-                2 * (precision * recall) / (precision + recall)
-                if (precision + recall) > 0
-                else 0
+            high_conf = ["very high", "high"]
+            positive_bins = (
+                high_conf if threshold == "strict" else high_conf + ["medium"]
             )
 
-            metrics.extend(
-                [
-                    {
-                        "metric_type": "precision",
-                        "approach": approach,
-                        "threshold": threshold,
-                        "value": precision,
-                        "details": f"Precision using {threshold} threshold",
-                    },
-                    {
-                        "metric_type": "recall",
-                        "approach": approach,
-                        "threshold": threshold,
-                        "value": recall,
-                        "details": f"Recall using {threshold} threshold",
-                    },
-                    {
-                        "metric_type": "f1",
-                        "approach": approach,
-                        "threshold": threshold,
-                        "value": f1,
-                        "details": f"F1 score using {threshold} threshold",
-                    },
-                ]
+            metrics = compute_validation_metrics(
+                predictions=combined_scores,
+                expert_df=expert_df,
+                assessment_df=assessment_df,
+                bin_column=bin_column,
+                positive_bins=positive_bins,
             )
-
+            
+            results.append({
+                "approach": approach,
+                "threshold": threshold,
+                **metrics,  # Unpack all metrics
+            })
+            
             logger.info(
-                "%s approach - %s threshold metrics:\n"
+                "%s approach - %s threshold:\n"
                 "Precision: %.3f\n"
                 "Recall: %.3f\n"
                 "F1: %.3f\n"
-                "True Positives: %d\n"
-                "False Positives: %d\n"
-                "False Negatives: %d\n"
-                "True Negatives: %d",
+                "TP: %d, FP: %d, FN: %d",
                 approach.title(),
                 threshold,
-                precision,
-                recall,
-                f1,
-                true_pos,
-                false_pos,
-                false_neg,
-                true_neg,
+                metrics["precision"],
+                metrics["recall"],
+                metrics["f1"],
+                metrics["true_positives"],
+                metrics["false_positives"],
+                metrics["false_negatives"],
             )
 
-    return pd.DataFrame(metrics)
+    return pd.DataFrame(results)

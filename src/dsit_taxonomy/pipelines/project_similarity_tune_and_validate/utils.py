@@ -235,3 +235,86 @@ def compute_likelihood_agreement(
     elif diff == 2:
         return "weak"
     return "disagree"
+
+
+def compute_validation_metrics(
+    predictions: pd.DataFrame,
+    expert_df: pd.DataFrame,
+    assessment_df: pd.DataFrame,
+    bin_column: str,
+    positive_bins: list,
+) -> dict:
+    """
+    Compute validation metrics for a set of predictions against expert labels.
+
+    Args:
+        predictions: DataFrame with predicted labels and confidence bins
+        expert_df: DataFrame with expert-suggested labels and likelihood
+        assessment_df: DataFrame with binary assessment of proposed labels
+        bin_column: Name of the confidence bin column
+        positive_bins: List of bin values to consider as positive predictions
+
+    Returns:
+        Dictionary with computed metrics
+    """
+    # Get positive predictions
+    pred_positives = predictions[
+        predictions[bin_column].isin(positive_bins)
+    ][["project_id", "taxonomy_label_id"]]
+    
+    # Get true positives from assessment_df
+    true_pos = len(
+        pred_positives.merge(
+            assessment_df[assessment_df["positive"]],
+            on=["project_id", "taxonomy_label_id"],
+            how="inner"
+        )
+    )
+    
+    # Get false positives from assessment_df
+    false_pos = len(
+        pred_positives.merge(
+            assessment_df[~assessment_df["positive"]],
+            on=["project_id", "taxonomy_label_id"],
+            how="inner"
+        )
+    )
+    
+    # Get expert-suggested labels (excluding low confidence)
+    expert_labels = expert_df[
+        expert_df["likelihood"].isin(["high"])
+    ][["project_id", "taxonomy_label_id"]]
+    
+    # False negatives are expert-suggested labels we missed
+    false_neg = len(
+        expert_labels[
+            ~expert_labels.apply(
+                lambda x: (
+                    (x["project_id"], x["taxonomy_label_id"]) in 
+                    zip(pred_positives["project_id"], pred_positives["taxonomy_label_id"])
+                ),
+                axis=1
+            )
+        ]
+    )
+    
+    # Compute metrics
+    total_pred = true_pos + false_pos
+    total_true = true_pos + false_neg
+    
+    precision = true_pos / total_pred if total_pred > 0 else 0.0
+    recall = true_pos / total_true if total_true > 0 else 0.0
+    f1 = (
+        2 * (precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0.0
+    )
+    
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "true_positives": true_pos,
+        "false_positives": false_pos,
+        "false_negatives": false_neg,
+    }
