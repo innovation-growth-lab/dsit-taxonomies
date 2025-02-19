@@ -7,7 +7,7 @@ similarity_refinement:
     local_q3: 0.75  # Project-level high threshold
   
   # Score normalization
-  normalise_by_matches: True
+  normalise_by_matches: False
 
   # Zero-shot validation
   zeroshot:
