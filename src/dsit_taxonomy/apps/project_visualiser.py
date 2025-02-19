@@ -248,7 +248,7 @@ def main():
         )
 
         st.markdown("---")
-        st.image("igl_logo.png")
+        st.image("src/dsit_taxonomy/apps/igl_logo.png")
 
     # Main content area
     if selected_title:
