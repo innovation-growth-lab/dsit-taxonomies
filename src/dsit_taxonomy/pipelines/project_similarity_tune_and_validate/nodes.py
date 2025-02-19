@@ -47,7 +47,6 @@ from ..project_similarity_matching.nodes import (
 )
 from ..project_similarity_refinement.nodes import aggregate_scores_to_labels
 from .utils import (
-    compute_likelihood_agreement,
     compute_per_project_metrics,
     validate_predictions,
     compute_validation_metrics,
