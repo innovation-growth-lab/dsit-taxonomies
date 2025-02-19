@@ -553,7 +553,6 @@ def evaluate_scoring_quality(
 
     # Evaluate each approach: zeroshot, confidence, and combined
     for approach in ["zeroshot", "confidence", "combined"]:
-        bin_column = f"{approach}_bin"
 
         # Merge with expert datasets
         merged_expert = pd.merge(
@@ -574,7 +573,7 @@ def evaluate_scoring_quality(
 
         # Calculate agreement with expert likelihood
         merged_expert["agreement"] = merged_expert.apply(
-            lambda x: compute_likelihood_agreement(x, bin_column=bin_column),
+            lambda x: compute_likelihood_agreement(x, bin_column=f"{approach}_bin"),
             axis=1,
         )
 
@@ -595,11 +594,11 @@ def evaluate_scoring_quality(
         # Evaluate against expert assessment
         for threshold in ["strict", "relaxed"]:
             if threshold == "strict":
-                positive_pred = merged_assessment[bin_column].isin(
+                positive_pred = merged_assessment[f"{approach}_bin"].isin(
                     ["very high", "high"]
                 )
             else:
-                positive_pred = merged_assessment[bin_column].isin(
+                positive_pred = merged_assessment[f"{approach}_bin"].isin(
                     ["very high", "high", "medium"]
                 )
 
