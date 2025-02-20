@@ -101,7 +101,7 @@ Tested against AI expert-labelled samples (300 projects), comparing multiple con
 ### CWTS Research Topics
 | Method            | Precision | Recall | F1    |
 |------------------|-----------|--------|-------|
-| Conservative     | 0.765     | 0.691  | 0.726 |
+| Zero-shot favoured     | 0.765     | 0.691  | 0.726 |
 | Zero-shot        | 0.784     | 0.661  | 0.717 |
 | Maximum          | 0.645     | 0.747  | 0.692 |
 
@@ -109,7 +109,7 @@ Tested against AI expert-labelled samples (300 projects), comparing multiple con
 | Method            | Precision | Recall | F1    |
 |------------------|-----------|--------|-------|
 | Zero-shot        | 0.646     | 0.664  | 0.655 |
-| Conservative     | 0.580     | 0.678  | 0.625 |
+| Zero-shot favoured     | 0.580     | 0.678  | 0.625 |
 | Maximum          | 0.350     | 0.760  | 0.479 |
 
 Note: These metrics show the best performing configuration for each approach. Your results may vary depending on the projects and taxonomies used.

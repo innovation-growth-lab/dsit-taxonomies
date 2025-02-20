@@ -295,98 +295,85 @@ def enhance_with_zeroshot(
 def refine_confidence_bins(zeroshot_scores: pd.DataFrame) -> pd.DataFrame:
     """
     Refine confidence bins using both sentence-level and zero-shot scores.
-    
+
     Args:
         zeroshot_scores: DataFrame with sentence and zero-shot confidence bins
-        
+
     Returns:
         DataFrame with refined confidence bins including:
         - max_confidence: Highest between sentence and zero-shot bins
         - conservative_confidence: Favors zero-shot when big disagreement
-        - sentence_favoring_confidence: Favors sentence scores when big disagreement
+        - sentence_favouring_confidence: Favors sentence scores when big disagreement
     """
     logger.info("Refining confidence bins from sentence and zero-shot scores")
-    
+
     # Rename confidence_bin to sentence_bin for clarity
-    refined = zeroshot_scores.rename(columns={'confidence_bin': 'sentence_bin'})
-    
+    refined = zeroshot_scores.rename(columns={"confidence_bin": "sentence_bin"})
+
     # Define bin order for comparison
-    bin_order = {
-        'very high': 4,
-        'high': 3,
-        'medium': 2,
-        'low': 1,
-        'very low': 0
-    }
-    
+    bin_order = {"very high": 4, "high": 3, "medium": 2, "low": 1, "very low": 0}
+
     def get_bin_distance(row):
         """Calculate absolute distance between sentence and zeroshot bins"""
-        sentence_val = bin_order.get(row['sentence_bin'], 0)
-        zeroshot_val = bin_order.get(row['zeroshot_bin'], 0)
+        sentence_val = bin_order.get(row["sentence_bin"], 0)
+        zeroshot_val = bin_order.get(row["zeroshot_bin"], 0)
         return abs(sentence_val - zeroshot_val)
-    
+
     def get_highest_bin(bin1, bin2):
         """Return the highest confidence bin between two bins"""
         return bin1 if bin_order.get(bin1, 0) > bin_order.get(bin2, 0) else bin2
-    
+
     # Calculate bin distance
-    refined['bin_distance'] = refined.apply(get_bin_distance, axis=1)
-    
+    refined["bin_distance"] = refined.apply(get_bin_distance, axis=1)
+
     # Get highest confidence between sentence and zeroshot
-    refined['max_confidence'] = refined.apply(
-        lambda x: get_highest_bin(x['sentence_bin'], x['zeroshot_bin']), 
-        axis=1
+    refined["max_confidence"] = refined.apply(
+        lambda x: get_highest_bin(x["sentence_bin"], x["zeroshot_bin"]), axis=1
     )
-    
+
     # Conservative approach - favor zeroshot when big disagreement
-    refined['conservative_confidence'] = refined.apply(
-        lambda x: (
-            x['zeroshot_bin'] if x['bin_distance'] > 1
-            else x['max_confidence']
-        ),
-        axis=1
+    refined["zeroshot_favouring_confidence"] = refined.apply(
+        lambda x: (x["zeroshot_bin"] if x["bin_distance"] > 1 else x["max_confidence"]),
+        axis=1,
     )
-    
-    # Sentence-favoring approach - favor sentence scores when big disagreement
-    refined['sentence_favoring_confidence'] = refined.apply(
-        lambda x: (
-            x['sentence_bin'] if x['bin_distance'] > 1
-            else x['max_confidence']
-        ),
-        axis=1
+
+    # Sentence-favouring approach - favor sentence scores when big disagreement
+    refined["sentence_favouring_confidence"] = refined.apply(
+        lambda x: (x["sentence_bin"] if x["bin_distance"] > 1 else x["max_confidence"]),
+        axis=1,
     )
-    
+
     # Reorder columns logically
     column_order = [
-        'project_id',
-        'taxonomy_label_id',
-        'taxonomy_label',
-        'relevance_score',
-        'zeroshot_score',
-        'sentence_bin',
-        'zeroshot_bin',
-        'max_confidence',
-        'conservative_confidence', 
-        'sentence_favoring_confidence',
-        'similarity_score_global',
-        'similarity_score_key',
-        'similarity_score_sent',
-        'num_matching_sentences',
-        'num_sentences',
-        'global_bin',
-        'local_bin'
+        "project_id",
+        "taxonomy_label_id",
+        "taxonomy_label",
+        "relevance_score",
+        "zeroshot_score",
+        "sentence_bin",
+        "zeroshot_bin",
+        "max_confidence",
+        "zeroshot_favouring_confidence",
+        "sentence_favouring_confidence",
+        "similarity_score_global",
+        "similarity_score_key",
+        "similarity_score_sent",
+        "num_matching_sentences",
+        "num_sentences",
+        "global_bin",
+        "local_bin",
     ]
-    
+
     refined = refined[column_order]
-    
+
     logger.info(
         "Confidence distribution summary:\n"
         "Sentence bins:\n%s\n"
         "Zero-shot bins:\n%s\n"
-        "Conservative bins:\n%s",
-        refined['sentence_bin'].value_counts().to_string(),
-        refined['zeroshot_bin'].value_counts().to_string(),
-        refined['conservative_confidence'].value_counts().to_string()
+        "Zero-shot favouring bins:\n%s",
+        refined["sentence_bin"].value_counts().to_string(),
+        refined["zeroshot_bin"].value_counts().to_string(),
+        refined["zeroshot_favouring_confidence"].value_counts().to_string(),
     )
-    
+
     return refined

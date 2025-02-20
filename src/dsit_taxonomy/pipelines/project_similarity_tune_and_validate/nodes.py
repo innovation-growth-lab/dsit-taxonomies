@@ -2,7 +2,7 @@
 This module contains nodes for tuning and validating taxonomy matching parameters.
 
 The nodes handle:
-- Sampling projects for expert validation
+- Sampling projects for expert validation 
 - Getting expert labels using RAG models
 - Parameter tuning using expert feedback
 - Computing validation metrics
@@ -14,7 +14,7 @@ The module provides functionality for:
 
 2. Expert Labeling
    - Using retrieval-augmented generation
-   - Providing structured taxonomy assignments
+   - Providing structured taxonomy assignments 
    - Handling multiple rounds of validation
 
 3. Confidence Bin Parameter Optimisation
@@ -519,8 +519,8 @@ def evaluate_scoring_quality(
     - Sentence-based confidence (sentence_bin)
     - Zero-shot confidence (zeroshot_bin)
     - Maximum confidence (max_confidence)
-    - Conservative approach (conservative_confidence)
-    - Sentence-favoring approach (sentence_favoring_confidence)
+    - Zero-shot favouring approach (zeroshot_favouring_confidence)
+    - Sentence-favouring approach (sentence_favouring_confidence)
 
     Args:
         final_scores: DataFrame with all confidence scores and bins
@@ -539,8 +539,8 @@ def evaluate_scoring_quality(
         'sentence': 'sentence_bin',
         'zeroshot': 'zeroshot_bin',
         'max': 'max_confidence',
-        'conservative': 'conservative_confidence',
-        'sentence_favoring': 'sentence_favoring_confidence'
+        'zeroshot_favouring': 'zeroshot_favouring_confidence',
+        'sentence_favouring': 'sentence_favouring_confidence'
     }
     
     for approach_name, bin_column in approaches.items():

@@ -141,7 +141,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                     },
                     outputs=f"validate.{taxonomy_name}.score_quality_metrics",
                     name=f"evaluate_scoring_quality_{taxonomy_name}",
-                    tags=["tune_and_validate", taxonomy_name],
+                    tags=["tune_and_validate", "evaluation_scores", taxonomy_name],
                 ),
             ]
         )

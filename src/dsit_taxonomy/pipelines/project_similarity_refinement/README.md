@@ -119,16 +119,16 @@ The pipeline now implements five different confidence scoring methods:
 
 3. **Maximum confidence (max_confidence)**:
    - Takes highest confidence between sentence and zero-shot
-   - Optimistic approach favoring any strong signal
-   - Best for maximizing recall
+   - Optimistic approach favouring any strong signal
+   - Best for maximising recall
 
-4. **Conservative (conservative_confidence)**:
-   - Favors zero-shot when large disagreement exists
+4. **Zero-shot favouring (zeroshot_favouring_confidence)**:
+   - Favours zero-shot when large disagreement exists
    - Falls back to maximum when approaches agree
-   - Prioritizes precision over recall
+   - Prioritises precision over recall
    - Best for high-confidence assignments
 
-5. **Sentence-favoring (sentence_favoring_confidence)**:
+5. **Sentence-favouring (sentence_favouring_confidence)**:
    - Trusts sentence-level scores when large disagreement exists
    - Uses maximum confidence when approaches agree
    - Useful when detailed text matching is critical
@@ -145,9 +145,9 @@ The pipeline now implements five different confidence scoring methods:
 |                  | Relaxed   | 0.784     | 0.661  | 0.717 |
 | Maximum          | Strict    | 0.781     | 0.608  | 0.684 |
 |                  | Relaxed   | 0.645     | 0.747  | 0.692 |
-| Conservative     | Strict    | 0.843     | 0.569  | 0.679 |
+| Zero-shot favouring| Strict  | 0.843     | 0.569  | 0.679 |
 |                  | Relaxed   | 0.765     | 0.691  | 0.726 |
-| Sentence-favoring| Strict    | 0.765     | 0.430  | 0.550 |
+| Sentence-favouring| Strict   | 0.765     | 0.430  | 0.550 |
 |                  | Relaxed   | 0.608     | 0.661  | 0.634 |
 
 #### GOScience Taxonomy
@@ -160,20 +160,20 @@ The pipeline now implements five different confidence scoring methods:
 |                  | Relaxed   | 0.646     | 0.664  | 0.655 |
 | Maximum          | Strict    | 0.533     | 0.640  | 0.582 |
 |                  | Relaxed   | 0.350     | 0.760  | 0.479 |
-| Conservative     | Strict    | 0.767     | 0.602  | 0.674 |
+| Zero-shot favouring| Strict  | 0.767     | 0.602  | 0.674 |
 |                  | Relaxed   | 0.580     | 0.678  | 0.625 |
-| Sentence-favoring| Strict    | 0.456     | 0.510  | 0.482 |
+| Sentence-favouring| Strict   | 0.456     | 0.510  | 0.482 |
 |                  | Relaxed   | 0.319     | 0.713  | 0.441 |
 
 ### Key Findings
 
 1. **Best Overall Performance**:
-   - CWTS: Conservative approach (relaxed) achieves F1=0.726
+   - CWTS: Zero-shot favouring approach (relaxed) achieves F1=0.726
    - GOScience: Zero-shot approach (relaxed) achieves F1=0.655
 
 2. **Precision vs Recall Trade-offs**:
-   - Conservative approach maintains high precision while improving recall
-   - Maximum confidence maximizes recall but with precision cost
+   - Zero-shot favouring approach maintains high precision while improving recall
+   - Maximum confidence maximises recall but with precision cost
    - Zero-shot consistently provides best precision
 
 3. **Taxonomy-Specific Patterns**:
@@ -184,7 +184,7 @@ The pipeline now implements five different confidence scoring methods:
 ### Recommendations
 
 1. **For CWTS Taxonomy**:
-   - Use conservative approach with relaxed threshold
+   - Use zero-shot favouring approach with relaxed threshold
    - Provides optimal balance (P=0.765, R=0.691, F1=0.726)
    - Maintains high precision while improving coverage
 
@@ -195,8 +195,7 @@ The pipeline now implements five different confidence scoring methods:
 
 ## Usage
 
-### Running the full pipeline
-```bash
+### Running the full pipeline```bash
 kedro run --pipeline project_similarity_refinement
 ```
 
