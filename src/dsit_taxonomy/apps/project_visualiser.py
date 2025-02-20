@@ -145,6 +145,9 @@ def render_colored_text(
     label_lookup = project_labels.set_index("taxonomy_label_id").to_dict("index")
 
     for sentence, info in sentence_scores.items():
+        # Clean up sentence breaks while preserving paragraph structure
+        clean_sentence = sentence.replace("\n", " ").replace("  ", " ").strip()
+        
         if info["label_id"] and info["label_id"] in label_colours:
             color = label_colours[info["label_id"]]
             rgba_color = color.replace("rgb", "rgba").replace(")", ", 0.15)")
@@ -157,20 +160,32 @@ def render_colored_text(
             sentence_score = label_info.get("similarity_score_sent", 0.0)
             global_score = label_info.get("similarity_score_global", "N/A")
             key_score = label_info.get("similarity_score_key", "N/A")
+            relevance_score = label_info.get("relevance_score", "N/A")
             
             tooltip = (
                 f"{label_text}\n"
                 f"Sentence match: {sentence_score:.3f}\n"
                 f"Global match: {global_score if global_score == 'N/A' else f'{global_score:.3f}'}\n"
                 f"Key match: {key_score if key_score == 'N/A' else f'{key_score:.3f}'}\n"
+                f"**Relevance score:** {relevance_score if relevance_score == 'N/A' else f'{relevance_score:.3f}'}"
             )
 
             html.append(
-                f'<span title="{tooltip}" style="background-color: {rgba_color};">{sentence}</span>'
+                f'<span title="{tooltip}" style="background-color: {rgba_color};">{clean_sentence}</span>'
             )
         else:
-            html.append(sentence)
-    return " ".join(html)
+            html.append(clean_sentence)
+
+    # Join sentences with proper spacing and handle paragraph breaks
+    text = " ".join(html)
+    
+    # Replace double line breaks with paragraph tags to preserve formatting
+    text = text.replace("\n\n", "</p><p>")
+    
+    # Wrap in paragraph tags
+    text = f"<p>{text}</p>"
+    
+    return text
 
 
 def confidence_level_to_rank(level: str) -> int:
