@@ -18,3 +18,4 @@ sentence-transformers~=3.4.1
 accelerate~=1.2.1
 langchain-openai # comment out if not planning to validate with LLM
 langchain-community # comment out if not planning to validate with LLM
+streamlit~=1.42.1

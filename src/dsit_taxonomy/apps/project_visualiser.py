@@ -160,14 +160,14 @@ def render_colored_text(
             sentence_score = label_info.get('similarity_score_sent', 0.0)
             global_score = label_info.get('similarity_score_global', 'N/A')
             key_score = label_info.get('similarity_score_key', 'N/A')
-            
+            relevance_score = label_info.get('relevance_score', 'N/A')
             # Show all scores in tooltip
             tooltip = (
                 f"{label_text}\n"
                 f"Sentence match: {sentence_score:.3f}\n"
                 f"Global match: {global_score if global_score == 'N/A' else f'{global_score:.3f}'}\n"
-                f"Key match: {key_score if key_score == 'N/A' else f'{key_score:.3f}'}"
-                f"\nRelevance score: **{label_info.get('relevance_score', 'N/A'):.3f}**"
+                f"Key match: {key_score if key_score == 'N/A' else f'{key_score:.3f}'}\n"
+                f"**Relevance score:** {relevance_score if relevance_score == 'N/A' else f'{relevance_score:.3f}'}"
             )
             
             html.append(
