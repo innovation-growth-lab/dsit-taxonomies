@@ -167,6 +167,7 @@ def render_colored_text(
                 f"Sentence match: {sentence_score:.3f}\n"
                 f"Global match: {global_score if global_score == 'N/A' else f'{global_score:.3f}'}\n"
                 f"Key match: {key_score if key_score == 'N/A' else f'{key_score:.3f}'}"
+                f"\nRelevance score: **{label_info.get('relevance_score', 'N/A'):.3f}**"
             )
             
             html.append(
