@@ -19,3 +19,4 @@ accelerate~=1.2.1
 langchain-openai # comment out if not planning to validate with LLM
 langchain-community # comment out if not planning to validate with LLM
 streamlit~=1.42.1 # comment out if not planning to run the app
+networkx~=3.2.1 # comment out if not planning to run the handover notebook

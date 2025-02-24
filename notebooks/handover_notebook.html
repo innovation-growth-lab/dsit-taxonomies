@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.39">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="David Ampudia Vicente">
+<meta name="dcterms.date" content="2024-02-24">
+
+<title>Taxonomy Classification Handover Guide</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="handover_notebook_files/libs/clipboard/clipboard.min.js"></script>
+<script src="handover_notebook_files/libs/quarto-html/quarto.js"></script>
+<script src="handover_notebook_files/libs/quarto-html/popper.min.js"></script>
+<script src="handover_notebook_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="handover_notebook_files/libs/quarto-html/anchor.min.js"></script>
+<link href="handover_notebook_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="handover_notebook_files/libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="handover_notebook_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="handover_notebook_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="handover_notebook_files/libs/bootstrap/bootstrap-de5f75ba0e9a74f6dd9045a57a301c09.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#key-components" id="toc-key-components" class="nav-link" data-scroll-target="#key-components">Key Components</a></li>
+  <li><a href="#current-performance" id="toc-current-performance" class="nav-link" data-scroll-target="#current-performance">Current Performance</a></li>
+  </ul></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a>
+  <ul class="collapse">
+  <li><a href="#loading-the-environment" id="toc-loading-the-environment" class="nav-link" data-scroll-target="#loading-the-environment">Loading the Environment</a></li>
+  <li><a href="#example-data" id="toc-example-data" class="nav-link" data-scroll-target="#example-data">Example Data</a></li>
+  </ul></li>
+  <li><a href="#taxonomy-processing" id="toc-taxonomy-processing" class="nav-link" data-scroll-target="#taxonomy-processing">1. Taxonomy Processing</a>
+  <ul class="collapse">
+  <li><a href="#understanding-taxonomy-structures" id="toc-understanding-taxonomy-structures" class="nav-link" data-scroll-target="#understanding-taxonomy-structures">1.1 Understanding Taxonomy Structures</a></li>
+  <li><a href="#hierarchical-relationships" id="toc-hierarchical-relationships" class="nav-link" data-scroll-target="#hierarchical-relationships">1.2 Hierarchical Relationships</a></li>
+  <li><a href="#adding-new-taxonomies" id="toc-adding-new-taxonomies" class="nav-link" data-scroll-target="#adding-new-taxonomies">1.3 Adding New Taxonomies</a></li>
+  <li><a href="#validation" id="toc-validation" class="nav-link" data-scroll-target="#validation">1.4 Validation</a></li>
+  </ul></li>
+  <li><a href="#keyword-processing" id="toc-keyword-processing" class="nav-link" data-scroll-target="#keyword-processing">2. Keyword Processing</a>
+  <ul class="collapse">
+  <li><a href="#keyword-extraction-methods" id="toc-keyword-extraction-methods" class="nav-link" data-scroll-target="#keyword-extraction-methods">2.1 Keyword Extraction Methods</a></li>
+  <li><a href="#keyword-aggregation" id="toc-keyword-aggregation" class="nav-link" data-scroll-target="#keyword-aggregation">2.2 Keyword Aggregation</a></li>
+  </ul></li>
+  <li><a href="#similarity-matching" id="toc-similarity-matching" class="nav-link" data-scroll-target="#similarity-matching">3. Similarity Matching</a>
+  <ul class="collapse">
+  <li><a href="#document-preprocessing" id="toc-document-preprocessing" class="nav-link" data-scroll-target="#document-preprocessing">3.1 Document Preprocessing</a></li>
+  <li><a href="#multi-level-matching" id="toc-multi-level-matching" class="nav-link" data-scroll-target="#multi-level-matching">3.2 Multi-Level Matching</a></li>
+  <li><a href="#score-combination" id="toc-score-combination" class="nav-link" data-scroll-target="#score-combination">3.3 Score Combination</a></li>
+  <li><a href="#score-pruning" id="toc-score-pruning" class="nav-link" data-scroll-target="#score-pruning">3.4 Score Pruning</a></li>
+  <li><a href="#score-pruning-and-evidence-integration" id="toc-score-pruning-and-evidence-integration" class="nav-link" data-scroll-target="#score-pruning-and-evidence-integration">3.4 Score Pruning and Evidence Integration</a></li>
+  </ul></li>
+  <li><a href="#refinement-and-validation" id="toc-refinement-and-validation" class="nav-link" data-scroll-target="#refinement-and-validation">4. Refinement and Validation</a>
+  <ul class="collapse">
+  <li><a href="#score-aggregation" id="toc-score-aggregation" class="nav-link" data-scroll-target="#score-aggregation">4.1 Score Aggregation</a></li>
+  <li><a href="#zero-shot-scores" id="toc-zero-shot-scores" class="nav-link" data-scroll-target="#zero-shot-scores">4.2 Zero-shot Scores</a></li>
+  <li><a href="#cwts-research-topics" id="toc-cwts-research-topics" class="nav-link" data-scroll-target="#cwts-research-topics">CWTS Research Topics</a></li>
+  <li><a href="#goscience-technologies" id="toc-goscience-technologies" class="nav-link" data-scroll-target="#goscience-technologies">GOScience Technologies</a></li>
+  </ul></li>
+  <li><a href="#fine-tuning-and-validation" id="toc-fine-tuning-and-validation" class="nav-link" data-scroll-target="#fine-tuning-and-validation">5. Fine-tuning and Validation</a>
+  <ul class="collapse">
+  <li><a href="#sample-selection" id="toc-sample-selection" class="nav-link" data-scroll-target="#sample-selection">5.1 Sample Selection</a></li>
+  <li><a href="#expert-label-generation" id="toc-expert-label-generation" class="nav-link" data-scroll-target="#expert-label-generation">5.2 Expert Label Generation</a></li>
+  <li><a href="#expert-validation" id="toc-expert-validation" class="nav-link" data-scroll-target="#expert-validation">5.3 Expert Validation</a></li>
+  <li><a href="#parameter-optimisation" id="toc-parameter-optimisation" class="nav-link" data-scroll-target="#parameter-optimisation">5.4 Parameter Optimisation</a></li>
+  </ul></li>
+  <li><a href="#practical-usage-and-best-practices" id="toc-practical-usage-and-best-practices" class="nav-link" data-scroll-target="#practical-usage-and-best-practices">6. Practical Usage and Best Practices</a>
+  <ul class="collapse">
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline">6.1 Running the Pipeline</a></li>
+  <li><a href="#configuration" id="toc-configuration" class="nav-link" data-scroll-target="#configuration">6.2 Configuration</a></li>
+  <li><a href="#best-practices" id="toc-best-practices" class="nav-link" data-scroll-target="#best-practices">6.3 Best Practices</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">6.4 Troubleshooting</a></li>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">6.5 Monitoring</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Taxonomy Classification Handover Guide</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>David Ampudia Vicente </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 24, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div id="cell-1" class="cell" data-execution_count="129">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> networkx <span class="im">as</span> nx</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> keybert <span class="im">import</span> KeyBERT</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> spacy.lang.en <span class="im">import</span> English</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> transformers <span class="im">import</span> pipeline <span class="im">as</span> transformers_pipeline</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> contextlib</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">"ignore"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">'display.max_colwidth'</span>, <span class="dv">160</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>This guide serves as a comprehensive overview of the DSIT Taxonomy Classification system. The project combines multiple approaches to accurately classify UKRI-funded research projects into standardised taxonomies, providing both classifications and confidence scores.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="handover_notebook_files/dsit-taxonomy-diagram.svg" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>DSIT Taxonomy System Architecture</figcaption>
+</figure>
+</div>
+<section id="key-components" class="level3">
+<h3 class="anchored" data-anchor-id="key-components">Key Components</h3>
+<ol type="1">
+<li><strong>Taxonomy Processing</strong>:
+<ul>
+<li>Standardisation of multiple research taxonomies (CWTS, GOScience, OpenAlex)</li>
+<li>Hierarchical relationship preservation</li>
+<li>Generation of both full and bottom-level taxonomies</li>
+</ul></li>
+<li><strong>Project Similarity Matching</strong>:
+<ul>
+<li>Multi-level semantic matching (global, sentence, keyword)</li>
+<li>Weighted score combination</li>
+<li>Pruning of low-confidence matches</li>
+</ul></li>
+<li><strong>Classification Refinement</strong>:
+<ul>
+<li>Score aggregation and confidence binning</li>
+<li>Zero-shot validation using NLI</li>
+<li>Multiple confidence scoring approaches</li>
+</ul></li>
+</ol>
+</section>
+<section id="current-performance" class="level3">
+<h3 class="anchored" data-anchor-id="current-performance">Current Performance</h3>
+<p>The system achieves strong results across different taxonomies on a subset of AI-labelled projects:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Taxonomy</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1 Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CWTS Topics</td>
+<td>76.5%</td>
+<td>69.1%</td>
+<td>0.726</td>
+</tr>
+<tr class="even">
+<td>GOScience</td>
+<td>64.6%</td>
+<td>66.4%</td>
+<td>0.655</td>
+</tr>
+</tbody>
+</table>
+<p>This guide will walk through each component, demonstrating how to:</p>
+<ol type="1">
+<li>Process and standardise new taxonomies</li>
+<li>Generate and understand similarity matches</li>
+<li>Refine and validate classifications</li>
+<li>Interpret and use confidence scores</li>
+</ol>
+</section>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<section id="loading-the-environment" class="level3">
+<h3 class="anchored" data-anchor-id="loading-the-environment">Loading the Environment</h3>
+<p>First, we’ll set up our Kedro environment and load some example data to demonstrate the system’s capabilities.</p>
+<div id="cell-3" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Kedro extensions</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>load_ext kedro.ipython</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Reload the Kedro context</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>reload_kedro</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="example-data" class="level3">
+<h3 class="anchored" data-anchor-id="example-data">Example Data</h3>
+<p>Let’s load some sample data to explore the taxonomy classification process:</p>
+<div id="cell-5" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cwts_taxonomy <span class="op">=</span> catalog.load(<span class="st">"taxonomy.cwts.full.db"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>goscience_taxonomy <span class="op">=</span> catalog.load(<span class="st">"taxonomy.goscience.full.db"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load example project</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>projects <span class="op">=</span> catalog.load(<span class="st">"gtr.projects.documents"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-6" class="cell" data-execution_count="61">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>example_project <span class="op">=</span> projects.iloc[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-7" class="cell" data-execution_count="62">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Example taxonomies loaded:"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CWTS Topics: </span><span class="sc">{</span><span class="bu">len</span>(cwts_taxonomy)<span class="sc">}</span><span class="ss"> labels"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"GOScience: </span><span class="sc">{</span><span class="bu">len</span>(goscience_taxonomy)<span class="sc">}</span><span class="ss"> labels"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Example project:"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Title: </span><span class="sc">{</span>example_project[<span class="st">'title'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Abstract: </span><span class="sc">{</span>example_project[<span class="st">'abstract_text'</span>][:<span class="dv">500</span>]<span class="sc">}</span><span class="ss">..."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Example taxonomies loaded:
+CWTS Topics: 4798 labels
+GOScience: 305 labels
+
+Example project:
+Title: Exploring the dark universe with quantum technologies
+Abstract: The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific priorities around the world. Terrestrial experiments focus efforts on Weakly Interacting Massive Particles (WIMPs) with ultra-low background experiments, operating many tonnes of target mass in deep underground sites. Such experiments have swept the bulk of the available electroweak parameter space for WIMPs and in the next decade will approach an irreducib...</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="taxonomy-processing" class="level2">
+<h2 class="anchored" data-anchor-id="taxonomy-processing">1. Taxonomy Processing</h2>
+<p>The first step in our pipeline is processing different research taxonomies into a standardised format. Each taxonomy has its unique structure and characteristics, but all need to be transformed into a consistent format for downstream matching.</p>
+<section id="understanding-taxonomy-structures" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-taxonomy-structures">1.1 Understanding Taxonomy Structures</h3>
+<p>Let’s examine the structure of our processed taxonomies:</p>
+<div id="cell-9" class="cell" data-execution_count="56">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"CWTS Taxonomy Example:"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>display(cwts_taxonomy[[<span class="st">"label"</span>, <span class="st">"id_path"</span>, <span class="st">"level"</span>]].head(<span class="dv">5</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">GOScience Taxonomy Example:"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>display(goscience_taxonomy[[<span class="st">"label"</span>, <span class="st">"level_path"</span>, <span class="st">"level"</span>]].head(<span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>CWTS Taxonomy Example:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">label</th>
+<th data-quarto-table-cell-role="th">id_path</th>
+<th data-quarto-table-cell-role="th">level</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Physical Sciences</td>
+<td>3</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>Physical Sciences &gt; Earth and Planetary Sciences</td>
+<td>3 &gt; 19</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Physical Sciences &gt; Earth and Planetary Sciences &gt; Geophysics</td>
+<td>3 &gt; 19 &gt; 1908</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Physical Sciences &gt; Earth and Planetary Sciences &gt; Geophysics &gt; Tectonic and Geochronological Evolution of Orogens</td>
+<td>3 &gt; 19 &gt; 1908 &gt; 10001</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5</td>
+<td>Physical Sciences &gt; Physics and Astronomy</td>
+<td>3 &gt; 31</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+GOScience Taxonomy Example:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">label</th>
+<th data-quarto-table-cell-role="th">level_path</th>
+<th data-quarto-table-cell-role="th">level</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Quantum technologies</td>
+<td>L0</td>
+<td>L0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>Quantum technologies &gt; Quantum computing</td>
+<td>L0 &gt; L1</td>
+<td>L1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Quantum technologies &gt; Quantum computing &gt; Quantum annealler</td>
+<td>L0 &gt; L1 &gt; L3</td>
+<td>L3</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Quantum technologies &gt; Quantum computing &gt; Gate-based quantum computer</td>
+<td>L0 &gt; L1 &gt; L3</td>
+<td>L3</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>Quantum technologies &gt; Quantum timing</td>
+<td>L0 &gt; L1</td>
+<td>L1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Each taxonomy is processed to include: - Full hierarchical path (<code>label</code>) - Unique identifier path (<code>id_path</code> or <code>level_path</code>) - Hierarchy level (<code>level</code>) - Unique identifier (<code>uuid</code>)</p>
+</section>
+<section id="hierarchical-relationships" class="level3">
+<h3 class="anchored" data-anchor-id="hierarchical-relationships">1.2 Hierarchical Relationships</h3>
+<p>The taxonomies maintain their hierarchical structure through path-based representation. Let’s visualise a branch of the Goscience taxonomy:</p>
+<div id="cell-11" class="cell" data-execution_count="46">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> create_taxonomy_network(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    taxonomy_df: pd.DataFrame,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    root_label: <span class="bu">str</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    figsize: <span class="bu">tuple</span> <span class="op">=</span> (<span class="dv">12</span>, <span class="dv">8</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    show_labels: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    font_size: <span class="bu">int</span> <span class="op">=</span> <span class="dv">20</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">    Create a network visualization using networkx with optional node labels.</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">        taxonomy_df: DataFrame containing taxonomy with columns 'label' and 'level'</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">        root_label: The root label to start the branch from</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">        figsize: Figure size tuple (width, height)</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">        show_labels: Whether to display node labels</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">        font_size: Size of the label text (only used if show_labels=True)</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get branch data</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    branch <span class="op">=</span> taxonomy_df[taxonomy_df[<span class="st">'label'</span>].<span class="bu">str</span>.startswith(root_label)].copy()</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create directed graph</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    G <span class="op">=</span> nx.DiGraph()</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add nodes and edges</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _, row <span class="kw">in</span> branch.iterrows():</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>        hierarchy <span class="op">=</span> row[<span class="st">'label'</span>].split(<span class="st">' &gt; '</span>)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(hierarchy)):</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>            current <span class="op">=</span> <span class="st">' &gt; '</span>.join(hierarchy[:i<span class="op">+</span><span class="dv">1</span>])</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>            parent <span class="op">=</span> <span class="st">' &gt; '</span>.join(hierarchy[:i]) <span class="cf">if</span> i <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Add node with level information and just the last part of hierarchy as label</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>            G.add_node(current, label<span class="op">=</span>hierarchy[i], level<span class="op">=</span>i)</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Add edge from parent if exists</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> parent:</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>                G.add_edge(parent, current)</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate layout (adjust k based on whether labels are shown)</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    k_value <span class="op">=</span> <span class="dv">2</span> <span class="cf">if</span> show_labels <span class="cf">else</span> <span class="dv">1</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    pos <span class="op">=</span> nx.spring_layout(G, k<span class="op">=</span>k_value, iterations<span class="op">=</span><span class="dv">50</span>)</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create figure</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    plt.figure(figsize<span class="op">=</span>figsize)</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get max level for scaling</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    max_level <span class="op">=</span> <span class="bu">max</span>(nx.get_node_attributes(G, <span class="st">'level'</span>).values())</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Draw edges</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    nx.draw_networkx_edges(G, pos, edge_color<span class="op">=</span><span class="st">'gray'</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Draw nodes for each level</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> level <span class="kw">in</span> <span class="bu">range</span>(max_level <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>        nodes_at_level <span class="op">=</span> [node <span class="cf">for</span> node, attr <span class="kw">in</span> G.nodes(data<span class="op">=</span><span class="va">True</span>) <span class="cf">if</span> attr[<span class="st">'level'</span>] <span class="op">==</span> level]</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> nodes_at_level:</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>            nx.draw_networkx_nodes(</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>                G, pos,</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>                nodelist<span class="op">=</span>nodes_at_level,</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>                node_size<span class="op">=</span><span class="dv">1000</span> <span class="op">*</span> (max_level <span class="op">-</span> level <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> max_level,  <span class="co"># Size decreases with level</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>                node_color<span class="op">=</span>[plt.cm.viridis(level <span class="op">/</span> max_level)],  <span class="co"># Color based on level</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>                alpha<span class="op">=</span><span class="fl">0.7</span>,</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add labels if requested</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> show_labels:</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>        labels <span class="op">=</span> nx.get_node_attributes(G, <span class="st">'label'</span>)</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>        nx.draw_networkx_labels(</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>            G, pos, </span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>            labels,</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>            font_size<span class="op">=</span>font_size,</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>            font_weight<span class="op">=</span><span class="st">'bold'</span>,</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    plt.axis(<span class="st">'off'</span>)</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> plt.gcf()</span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> create_taxonomy_network(</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>    goscience_taxonomy,</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Quantum technologies"</span>,</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>    figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>),</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>    show_labels<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="handover_notebook_files/figure-html/cell-8-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Let’s also consider a branch of the CWTS taxonomy:</p>
+<div id="cell-13" class="cell" data-execution_count="48">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> create_taxonomy_network(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    cwts_taxonomy,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Physical Sciences &gt; Earth and Planetary Sciences &gt; Geophysics"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    show_labels<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    font_size<span class="op">=</span><span class="dv">14</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="handover_notebook_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="adding-new-taxonomies" class="level3">
+<h3 class="anchored" data-anchor-id="adding-new-taxonomies">1.3 Adding New Taxonomies</h3>
+<p>To add a new taxonomy, you need to transform it into our standard format. Here’s a simplified example:</p>
+<div id="cell-15" class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> standardise_taxonomy(df, name_col, parent_col, level_col):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Standardise a taxonomy DataFrame into the required format.</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">        df: Input DataFrame</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">        name_col: Column containing label names</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">        parent_col: Column containing parent labels</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">        level_col: Column containing hierarchy levels</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">        Standardised DataFrame with required columns</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> uuid</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create empty DataFrame with required columns</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    std_df <span class="op">=</span> pd.DataFrame(columns<span class="op">=</span>[<span class="st">'label'</span>, <span class="st">'id_path'</span>, <span class="st">'level'</span>, <span class="st">'uuid'</span>])</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Example processing logic</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> idx, row <span class="kw">in</span> df.iterrows():</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Generate full path</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        path <span class="op">=</span> []</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>        current <span class="op">=</span> row[name_col]</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> current <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>            path.append(current)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>            current <span class="op">=</span> df[df[name_col] <span class="op">==</span> current][parent_col].iloc[<span class="dv">0</span>] <span class="cf">if</span> <span class="bu">len</span>(df[df[name_col] <span class="op">==</span> current]) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Add processed row</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>        std_df.loc[idx] <span class="op">=</span> {</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">'label'</span>: <span class="st">' &gt; '</span>.join(<span class="bu">reversed</span>(path)),</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">'id_path'</span>: <span class="st">' &gt; '</span>.join([<span class="bu">str</span>(uuid.uuid4())[:<span class="dv">8</span>] <span class="cf">for</span> _ <span class="kw">in</span> path]),</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>            <span class="st">'level'</span>: row[level_col],</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>            <span class="st">'uuid'</span>: <span class="bu">str</span>(uuid.uuid4())</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> std_df</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Example usage with dummy data</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>example_taxonomy <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">'name'</span>: [<span class="st">'Physics'</span>, <span class="st">'Quantum Physics'</span>, <span class="st">'Quantum Computing'</span>],</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    <span class="st">'parent'</span>: [<span class="va">None</span>, <span class="st">'Physics'</span>, <span class="st">'Quantum Physics'</span>],</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>    <span class="st">'level'</span>: [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>]</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>standardised <span class="op">=</span> standardise_taxonomy(example_taxonomy, <span class="st">'name'</span>, <span class="st">'parent'</span>, <span class="st">'level'</span>)</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Standardised Taxonomy Format:"</span>)</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>display(standardised)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Standardised Taxonomy Format:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">label</th>
+<th data-quarto-table-cell-role="th">id_path</th>
+<th data-quarto-table-cell-role="th">level</th>
+<th data-quarto-table-cell-role="th">uuid</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Physics</td>
+<td>e686b089</td>
+<td>0</td>
+<td>06da1ed1-660a-406d-866a-ae9cd6bc9793</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>Physics &gt; Quantum Physics</td>
+<td>c22c4d14 &gt; 47e76451</td>
+<td>1</td>
+<td>f773d313-8a14-48d1-a385-b757808fd79e</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Physics &gt; Quantum Physics &gt; Quantum Computing</td>
+<td>0c4b4b5b &gt; 4eefea6d &gt; fb678658</td>
+<td>2</td>
+<td>34f9b069-98e9-4afc-a75a-7fbd6b0b3c05</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="validation" class="level3">
+<h3 class="anchored" data-anchor-id="validation">1.4 Validation</h3>
+<p>After processing, taxonomies should be validated to ensure they meet requirements:</p>
+<div id="cell-17" class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> validate_taxonomy(df):</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Validate a processed taxonomy DataFrame."""</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    checks <span class="op">=</span> {</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Required columns"</span>: <span class="bu">all</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>            col <span class="kw">in</span> df.columns <span class="cf">for</span> col <span class="kw">in</span> [<span class="st">"label"</span>, <span class="st">"level"</span>, <span class="st">"uuid"</span>]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Unique identifiers"</span>: df[<span class="st">"uuid"</span>].is_unique,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Valid levels"</span>: df[<span class="st">"level"</span>]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        .<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="bu">int</span>(<span class="bu">str</span>(x).split(<span class="st">"L"</span>)[<span class="op">-</span><span class="dv">1</span>]) <span class="cf">if</span> <span class="bu">isinstance</span>(x, <span class="bu">str</span>) <span class="cf">else</span> x)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        .<span class="bu">min</span>()</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">&gt;=</span> <span class="dv">0</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Hierarchical paths"</span>: df[<span class="st">"label"</span>].<span class="bu">str</span>.contains(<span class="st">" &gt; "</span>).<span class="bu">all</span>(),</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Validation Results:"</span>)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> check, result <span class="kw">in</span> checks.items():</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>check<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="st">'✓'</span> <span class="cf">if</span> result <span class="cf">else</span> <span class="st">'✗'</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate our taxonomies</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"CWTS Taxonomy:"</span>)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>validate_taxonomy(cwts_taxonomy)</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">GOScience Taxonomy:"</span>)</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>validate_taxonomy(goscience_taxonomy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CWTS Taxonomy:
+Validation Results:
+Required columns: ✓
+Unique identifiers: ✓
+Valid levels: ✓
+Hierarchical paths: ✗
+
+GOScience Taxonomy:
+Validation Results:
+Required columns: ✓
+Unique identifiers: ✓
+Valid levels: ✓
+Hierarchical paths: ✗</code></pre>
+</div>
+</div>
+<p>This standardised format ensures that all taxonomies can be processed consistently in the downstream matching pipeline, while preserving their unique hierarchical relationships and domain knowledge.</p>
+</section>
+</section>
+<section id="keyword-processing" class="level2">
+<h2 class="anchored" data-anchor-id="keyword-processing">2. Keyword Processing</h2>
+<p>Before matching projects to taxonomies, we extract and process keywords using multiple methods to capture different aspects of the research content.</p>
+<section id="keyword-extraction-methods" class="level3">
+<h3 class="anchored" data-anchor-id="keyword-extraction-methods">2.1 Keyword Extraction Methods</h3>
+<p>The system uses four complementary keyword extractors:</p>
+<div id="cell-19" class="cell" data-execution_count="67">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_keyword_examples(project_text: <span class="bu">str</span>):</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show example keywords from each extractor."""</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> dsit_taxonomy.pipelines.keyword_processing_gtr.utils <span class="im">import</span> (</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        get_dbp_annotation,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        get_rake_keywords,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        get_yake_keywords,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        get_keybert_keywords,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Input text:"</span>, project_text[:<span class="dv">200</span>], <span class="st">"...</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"1. DBpedia Spotlight (Knowledge Base Linking):"</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(get_dbp_annotation(project_text)[:<span class="dv">5</span>])</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">2. RAKE (Statistical Extraction):"</span>)</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(get_rake_keywords(project_text)[:<span class="dv">5</span>])</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">3. YAKE (Unsupervised Extraction):"</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(get_yake_keywords(project_text)[:<span class="dv">5</span>])</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">4. KeyBERT (Semantic Extraction):"</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    kw_extractor <span class="op">=</span> KeyBERT(<span class="st">"all-MiniLM-L6-v2"</span>)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>([k <span class="cf">for</span> k <span class="kw">in</span> get_keybert_keywords(project_text, kw_extractor)][:<span class="dv">5</span>])</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Show examples using our sample project</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>show_keyword_examples(</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'title'</span>] <span class="op">+</span> <span class="st">". "</span> <span class="op">+</span> </span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>]</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Input text: Exploring the dark universe with quantum technologies. The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific prio ...
+
+1. DBpedia Spotlight (Knowledge Base Linking):
+['Quantum', 'Alpha decay', 'Nanometre', 'Dark matter', 'Universal Classic Monsters']
+
+2. RAKE (Statistical Extraction):
+['wimp thermal relic dark matter candidates', 'whilst also providing directional information', 'highest scientific priorities around', 'available electroweak parameter space', '150 nm quartz sphere']
+
+3. YAKE (Unsupervised Extraction):
+['dark matter', 'Weakly Interacting Massive', 'Interacting Massive Particles', 'dark', 'elusive dark matter']
+
+4. KeyBERT (Semantic Extraction):
+['dark matter sensing', 'sensitivity dark matter', 'elusive dark matter', 'dark matter scattering', 'galactic dark matter']</code></pre>
+</div>
+</div>
+<p>Each method brings different strengths: - <strong>DBpedia</strong>: Links to knowledge base concepts - <strong>RAKE</strong>: Statistical approach using word co-occurrence - <strong>YAKE</strong>: Unsupervised extraction with text features - <strong>KeyBERT</strong>: Transformer-based semantic extraction</p>
+</section>
+<section id="keyword-aggregation" class="level3">
+<h3 class="anchored" data-anchor-id="keyword-aggregation">2.2 Keyword Aggregation</h3>
+<p>Keywords from different extractors are combined using a consensus approach:</p>
+<div id="cell-21" class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dsit_taxonomy.pipelines.keyword_processing_gtr.nodes <span class="im">import</span> (</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    aggregate_keyword_annotators</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_keyword_aggregation(keywords_by_extractor):</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how keywords are aggregated across extractors.</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">        keywords_by_extractor: Dictionary of extractor names and their keywords</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co">        DataFrame with aggregated keywords and their counts</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create sample DataFrames for each extractor</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    dfs <span class="op">=</span> {</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>        name: pd.DataFrame({</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">'project_id'</span>: [<span class="st">'example_proj'</span>],</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f'</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">_keywords'</span>: [kws]</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        }) <span class="cf">for</span> name, kws <span class="kw">in</span> keywords_by_extractor.items()</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Aggregate keywords and return</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> aggregate_keyword_annotators(<span class="op">*</span>dfs.values())</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>example_keywords <span class="op">=</span> {</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">'dbp'</span>: [<span class="st">'machine learning'</span>, <span class="st">'artificial intelligence'</span>, <span class="st">'neural networks'</span>],</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">'rake'</span>: [<span class="st">'machine learning'</span>, <span class="st">'deep learning'</span>, <span class="st">'data science'</span>],</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">'yake'</span>: [<span class="st">'artificial intelligence'</span>, <span class="st">'neural networks'</span>, <span class="st">'ml algorithms'</span>],</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">'keybert'</span>: [<span class="st">'machine learning'</span>, <span class="st">'neural networks'</span>, <span class="st">'deep learning'</span>]</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Get results</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> demonstrate_keyword_aggregation(example_keywords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-22" class="cell" data-execution_count="148">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Aggregated Keywords:"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>display(results[[<span class="st">'keyword'</span>, <span class="st">'num_annotators'</span>]].head(<span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Aggregated Keywords:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">keyword</th>
+<th data-quarto-table-cell-role="th">num_annotators</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>machine learning</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2</td>
+<td>neural networks</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1</td>
+<td>artificial intelligence</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>deep learning</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Key features of the aggregation: - Only keeps keywords found by multiple extractors - Counts extractor agreement for confidence - Maintains project-keyword mappings - Generates unique identifiers for tracking</p>
+</section>
+</section>
+<section id="similarity-matching" class="level2">
+<h2 class="anchored" data-anchor-id="similarity-matching">3. Similarity Matching</h2>
+<p>The similarity matching pipeline combines evidence from multiple levels to create robust taxonomy assignments. This multi-level approach helps capture both broad thematic alignment and specific technical matches.</p>
+<section id="document-preprocessing" class="level3">
+<h3 class="anchored" data-anchor-id="document-preprocessing">3.1 Document Preprocessing</h3>
+<p>First, projects are preprocessed into different granularity levels:</p>
+<div id="cell-24" class="cell" data-execution_count="83">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_matching.nodes <span class="im">import</span> (</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    document_preprocessing,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_preprocessing(project):</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show document preprocessing steps."""</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create sample DataFrame</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.DataFrame(</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">"project_id"</span>: [project[<span class="st">"project_id"</span>]],</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>            <span class="st">"title"</span>: [project[<span class="st">"title"</span>]],</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">"abstract_text"</span>: [project[<span class="st">"abstract_text"</span>]],</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">"tech_abstract_text"</span>: [project[<span class="st">"tech_abstract_text"</span>]],</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">"potential_impact"</span>: [project[<span class="st">"potential_impact"</span>]],</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Process documents</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    project_df, sentences_df <span class="op">=</span> document_preprocessing(df)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"1. Combined Project Text (first 200 chars):"</span>)</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(project_df[<span class="st">"text"</span>].iloc[<span class="dv">0</span>][:<span class="dv">200</span>], <span class="st">"...</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"2. Split Sentences (first 3):"</span>)</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, row <span class="kw">in</span> sentences_df.head(<span class="dv">3</span>).iterrows():</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Sentence </span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>row[<span class="st">'sentence_text'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Demonstrate preprocessing</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>demonstrate_preprocessing(example_project)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1. Combined Project Text (first 200 chars):
+Exploring the dark universe with quantum technologies. The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific prio ...
+
+2. Split Sentences (first 3):
+Sentence 1: Exploring the dark universe with quantum technologies.
+Sentence 1: The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific priorities around the world.
+Sentence 1: Terrestrial experiments focus efforts on Weakly Interacting Massive Particles (WIMPs) with ultra-low background experiments, operating many tonnes of target mass in deep underground sites.</code></pre>
+</div>
+</div>
+</section>
+<section id="multi-level-matching" class="level3">
+<h3 class="anchored" data-anchor-id="multi-level-matching">3.2 Multi-Level Matching</h3>
+<p>The system computes similarities at three levels:</p>
+<ol type="1">
+<li><strong>Global Project Matching</strong>:
+<ul>
+<li>Compares full project text to taxonomy labels</li>
+<li>Captures overall thematic alignment</li>
+<li>Uses cosine similarity with normalised vectors</li>
+</ul></li>
+<li><strong>Sentence-Level Matching</strong>:
+<ul>
+<li>Identifies specific relevant passages</li>
+<li>Provides granular evidence for assignments</li>
+<li>Enables traceability of matches</li>
+</ul></li>
+<li><strong>Keyword-Level Matching</strong>:
+<ul>
+<li>Leverages extracted and validated keywords</li>
+<li>Boosts scores based on terminology overlap</li>
+<li>Helps with technical term matching</li>
+</ul></li>
+</ol>
+<div id="cell-26" class="cell" data-execution_count="88">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_matching_levels(text, taxonomy_label):</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show similarity computation at different levels."""</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Load model</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> SentenceTransformer(<span class="st">'all-MiniLM-L6-v2'</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute embeddings</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    text_emb <span class="op">=</span> model.encode(text)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    label_emb <span class="op">=</span> model.encode(taxonomy_label)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalise vectors</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    text_emb <span class="op">=</span> text_emb <span class="op">/</span> torch.norm(torch.tensor(text_emb))</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    label_emb <span class="op">=</span> label_emb <span class="op">/</span> torch.norm(torch.tensor(label_emb))</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute similarity</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    similarity <span class="op">=</span> torch.dot(torch.tensor(text_emb), torch.tensor(label_emb)).item()</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> similarity</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Example taxonomy label: Physical Sciences &gt; Physics &gt; Quantum Physics
+
+Similarity Scores:
+
+1. Global Project Match:
+Score: 0.250
+
+2. Sentence Match (first sentence):
+Score: 0.241</code></pre>
+</div>
+</div>
+<div id="cell-27" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example taxonomy label</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>example_label <span class="op">=</span> <span class="st">"Physical Sciences &gt; Physics &gt; Quantum Physics"</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Example taxonomy label:"</span>, example_label)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Similarity Scores:"</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">1. Global Project Match:"</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>global_sim <span class="op">=</span> demonstrate_matching_levels(</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>], </span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    example_label</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>global_sim<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">2. Sentence Match (first sentence):"</span>)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>sent_sim <span class="op">=</span> demonstrate_matching_levels(</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>].split(<span class="st">'.'</span>)[<span class="dv">0</span>], </span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    example_label</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>sent_sim<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-28" class="cell" data-execution_count="94">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example taxonomy label</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>example_label <span class="op">=</span> <span class="st">"Physical Sciences &gt; Physics and Astronomy &gt; Nuclear and High Energy Physics &gt; Particle Dark Matter and Detection Methods"</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Example taxonomy label:"</span>, example_label)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Similarity Scores:"</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">1. Global Project Match:"</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>global_sim <span class="op">=</span> demonstrate_matching_levels(</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>], </span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    example_label</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>global_sim<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">2. Sentence Match (first sentence):"</span>)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>sent_sim <span class="op">=</span> demonstrate_matching_levels(</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>].split(<span class="st">'.'</span>)[<span class="dv">0</span>], </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    example_label</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>sent_sim<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Example taxonomy label: Physical Sciences &gt; Physics and Astronomy &gt; Nuclear and High Energy Physics &gt; Particle Dark Matter and Detection Methods
+
+Similarity Scores:
+
+1. Global Project Match:
+Score: 0.496
+
+2. Sentence Match (first sentence):
+Score: 0.514</code></pre>
+</div>
+</div>
+</section>
+<section id="score-combination" class="level3">
+<h3 class="anchored" data-anchor-id="score-combination">3.3 Score Combination</h3>
+<p>The final scores combine evidence from all levels using weighted aggregation:</p>
+<p><span class="math display">\[
+\text{score}(p,l) = \alpha \cdot s_{\text{sent}}(p,l) + \beta \cdot s_{\text{global}}(p,l) + (1-\alpha-\beta) \cdot s_{\text{key}}(p,l)
+\]</span></p>
+<p>where: - <span class="math inline">\(s_{\text{sent}}(p,l)\)</span>: Sentence-level similarity - <span class="math inline">\(s_{\text{global}}(p,l)\)</span>: Global project similarity - <span class="math inline">\(s_{\text{key}}(p,l)\)</span>: Keyword-based similarity - <span class="math inline">\(\alpha, \beta\)</span>: Weighting parameters (currently <span class="math inline">\(\alpha=0.6, \beta=0.3\)</span>)</p>
+<div id="cell-30" class="cell" data-execution_count="96">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_score_combination(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    sentence_score: <span class="bu">float</span>,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    global_score: <span class="bu">float</span>,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    keyword_score: <span class="bu">float</span>,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    sentence_weight: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    global_weight: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how different scores are combined."""</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    keyword_weight <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> sentence_weight <span class="op">-</span> global_weight</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    combined_score <span class="op">=</span> (</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>        sentence_weight <span class="op">*</span> sentence_score <span class="op">+</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>        global_weight <span class="op">*</span> global_score <span class="op">+</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>        keyword_weight <span class="op">*</span> keyword_score</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Inputs:"</span>)</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Sentence Score: </span><span class="sc">{</span>sentence_score<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Global Score:   </span><span class="sc">{</span>global_score<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Keyword Score:  </span><span class="sc">{</span>keyword_score<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Weights:"</span>)</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- α (sentence): </span><span class="sc">{</span>sentence_weight<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- β (global):   </span><span class="sc">{</span>global_weight<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- γ (keyword):  </span><span class="sc">{</span>keyword_weight<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Combined Score: </span><span class="sc">{</span>combined_score<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Example combination</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>demonstrate_score_combination(</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    sentence_score<span class="op">=</span><span class="fl">0.85</span>,</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    global_score<span class="op">=</span><span class="fl">0.75</span>,</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>    keyword_score<span class="op">=</span><span class="fl">0.65</span></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Inputs:
+- Sentence Score: 0.850
+- Global Score:   0.750
+- Keyword Score:  0.650
+
+Weights:
+- α (sentence): 0.6
+- β (global):   0.3
+- γ (keyword):  0.1
+
+Combined Score: 0.800</code></pre>
+</div>
+</div>
+</section>
+<section id="score-pruning" class="level3">
+<h3 class="anchored" data-anchor-id="score-pruning">3.4 Score Pruning</h3>
+<p>Low-confidence matches are pruned using dynamic thresholds:</p>
+<p><span class="math display">\[
+\text{threshold}(s) = \begin{cases}
+Q_3(s) &amp; \text{for high confidence} \\
+Q_2(s) &amp; \text{for medium confidence}
+\end{cases}
+\]</span></p>
+<p>where <span class="math inline">\(Q_2, Q_3\)</span> are the second and third quartiles of the score distribution.</p>
+<div id="cell-32" class="cell" data-execution_count="100">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_pruning(scores, use_quantile<span class="op">=</span><span class="va">True</span>):</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how matches are pruned.</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">        scores: List of similarity scores</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">        use_quantile: Whether to use quantile-based thresholds</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">        tuple: (original_df, pruned_sent, pruned_global, pruned_key)</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">            - original_df: Original DataFrame with matches</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_sent: DataFrame after sentence-level pruning</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_global: DataFrame after global pruning</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_key: DataFrame after keyword pruning</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_matching.nodes <span class="im">import</span> prune_raw_matches</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create sample DataFrame</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">'project_id'</span>: [<span class="st">'proj1'</span>] <span class="op">*</span> <span class="bu">len</span>(scores),</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">'taxonomy_label_id'</span>: [<span class="ss">f'tax</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">'</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(scores))],</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">'similarity_score'</span>: scores</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get pruned results</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>    pruned_sent, pruned_global, pruned_key <span class="op">=</span> prune_raw_matches(</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>        df, df.copy(), df.copy(),</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>        sentence_threshold<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>        global_threshold<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>        keyword_threshold<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>        use_quantile<span class="op">=</span>use_quantile</span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df, pruned_sent, pruned_global, pruned_key</span>
+<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a>example_scores <span class="op">=</span> [<span class="fl">0.85</span>, <span class="fl">0.75</span>, <span class="fl">0.65</span>, <span class="fl">0.55</span>, <span class="fl">0.45</span>, <span class="fl">0.35</span>]</span>
+<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>original, sent, glob, key <span class="op">=</span> demonstrate_pruning(example_scores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-33" class="cell" data-execution_count="101">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Original matches: </span><span class="sc">{</span><span class="bu">len</span>(original)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"After pruning:"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"- Sentence matches: </span><span class="sc">{</span><span class="bu">len</span>(sent)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"- Global matches:   </span><span class="sc">{</span><span class="bu">len</span>(glob)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"- Keyword matches:  </span><span class="sc">{</span><span class="bu">len</span>(key)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Original matches: 6
+After pruning:
+- Sentence matches: 3
+- Global matches:   3
+- Keyword matches:  3</code></pre>
+</div>
+</div>
+</section>
+<section id="score-pruning-and-evidence-integration" class="level3">
+<h3 class="anchored" data-anchor-id="score-pruning-and-evidence-integration">3.4 Score Pruning and Evidence Integration</h3>
+<p>The pruning process serves multiple purposes beyond simple threshold filtering:</p>
+<ol type="1">
+<li><strong>Context-Rich Evidence</strong>:
+<ul>
+<li>Sentence-level matches provide detailed contextual evidence</li>
+<li>Higher-level topics can dominate when specific subtopics lack strong evidence</li>
+<li>Maintains traceability to specific supporting text</li>
+</ul></li>
+</ol>
+<div id="cell-35" class="cell" data-execution_count="102">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_contextual_evidence(matches_df):</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how contextual evidence is preserved."""</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Example Matches with Context:"</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _, match <span class="kw">in</span> matches_df.head(<span class="dv">2</span>).iterrows():</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Topic: </span><span class="sc">{</span>match[<span class="st">'taxonomy_label'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>match[<span class="st">'similarity_score'</span>]<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Supporting Evidence:"</span>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"- Sentence: '</span><span class="sc">{</span>match[<span class="st">'sentence_text'</span>]<span class="sc">}</span><span class="ss">'"</span>)</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"- Keywords: </span><span class="sc">{</span><span class="st">', '</span><span class="sc">.</span>join(match[<span class="st">'matching_keywords'</span>])<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Example evidence display</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>example_matches <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'taxonomy_label'</span>: [</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Physics &gt; Quantum Physics'</span>,</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Physics &gt; Quantum Physics &gt; Quantum Computing'</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">'similarity_score'</span>: [<span class="fl">0.85</span>, <span class="fl">0.65</span>],</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">'sentence_text'</span>: [</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">'The project advances quantum physics through novel approaches.'</span>,</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Some applications in quantum computing may be possible.'</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">'matching_keywords'</span>: [</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>        [<span class="st">'quantum physics'</span>, <span class="st">'quantum mechanics'</span>],</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>        [<span class="st">'quantum computing'</span>, <span class="st">'quantum algorithms'</span>]</span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>show_contextual_evidence(example_matches)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Example Matches with Context:
+
+Topic: Physics &gt; Quantum Physics
+Score: 0.850
+Supporting Evidence:
+- Sentence: 'The project advances quantum physics through novel approaches.'
+- Keywords: quantum physics, quantum mechanics
+
+Topic: Physics &gt; Quantum Physics &gt; Quantum Computing
+Score: 0.650
+Supporting Evidence:
+- Sentence: 'Some applications in quantum computing may be possible.'
+- Keywords: quantum computing, quantum algorithms</code></pre>
+</div>
+</div>
+<ol start="2" type="1">
+<li><strong>Hierarchical Pruning</strong>:
+<ul>
+<li>Automatically favours best-fitting taxonomic level</li>
+<li>Prevents redundant assignments at multiple levels</li>
+<li>Preserves broader classifications when specific ones are uncertain</li>
+</ul></li>
+</ol>
+<div id="cell-37" class="cell" data-execution_count="104">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_hierarchical_pruning():</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how hierarchical pruning works."""</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    scores <span class="op">=</span> {</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Physics'</span>: <span class="fl">0.85</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Physics &gt; Quantum Physics'</span>: <span class="fl">0.82</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Physics &gt; Quantum Physics &gt; Quantum Computing'</span>: <span class="fl">0.45</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Scores by Taxonomic Level:"</span>)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> label, score <span class="kw">in</span> scores.items():</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        depth <span class="op">=</span> <span class="bu">len</span>(label.split(<span class="st">' &gt; '</span>))</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'  '</span> <span class="op">*</span> (depth<span class="op">-</span><span class="dv">1</span>)<span class="sc">}</span><span class="ss">└─ </span><span class="sc">{</span>label<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>score<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">After Pruning:"</span>)</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Keeps: 'Physics' (0.85) - Strong general fit"</span>)</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Keeps: 'Physics &gt; Quantum Physics' (0.82) - Strong specific fit"</span>)</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Prunes: 'Physics &gt; Quantum Physics &gt; Quantum Computing' (0.45) - Weak specific fit"</span>)</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>demonstrate_hierarchical_pruning()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Scores by Taxonomic Level:
+└─ Physics: 0.85
+  └─ Physics &gt; Quantum Physics: 0.82
+    └─ Physics &gt; Quantum Physics &gt; Quantum Computing: 0.45
+
+After Pruning:
+- Keeps: 'Physics' (0.85) - Strong general fit
+- Keeps: 'Physics &gt; Quantum Physics' (0.82) - Strong specific fit
+- Prunes: 'Physics &gt; Quantum Physics &gt; Quantum Computing' (0.45) - Weak specific fit</code></pre>
+</div>
+</div>
+<ol start="3" type="1">
+<li><strong>Multi-Source Validation</strong>:
+<ul>
+<li>Combines evidence from different extraction methods</li>
+<li>Keywords provide traceable domain-specific signals</li>
+<li>Sentence matches offer contextual validation</li>
+<li>Global scores ensure thematic coherence</li>
+</ul></li>
+</ol>
+<div id="cell-39" class="cell" data-execution_count="105">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_evidence_combination(project_id: <span class="bu">str</span>):</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how different evidence sources combine."""</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    evidence <span class="op">=</span> {</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Global Match'</span>: {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">'score'</span>: <span class="fl">0.75</span>,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">'evidence'</span>: <span class="st">'Overall project theme matches taxonomy domain'</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Keyword Matches'</span>: {</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">'score'</span>: <span class="fl">0.82</span>,</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">'evidence'</span>: [<span class="st">'quantum physics'</span>, <span class="st">'quantum mechanics'</span>, <span class="st">'quantum states'</span>],</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">'extractors'</span>: [<span class="st">'KeyBERT'</span>, <span class="st">'RAKE'</span>, <span class="st">'DBpedia'</span>]</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Sentence Matches'</span>: {</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">'score'</span>: <span class="fl">0.85</span>,</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">'evidence'</span>: [</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>                <span class="st">'Project advances quantum physics understanding'</span>,</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>                <span class="st">'Novel quantum mechanical approaches developed'</span></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Evidence Integration Example:"</span>)</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> source, details <span class="kw">in</span> evidence.items():</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span>source<span class="sc">}</span><span class="ss">:"</span>)</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>details[<span class="st">'score'</span>]<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(details[<span class="st">'evidence'</span>], <span class="bu">list</span>):</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">"Supporting Evidence:"</span>)</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> e <span class="kw">in</span> details[<span class="st">'evidence'</span>]:</span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>                <span class="bu">print</span>(<span class="ss">f"- </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"Evidence: </span><span class="sc">{</span>details[<span class="st">'evidence'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="st">'extractors'</span> <span class="kw">in</span> details:</span>
+<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"Validated by: </span><span class="sc">{</span><span class="st">', '</span><span class="sc">.</span>join(details[<span class="st">'extractors'</span>])<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb37-34"><a href="#cb37-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-35"><a href="#cb37-35" aria-hidden="true" tabindex="-1"></a>show_evidence_combination(<span class="st">"example_project"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Evidence Integration Example:
+
+Global Match:
+Score: 0.75
+Evidence: Overall project theme matches taxonomy domain
+
+Keyword Matches:
+Score: 0.82
+Supporting Evidence:
+- quantum physics
+- quantum mechanics
+- quantum states
+Validated by: KeyBERT, RAKE, DBpedia
+
+Sentence Matches:
+Score: 0.85
+Supporting Evidence:
+- Project advances quantum physics understanding
+- Novel quantum mechanical approaches developed</code></pre>
+</div>
+</div>
+<p>The pruning thresholds are dynamically computed using score distributions:</p>
+<p><span class="math display">\[
+\text{threshold}(s) = \begin{cases}
+Q_3(s) &amp; \text{for high confidence} \\
+Q_2(s) &amp; \text{for medium confidence}
+\end{cases}
+\]</span></p>
+<p>This approach ensures that: 1. Classifications are supported by multiple evidence types 2. Higher-level topics are preserved when appropriate 3. Confidence scores reflect evidence quality and agreement 4. All assignments remain traceable to source evidence</p>
+<p>These pruned scores form the foundation for the final confidence refinement stage.</p>
+</section>
+</section>
+<section id="refinement-and-validation" class="level2">
+<h2 class="anchored" data-anchor-id="refinement-and-validation">4. Refinement and Validation</h2>
+<p>The final pipeline stage refines the similarity scores into confidence-based assignments and validates them using zero-shot classification.</p>
+<section id="score-aggregation" class="level3">
+<h3 class="anchored" data-anchor-id="score-aggregation">4.1 Score Aggregation</h3>
+<p>First, granular scores are aggregated to project-label pairs:</p>
+<div id="cell-42" class="cell" data-execution_count="121">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_refinement.nodes <span class="im">import</span> (</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    aggregate_scores_to_labels,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_aggregation(granular_scores):</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how granular scores are aggregated.</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="co">        granular_scores: DataFrame with granular match scores</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co">        tuple: (granular_scores, aggregated_scores)</span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="co">            - granular_scores: Original granular scores DataFrame</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co">            - aggregated_scores: Aggregated scores DataFrame</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    aggregated <span class="op">=</span> aggregate_scores_to_labels(</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>        granular_scores,</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>        normalise_by_matches<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>        global_q2_threshold<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>        global_q3_threshold<span class="op">=</span><span class="fl">0.75</span>,</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>        local_q2_threshold<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>        local_q3_threshold<span class="op">=</span><span class="fl">0.75</span>,</span>
+<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-27"><a href="#cb39-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> granular_scores, aggregated</span>
+<span id="cb39-28"><a href="#cb39-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-29"><a href="#cb39-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sample data with multiple diverse projects</span></span>
+<span id="cb39-30"><a href="#cb39-30" aria-hidden="true" tabindex="-1"></a>sample_scores <span class="op">=</span> pd.DataFrame(</span>
+<span id="cb39-31"><a href="#cb39-31" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb39-32"><a href="#cb39-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">"project_id"</span>: [<span class="st">"proj1"</span>, <span class="st">"proj1"</span>, <span class="st">"proj1"</span>, <span class="st">"proj2"</span>, <span class="st">"proj2"</span>, <span class="st">"proj2"</span>, </span>
+<span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"proj3"</span>, <span class="st">"proj3"</span>, <span class="st">"proj4"</span>, <span class="st">"proj4"</span>, <span class="st">"proj5"</span>, <span class="st">"proj5"</span>],</span>
+<span id="cb39-34"><a href="#cb39-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_id"</span>: [<span class="st">"s1"</span>, <span class="st">"s2"</span>, <span class="st">"s3"</span>, <span class="st">"s4"</span>, <span class="st">"s5"</span>, <span class="st">"s6"</span>, </span>
+<span id="cb39-35"><a href="#cb39-35" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"s7"</span>, <span class="st">"s8"</span>, <span class="st">"s9"</span>, <span class="st">"s10"</span>, <span class="st">"s11"</span>, <span class="st">"s12"</span>],</span>
+<span id="cb39-36"><a href="#cb39-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">"taxonomy_label_id"</span>: [<span class="st">"tax1"</span>, <span class="st">"tax1"</span>, <span class="st">"tax2"</span>, <span class="st">"tax3"</span>, <span class="st">"tax3"</span>, <span class="st">"tax4"</span>,</span>
+<span id="cb39-37"><a href="#cb39-37" aria-hidden="true" tabindex="-1"></a>                            <span class="st">"tax5"</span>, <span class="st">"tax5"</span>, <span class="st">"tax6"</span>, <span class="st">"tax6"</span>, <span class="st">"tax7"</span>, <span class="st">"tax7"</span>],</span>
+<span id="cb39-38"><a href="#cb39-38" aria-hidden="true" tabindex="-1"></a>        <span class="st">"taxonomy_label"</span>: [</span>
+<span id="cb39-39"><a href="#cb39-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Physics &gt; Quantum Physics"</span>,</span>
+<span id="cb39-40"><a href="#cb39-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Physics &gt; Quantum Physics"</span>,</span>
+<span id="cb39-41"><a href="#cb39-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Physics &gt; Quantum Computing"</span>, </span>
+<span id="cb39-42"><a href="#cb39-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Biology &gt; Genetics"</span>,</span>
+<span id="cb39-43"><a href="#cb39-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Biology &gt; Genetics"</span>,</span>
+<span id="cb39-44"><a href="#cb39-44" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Biology &gt; Molecular Biology"</span>,</span>
+<span id="cb39-45"><a href="#cb39-45" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Chemistry &gt; Materials"</span>,</span>
+<span id="cb39-46"><a href="#cb39-46" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Chemistry &gt; Materials"</span>,</span>
+<span id="cb39-47"><a href="#cb39-47" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Engineering &gt; Robotics"</span>,</span>
+<span id="cb39-48"><a href="#cb39-48" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Engineering &gt; Robotics"</span>, </span>
+<span id="cb39-49"><a href="#cb39-49" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Computer Science &gt; AI"</span>,</span>
+<span id="cb39-50"><a href="#cb39-50" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Computer Science &gt; AI"</span></span>
+<span id="cb39-51"><a href="#cb39-51" aria-hidden="true" tabindex="-1"></a>        ],</span>
+<span id="cb39-52"><a href="#cb39-52" aria-hidden="true" tabindex="-1"></a>        <span class="st">"similarity_score"</span>: [<span class="fl">0.85</span>, <span class="fl">0.75</span>, <span class="fl">0.82</span>, <span class="fl">0.88</span>, <span class="fl">0.78</span>, <span class="fl">0.72</span>,</span>
+<span id="cb39-53"><a href="#cb39-53" aria-hidden="true" tabindex="-1"></a>                           <span class="fl">0.92</span>, <span class="fl">0.85</span>, <span class="fl">0.79</span>, <span class="fl">0.71</span>, <span class="fl">0.89</span>, <span class="fl">0.81</span>],</span>
+<span id="cb39-54"><a href="#cb39-54" aria-hidden="true" tabindex="-1"></a>        <span class="st">"similarity_score_global"</span>: [<span class="fl">0.75</span>, <span class="fl">0.75</span>, <span class="fl">0.70</span>, <span class="fl">0.82</span>, <span class="fl">0.82</span>, <span class="fl">0.68</span>,</span>
+<span id="cb39-55"><a href="#cb39-55" aria-hidden="true" tabindex="-1"></a>                                  <span class="fl">0.88</span>, <span class="fl">0.88</span>, <span class="fl">0.73</span>, <span class="fl">0.73</span>, <span class="fl">0.85</span>, <span class="fl">0.85</span>],</span>
+<span id="cb39-56"><a href="#cb39-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">"similarity_score_key"</span>: [<span class="fl">0.70</span>, <span class="fl">0.65</span>, <span class="fl">0.75</span>, <span class="fl">0.80</span>, <span class="fl">0.76</span>, <span class="fl">0.65</span>,</span>
+<span id="cb39-57"><a href="#cb39-57" aria-hidden="true" tabindex="-1"></a>                               <span class="fl">0.85</span>, <span class="fl">0.80</span>, <span class="fl">0.70</span>, <span class="fl">0.65</span>, <span class="fl">0.82</span>, <span class="fl">0.78</span>],</span>
+<span id="cb39-58"><a href="#cb39-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_score"</span>: [<span class="fl">0.85</span>, <span class="fl">0.75</span>, <span class="fl">0.80</span>, <span class="fl">0.88</span>, <span class="fl">0.78</span>, <span class="fl">0.72</span>,</span>
+<span id="cb39-59"><a href="#cb39-59" aria-hidden="true" tabindex="-1"></a>                         <span class="fl">0.92</span>, <span class="fl">0.85</span>, <span class="fl">0.79</span>, <span class="fl">0.71</span>, <span class="fl">0.89</span>, <span class="fl">0.81</span>]</span>
+<span id="cb39-60"><a href="#cb39-60" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb39-61"><a href="#cb39-61" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-62"><a href="#cb39-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-63"><a href="#cb39-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Get results</span></span>
+<span id="cb39-64"><a href="#cb39-64" aria-hidden="true" tabindex="-1"></a>granular, aggregated <span class="op">=</span> demonstrate_aggregation(sample_scores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-43" class="cell" data-execution_count="122">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Granular Scores:"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>display(granular[[<span class="st">'project_id'</span>, <span class="st">'taxonomy_label'</span>, <span class="st">'sentence_score'</span>]].head(<span class="dv">12</span>))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Aggregated Scores:"</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>display(aggregated[[<span class="st">'project_id'</span>, <span class="st">'taxonomy_label'</span>, <span class="st">'relevance_score'</span>, </span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>                 <span class="st">'global_bin'</span>, <span class="st">'local_bin'</span>, <span class="st">'confidence_bin'</span>]].head())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Granular Scores:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">project_id</th>
+<th data-quarto-table-cell-role="th">taxonomy_label</th>
+<th data-quarto-table-cell-role="th">sentence_score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>proj1</td>
+<td>Physics &gt; Quantum Physics</td>
+<td>0.85</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>proj1</td>
+<td>Physics &gt; Quantum Physics</td>
+<td>0.75</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>proj1</td>
+<td>Physics &gt; Quantum Computing</td>
+<td>0.80</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>proj2</td>
+<td>Biology &gt; Genetics</td>
+<td>0.88</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>proj2</td>
+<td>Biology &gt; Genetics</td>
+<td>0.78</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>proj2</td>
+<td>Biology &gt; Molecular Biology</td>
+<td>0.72</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>proj3</td>
+<td>Chemistry &gt; Materials</td>
+<td>0.92</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>proj3</td>
+<td>Chemistry &gt; Materials</td>
+<td>0.85</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>proj4</td>
+<td>Engineering &gt; Robotics</td>
+<td>0.79</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>proj4</td>
+<td>Engineering &gt; Robotics</td>
+<td>0.71</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>proj5</td>
+<td>Computer Science &gt; AI</td>
+<td>0.89</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>proj5</td>
+<td>Computer Science &gt; AI</td>
+<td>0.81</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Aggregated Scores:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">project_id</th>
+<th data-quarto-table-cell-role="th">taxonomy_label</th>
+<th data-quarto-table-cell-role="th">relevance_score</th>
+<th data-quarto-table-cell-role="th">global_bin</th>
+<th data-quarto-table-cell-role="th">local_bin</th>
+<th data-quarto-table-cell-role="th">confidence_bin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>proj1</td>
+<td>Physics &gt; Quantum Physics</td>
+<td>0.85</td>
+<td>low</td>
+<td>high</td>
+<td>low</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>proj1</td>
+<td>Physics &gt; Quantum Computing</td>
+<td>0.80</td>
+<td>low</td>
+<td>medium</td>
+<td>low</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>proj2</td>
+<td>Biology &gt; Genetics</td>
+<td>0.88</td>
+<td>medium</td>
+<td>high</td>
+<td>medium</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>proj2</td>
+<td>Biology &gt; Molecular Biology</td>
+<td>0.72</td>
+<td>low</td>
+<td>medium</td>
+<td>low</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>proj3</td>
+<td>Chemistry &gt; Materials</td>
+<td>0.92</td>
+<td>high</td>
+<td>high</td>
+<td>high</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>The aggregation process: 1. Combines evidence from multiple sentences 2. Computes project-level relevance scores 3. Assigns initial confidence bins based on both global and local patterns</p>
+</section>
+<section id="zero-shot-scores" class="level3">
+<h3 class="anchored" data-anchor-id="zero-shot-scores">4.2 Zero-shot Scores</h3>
+<p>The system then validates assignments using zero-shot classification:</p>
+<div id="cell-45" class="cell" data-execution_count="134">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_zeroshot(project_text, taxonomy_label):</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show zero-shot validation process."""</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    classifier <span class="op">=</span> transformers_pipeline(</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"zero-shot-classification"</span>,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>        model<span class="op">=</span><span class="st">"tasksource/ModernBERT-large-nli"</span>,</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>        device<span class="op">=-</span><span class="dv">1</span>,  <span class="co"># CPU</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>        truncation<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> classifier(</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>        project_text,</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        candidate_labels<span class="op">=</span>[taxonomy_label],</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>        hypothesis_template<span class="op">=</span><span class="st">"This text is about </span><span class="sc">{}</span><span class="st">."</span>,</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>zeroshot_score <span class="op">=</span> demonstrate_zeroshot(</span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">"abstract_text"</span>], <span class="st">"Quantum Physics"</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-46" class="cell" data-execution_count="137">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Project Abstract:"</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(example_project[<span class="st">"abstract_text"</span>][:<span class="dv">200</span>], <span class="st">"...</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Zero-shot Classification Results:"</span>)</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Label: </span><span class="sc">{</span>zeroshot_score[<span class="st">'labels'</span>][<span class="dv">0</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Confidence: </span><span class="sc">{</span>zeroshot_score[<span class="st">'scores'</span>][<span class="dv">0</span>]<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Project Abstract:
+The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific priorities around the world. Terrestrial experiments focus  ...
+
+Zero-shot Classification Results:
+Label: Quantum Physics
+Confidence: 0.960</code></pre>
+</div>
+</div>
+<p>The zero-shot scores are binned into confidence levels:</p>
+<div id="cell-48" class="cell" data-execution_count="140">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Bin Thresholds:"</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"- very high: ≥ 0.90"</span>)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"- high:      ≥ 0.70"</span>)</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"- medium:    ≥ 0.50"</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"- low:       ≥ 0.25"</span>) </span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"- very low:  &lt; 0.25"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Bin Thresholds:
+- very high: ≥ 0.90
+- high:      ≥ 0.70
+- medium:    ≥ 0.50
+- low:       ≥ 0.25
+- very low:  &lt; 0.25</code></pre>
+</div>
+</div>
+<p>These zero-shot confidence bins are then combined with the sentence-level confidence bins to produce three different confidence measures: 1. <code>max_confidence</code>: Takes the highest bin between sentence and zero-shot 2. <code>zeroshot_favouring_confidence</code>: Uses zero-shot bin when there’s significant disagreement, selects higher score if minor disagreement. 3. <code>sentence_favouring_confidence</code>: Uses sentence bin when there’s significant disagreement, selects higher score if minor disagreement.</p>
+<p>The choice between these measures depends on the taxonomy and use case:</p>
+</section>
+<section id="cwts-research-topics" class="level3">
+<h3 class="anchored" data-anchor-id="cwts-research-topics">CWTS Research Topics</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Zero-shot favoured</td>
+<td>0.765</td>
+<td>0.691</td>
+<td>0.726</td>
+</tr>
+<tr class="even">
+<td>Zero-shot</td>
+<td>0.784</td>
+<td>0.661</td>
+<td>0.717</td>
+</tr>
+<tr class="odd">
+<td>Maximum</td>
+<td>0.645</td>
+<td>0.747</td>
+<td>0.692</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="goscience-technologies" class="level3">
+<h3 class="anchored" data-anchor-id="goscience-technologies">GOScience Technologies</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Zero-shot</td>
+<td>0.646</td>
+<td>0.664</td>
+<td>0.655</td>
+</tr>
+<tr class="even">
+<td>Zero-shot favoured</td>
+<td>0.580</td>
+<td>0.678</td>
+<td>0.625</td>
+</tr>
+<tr class="odd">
+<td>Maximum</td>
+<td>0.350</td>
+<td>0.760</td>
+<td>0.479</td>
+</tr>
+</tbody>
+</table>
+<p>The choice of confidence measure mainly depends on the balance between precision and recall needs. Favouring zero-shot reduces precision while increasing recall, suggesting a trade-off when partially leveraging sentence scores to decide when minor disagreement.</p>
+</section>
+</section>
+<section id="fine-tuning-and-validation" class="level2">
+<h2 class="anchored" data-anchor-id="fine-tuning-and-validation">5. Fine-tuning and Validation</h2>
+<p>The system uses a tuning and validation pipeline that combines expert LLM-based evaluation with parameter optimisation.</p>
+<section id="sample-selection" class="level3">
+<h3 class="anchored" data-anchor-id="sample-selection">5.1 Sample Selection</h3>
+<p>First, we select a representative sample of projects for validation:</p>
+<div id="cell-51" class="cell" data-execution_count="142">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_sample_selection(projects_df, sample_size<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show the sample selection process."""</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_tune_and_validate.nodes <span class="im">import</span> (</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>        select_sample_projects</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> select_sample_projects(</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>        projects_df,</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>        sample_size<span class="op">=</span>sample_size,</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>        sample_random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Selected </span><span class="sc">{</span><span class="bu">len</span>(sample)<span class="sc">}</span><span class="ss"> projects for validation"</span>)</span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Sample characteristics:"</span>)</span>
+<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Average abstract length: </span><span class="sc">{</span>sample[<span class="st">'abstract_text'</span>]<span class="sc">.</span><span class="bu">str</span><span class="sc">.</span><span class="bu">len</span>()<span class="sc">.</span>mean()<span class="sc">:.0f}</span><span class="ss"> chars"</span>)</span>
+<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Projects with technical abstracts: </span><span class="sc">{</span>(sample[<span class="st">'tech_abstract_text'</span>].notna().<span class="bu">sum</span>())<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"- Projects with impact statements: </span><span class="sc">{</span>(sample[<span class="st">'potential_impact'</span>].notna().<span class="bu">sum</span>())<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb48-18"><a href="#cb48-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-19"><a href="#cb48-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sample</span>
+<span id="cb48-20"><a href="#cb48-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-21"><a href="#cb48-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Example sample selection</span></span>
+<span id="cb48-22"><a href="#cb48-22" aria-hidden="true" tabindex="-1"></a>validation_sample <span class="op">=</span> demonstrate_sample_selection(projects)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Selected 100 projects for validation
+
+Sample characteristics:
+- Average abstract length: 2009 chars
+- Projects with technical abstracts: 8
+- Projects with impact statements: 28</code></pre>
+</div>
+</div>
+</section>
+<section id="expert-label-generation" class="level3">
+<h3 class="anchored" data-anchor-id="expert-label-generation">5.2 Expert Label Generation</h3>
+<p>The system uses GPT-4 with retrieval-augmented generation to independently identify relevant taxonomy labels:</p>
+<div id="cell-53" class="cell" data-execution_count="144">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_expert_labeling_process(project_text: <span class="bu">str</span>, taxonomy_df: pd.DataFrame):</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Demonstrate the expert labeling process."""</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"1. Retrieval Setup:"</span>)</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Embedding taxonomy labels"</span>)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Creating vector store"</span>)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- Setting up RAG chain"</span>)</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">2. Expert Prompt:"</span>)</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"System: You are an expert research taxonomy analyst..."</span>)</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"CONFIDENCE LEVELS:"</span>)</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- HIGH: Perfect match with project's core focus"</span>)</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- MEDIUM: Related or partially overlapping field"</span>)</span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"- LOW: Tangential connection"</span>)</span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">3. Example Project:"</span>)</span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Text: </span><span class="sc">{</span>project_text[:<span class="dv">200</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">4. Retrieved Context:"</span>)</span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Top-3 similar taxonomy labels:"</span>)</span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Simulate retrieval results</span></span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"1. Physics &gt; Quantum Physics"</span>)</span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"2. Computer Science &gt; Quantum Computing"</span>)</span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"3. Mathematics &gt; Applied Mathematics"</span>)</span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb50-25"><a href="#cb50-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">5. Expert Output:"</span>)</span>
+<span id="cb50-26"><a href="#cb50-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"""[</span></span>
+<span id="cb50-27"><a href="#cb50-27" aria-hidden="true" tabindex="-1"></a><span class="st">    {</span></span>
+<span id="cb50-28"><a href="#cb50-28" aria-hidden="true" tabindex="-1"></a><span class="st">        "taxonomy_label": "Physics &gt; Quantum Physics",</span></span>
+<span id="cb50-29"><a href="#cb50-29" aria-hidden="true" tabindex="-1"></a><span class="st">        "likelihood": "high",</span></span>
+<span id="cb50-30"><a href="#cb50-30" aria-hidden="true" tabindex="-1"></a><span class="st">        "explanation": "Direct focus on quantum physics principles"</span></span>
+<span id="cb50-31"><a href="#cb50-31" aria-hidden="true" tabindex="-1"></a><span class="st">    },</span></span>
+<span id="cb50-32"><a href="#cb50-32" aria-hidden="true" tabindex="-1"></a><span class="st">    {</span></span>
+<span id="cb50-33"><a href="#cb50-33" aria-hidden="true" tabindex="-1"></a><span class="st">        "taxonomy_label": "Computer Science &gt; Quantum Computing",</span></span>
+<span id="cb50-34"><a href="#cb50-34" aria-hidden="true" tabindex="-1"></a><span class="st">        "likelihood": "medium",</span></span>
+<span id="cb50-35"><a href="#cb50-35" aria-hidden="true" tabindex="-1"></a><span class="st">        "explanation": "Applications discussed but not primary focus"</span></span>
+<span id="cb50-36"><a href="#cb50-36" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb50-37"><a href="#cb50-37" aria-hidden="true" tabindex="-1"></a><span class="st">]"""</span>)</span>
+<span id="cb50-38"><a href="#cb50-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-39"><a href="#cb50-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Demonstrate expert labeling</span></span>
+<span id="cb50-40"><a href="#cb50-40" aria-hidden="true" tabindex="-1"></a>show_expert_labeling_process(</span>
+<span id="cb50-41"><a href="#cb50-41" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">'abstract_text'</span>],</span>
+<span id="cb50-42"><a href="#cb50-42" aria-hidden="true" tabindex="-1"></a>    cwts_taxonomy</span>
+<span id="cb50-43"><a href="#cb50-43" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>1. Retrieval Setup:
+- Embedding taxonomy labels
+- Creating vector store
+- Setting up RAG chain
+
+2. Expert Prompt:
+System: You are an expert research taxonomy analyst...
+CONFIDENCE LEVELS:
+- HIGH: Perfect match with project's core focus
+- MEDIUM: Related or partially overlapping field
+- LOW: Tangential connection
+
+3. Example Project:
+Text: The search to understand the nature of the elusive dark matter in our universe, making up 85% of its mass, is amongst the highest scientific priorities around the world. Terrestrial experiments focus ...
+
+4. Retrieved Context:
+Top-3 similar taxonomy labels:
+1. Physics &gt; Quantum Physics
+2. Computer Science &gt; Quantum Computing
+3. Mathematics &gt; Applied Mathematics
+
+5. Expert Output:
+[
+    {
+        "taxonomy_label": "Physics &gt; Quantum Physics",
+        "likelihood": "high",
+        "explanation": "Direct focus on quantum physics principles"
+    },
+    {
+        "taxonomy_label": "Computer Science &gt; Quantum Computing",
+        "likelihood": "medium",
+        "explanation": "Applications discussed but not primary focus"
+    }
+]</code></pre>
+</div>
+</div>
+</section>
+<section id="expert-validation" class="level3">
+<h3 class="anchored" data-anchor-id="expert-validation">5.3 Expert Validation</h3>
+<p>The system also uses an expert LLM to validate the quality of matches by identifying true and false positives:</p>
+<div id="cell-55" class="cell" data-execution_count="145">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_expert_validation():</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how expert validation works."""</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    example <span class="op">=</span> {</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Project"</span>: <span class="st">"Quantum Computing Research"</span>,</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Description"</span>: <span class="st">"""We develop novel quantum computing algorithms </span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="st">        for optimization problems, leveraging principles from quantum physics </span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="st">        and information theory."""</span>,</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Candidates"</span>: [</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">"taxonomy_label_id"</span>: <span class="st">"qc_001"</span>,</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"label"</span>: <span class="st">"Computer Science &gt; Quantum Computing"</span>,</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">"score"</span>: <span class="fl">0.85</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>            },</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">"taxonomy_label_id"</span>: <span class="st">"math_042"</span>,</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>                <span class="st">"label"</span>: <span class="st">"Mathematics &gt; Optimization"</span>,</span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>                <span class="st">"score"</span>: <span class="fl">0.45</span></span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb52-19"><a href="#cb52-19" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb52-20"><a href="#cb52-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb52-21"><a href="#cb52-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb52-22"><a href="#cb52-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Expert Validation Process:"</span>)</span>
+<span id="cb52-23"><a href="#cb52-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Project Description:"</span>)</span>
+<span id="cb52-24"><a href="#cb52-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(example[<span class="st">"Description"</span>])</span>
+<span id="cb52-25"><a href="#cb52-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb52-26"><a href="#cb52-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Candidate Labels:"</span>)</span>
+<span id="cb52-27"><a href="#cb52-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> candidate <span class="kw">in</span> example[<span class="st">"Candidates"</span>]:</span>
+<span id="cb52-28"><a href="#cb52-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Label: </span><span class="sc">{</span>candidate[<span class="st">'label'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb52-29"><a href="#cb52-29" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>candidate[<span class="st">'score'</span>]<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb52-30"><a href="#cb52-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb52-31"><a href="#cb52-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Expert Assessment:"</span>)</span>
+<span id="cb52-32"><a href="#cb52-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"""[</span></span>
+<span id="cb52-33"><a href="#cb52-33" aria-hidden="true" tabindex="-1"></a><span class="st">    {</span></span>
+<span id="cb52-34"><a href="#cb52-34" aria-hidden="true" tabindex="-1"></a><span class="st">        "taxonomy_label_id": "qc_001",</span></span>
+<span id="cb52-35"><a href="#cb52-35" aria-hidden="true" tabindex="-1"></a><span class="st">        "positive": true,</span></span>
+<span id="cb52-36"><a href="#cb52-36" aria-hidden="true" tabindex="-1"></a><span class="st">        "explanation": "Core focus on quantum computing algorithms"</span></span>
+<span id="cb52-37"><a href="#cb52-37" aria-hidden="true" tabindex="-1"></a><span class="st">    },</span></span>
+<span id="cb52-38"><a href="#cb52-38" aria-hidden="true" tabindex="-1"></a><span class="st">    {</span></span>
+<span id="cb52-39"><a href="#cb52-39" aria-hidden="true" tabindex="-1"></a><span class="st">        "taxonomy_label_id": "math_042",</span></span>
+<span id="cb52-40"><a href="#cb52-40" aria-hidden="true" tabindex="-1"></a><span class="st">        "positive": false,</span></span>
+<span id="cb52-41"><a href="#cb52-41" aria-hidden="true" tabindex="-1"></a><span class="st">        "explanation": "Optimization is application area, not core focus"</span></span>
+<span id="cb52-42"><a href="#cb52-42" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb52-43"><a href="#cb52-43" aria-hidden="true" tabindex="-1"></a><span class="st">]"""</span>)</span>
+<span id="cb52-44"><a href="#cb52-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-45"><a href="#cb52-45" aria-hidden="true" tabindex="-1"></a>show_expert_validation()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Expert Validation Process:
+
+Project Description:
+We develop novel quantum computing algorithms 
+        for optimization problems, leveraging principles from quantum physics 
+        and information theory.
+
+Candidate Labels:
+
+Label: Computer Science &gt; Quantum Computing
+Score: 0.85
+
+Label: Mathematics &gt; Optimization
+Score: 0.45
+
+Expert Assessment:
+[
+    {
+        "taxonomy_label_id": "qc_001",
+        "positive": true,
+        "explanation": "Core focus on quantum computing algorithms"
+    },
+    {
+        "taxonomy_label_id": "math_042",
+        "positive": false,
+        "explanation": "Optimization is application area, not core focus"
+    }
+]</code></pre>
+</div>
+</div>
+<p>The expert validation: 1. Considers the core focus of the project 2. Evaluates research methods and approaches 3. Assesses intended outcomes and impact 4. Provides explanations for each decision</p>
+<p>This validation helps identify both high-scoring false positives and lower-scoring true positives, which is crucial for: - Validating pruning thresholds - Identifying systematic matching errors - Understanding classification edge cases - Improving overall system accuracy</p>
+</section>
+<section id="parameter-optimisation" class="level3">
+<h3 class="anchored" data-anchor-id="parameter-optimisation">5.4 Parameter Optimisation</h3>
+<p>The system performs grid search over parameter combinations to find optimised settings:</p>
+<div id="cell-58" class="cell" data-execution_count="147">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_parameter_tuning():</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show the parameter tuning process."""</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Example parameter grid</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    param_grid <span class="op">=</span> {</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_threshold"</span>: [<span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="fl">0.8</span>],</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"global_threshold"</span>: [<span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="fl">0.8</span>],</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_weight"</span>: [<span class="fl">0.5</span>, <span class="fl">0.6</span>, <span class="fl">0.7</span>],</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"global_weight"</span>: [<span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.4</span>],</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"use_quantile"</span>: [<span class="va">True</span>, <span class="va">False</span>]</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Parameter Grid:"</span>)</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> param, values <span class="kw">in</span> param_grid.items():</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"- </span><span class="sc">{</span>param<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>values<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Show example results</span></span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_threshold"</span>: [<span class="fl">0.7</span>, <span class="fl">0.7</span>, <span class="fl">0.6</span>],</span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"global_threshold"</span>: [<span class="fl">0.7</span>, <span class="fl">0.6</span>, <span class="fl">0.7</span>],</span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">"sentence_weight"</span>: [<span class="fl">0.6</span>, <span class="fl">0.6</span>, <span class="fl">0.5</span>],</span>
+<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"global_weight"</span>: [<span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.4</span>],</span>
+<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"use_quantile"</span>: [<span class="va">True</span>, <span class="va">True</span>, <span class="va">False</span>],</span>
+<span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"strict_precision"</span>: [<span class="fl">0.765</span>, <span class="fl">0.742</span>, <span class="fl">0.731</span>],</span>
+<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">"strict_recall"</span>: [<span class="fl">0.691</span>, <span class="fl">0.703</span>, <span class="fl">0.688</span>],</span>
+<span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">"strict_f1"</span>: [<span class="fl">0.726</span>, <span class="fl">0.722</span>, <span class="fl">0.709</span>]</span>
+<span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb54-27"><a href="#cb54-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-28"><a href="#cb54-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Top Parameter Combinations:"</span>)</span>
+<span id="cb54-29"><a href="#cb54-29" aria-hidden="true" tabindex="-1"></a>    display(results.nlargest(<span class="dv">3</span>, <span class="st">"strict_f1"</span>))</span>
+<span id="cb54-30"><a href="#cb54-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-31"><a href="#cb54-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb54-32"><a href="#cb54-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-33"><a href="#cb54-33" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="op">=</span> demonstrate_parameter_tuning()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Parameter Grid:
+- sentence_threshold: [0.6, 0.7, 0.8]
+- global_threshold: [0.6, 0.7, 0.8]
+- sentence_weight: [0.5, 0.6, 0.7]
+- global_weight: [0.2, 0.3, 0.4]
+- use_quantile: [True, False]
+
+Top Parameter Combinations:</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">sentence_threshold</th>
+<th data-quarto-table-cell-role="th">global_threshold</th>
+<th data-quarto-table-cell-role="th">sentence_weight</th>
+<th data-quarto-table-cell-role="th">global_weight</th>
+<th data-quarto-table-cell-role="th">use_quantile</th>
+<th data-quarto-table-cell-role="th">strict_precision</th>
+<th data-quarto-table-cell-role="th">strict_recall</th>
+<th data-quarto-table-cell-role="th">strict_f1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0.7</td>
+<td>0.7</td>
+<td>0.6</td>
+<td>0.3</td>
+<td>True</td>
+<td>0.765</td>
+<td>0.691</td>
+<td>0.726</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.7</td>
+<td>0.6</td>
+<td>0.6</td>
+<td>0.3</td>
+<td>True</td>
+<td>0.742</td>
+<td>0.703</td>
+<td>0.722</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0.6</td>
+<td>0.7</td>
+<td>0.5</td>
+<td>0.4</td>
+<td>False</td>
+<td>0.731</td>
+<td>0.688</td>
+<td>0.709</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>The system uses validation metrics (precision, recall, F1 scores) for both strict and relaxed thresholds to estimate the most accurate settings.</p>
+</section>
+</section>
+<section id="practical-usage-and-best-practices" class="level2">
+<h2 class="anchored" data-anchor-id="practical-usage-and-best-practices">6. Practical Usage and Best Practices</h2>
+<section id="running-the-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="running-the-pipeline">6.1 Running the Pipeline</h3>
+<p>The complete classification pipeline can be run using Kedro:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the complete pipeline</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="ex">kedro</span> run</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific pipeline modules</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="ex">kedro</span> run <span class="at">--pipeline</span> data_processing_taxonomies</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="ex">kedro</span> run <span class="at">--pipeline</span> keyword_processing_gtr</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="ex">kedro</span> run <span class="at">--pipeline</span> project_similarity_matching</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="ex">kedro</span> run <span class="at">--pipeline</span> project_similarity_refinement</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="configuration" class="level3">
+<h3 class="anchored" data-anchor-id="configuration">6.2 Configuration</h3>
+<p>Key configuration files: - <code>conf/base/credentials.yml</code>: Main pipeline credentials. Not shared for security reasons. - <code>conf/base/parameters_project_similarity_matching.yml</code>: Matching parameters - <code>conf/base/parameters_project_similarity_refinement.yml</code>: Refinement parameters - <code>conf/base/catalog.yml</code>: Data source configurations</p>
+</section>
+<section id="best-practices" class="level3">
+<h3 class="anchored" data-anchor-id="best-practices">6.3 Best Practices</h3>
+<ol type="1">
+<li><strong>Data Quality</strong>
+<ul>
+<li>Ensure project descriptions are complete and well-formatted</li>
+<li>Include technical abstracts when available</li>
+<li>Pre-process text to remove formatting artifacts</li>
+</ul></li>
+<li><strong>Taxonomy Management</strong>
+<ul>
+<li>Keep taxonomies in standardized format</li>
+<li>Validate hierarchical relationships</li>
+<li>Maintain unique identifiers for all labels</li>
+</ul></li>
+<li><strong>Performance Optimization</strong>
+<ul>
+<li>Use recommended parameter combinations for your use case</li>
+<li>Monitor precision/recall trade-offs</li>
+<li>Regularly validate against expert assessments</li>
+</ul></li>
+<li><strong>System Maintenance</strong>
+<ul>
+<li>Update model dependencies as needed</li>
+<li>Monitor API usage for external services</li>
+<li>Keep validation sets current</li>
+</ul></li>
+</ol>
+</section>
+<section id="troubleshooting" class="level3">
+<h3 class="anchored" data-anchor-id="troubleshooting">6.4 Troubleshooting</h3>
+<p>Common issues and solutions:</p>
+<ol type="1">
+<li><strong>Low Match Quality</strong>
+<ul>
+<li>Check text preprocessing quality</li>
+<li>Verify taxonomy coverage for domain</li>
+<li>Review confidence thresholds</li>
+</ul></li>
+<li><strong>Performance Issues</strong>
+<ul>
+<li>Use batch processing for large datasets</li>
+<li>Enable caching for embeddings</li>
+<li>Optimize database queries</li>
+</ul></li>
+<li><strong>Integration Problems</strong>
+<ul>
+<li>Verify API credentials</li>
+<li>Check input/output formats</li>
+<li>Monitor service endpoints</li>
+</ul></li>
+</ol>
+</section>
+<section id="monitoring" class="level3">
+<h3 class="anchored" data-anchor-id="monitoring">6.5 Monitoring</h3>
+<p>Key metrics to track: 1. Classification quality (precision, recall, F1) 2. Processing efficiency 3. Resource utilization 4. API service health 5. Data quality metrics</p>
+<p>For detailed implementation guidance, refer to the <a href="https://github.com/innovation-growth-lab/dsit-taxonomies/">project documentation</a>.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
