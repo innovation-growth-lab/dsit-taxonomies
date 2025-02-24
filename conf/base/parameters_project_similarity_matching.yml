@@ -1,4 +1,5 @@
 similarity_matching:
+  n_jobs: 8
   # Batch processing settings for raw matches
   sentences:
     batch_size: 1000

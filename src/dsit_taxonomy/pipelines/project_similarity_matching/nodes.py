@@ -80,6 +80,7 @@ def compute_similarities(
     documents: pd.DataFrame,
     batch_size: int = 1000,
     top_n: int = 10,
+    n_jobs: int = 8,
 ) -> pd.DataFrame:
     """
     Compute similarity scores between documents and taxonomy labels.
@@ -89,6 +90,7 @@ def compute_similarities(
         documents: DataFrame containing documents to match
         batch_size: Number of documents to process in each batch
         top_n: Number of top matches to retain per document
+        n_jobs: Number of parallel jobs to run
 
     Returns:
         DataFrame with similarity scores between documents and labels
@@ -106,7 +108,7 @@ def compute_similarities(
 
     # Process batches in parallel
     logger.info("Processing %d batches in parallel", len(document_batches))
-    results = Parallel(n_jobs=8, verbose=10)(
+    results = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(search_batch)(batch, taxonomy_embeddings, taxonomy_ids, top_n)
         for batch in document_batches
     )
