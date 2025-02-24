@@ -155,7 +155,7 @@ def yake_keywords(
 
 
 def keybert_keywords(
-    dataframe: pd.DataFrame, processed_projects: pd.DataFrame
+    dataframe: pd.DataFrame, processed_projects: pd.DataFrame, n_jobs: int = 8
 ) -> Generator[pd.DataFrame, None, None]:
     """
     Extract keywords using KeyBERT transformer model.
@@ -169,6 +169,7 @@ def keybert_keywords(
     Args:
         dataframe: Input data with text fields
         processed_projects: Previously processed results
+        n_jobs: Number of parallel jobs for keyword extraction
 
     Yields:
         Dictionary mapping partition ID to DataFrame with:
@@ -190,7 +191,7 @@ def keybert_keywords(
         )
         end = start + 100
         batch_df = dataframe.iloc[start:end]
-        batch_df.loc[:, "keybert_keywords"] = Parallel(n_jobs=8, verbose=10)(
+        batch_df.loc[:, "keybert_keywords"] = Parallel(n_jobs=n_jobs, verbose=10)(
             delayed(get_keybert_keywords)(text, extractor=kw_extractor)
             for text in batch_df["input_text"]
         )
@@ -200,9 +201,9 @@ def keybert_keywords(
             ]
         }
 
-
 def concatenate_partitions(
-    partitioned_dataset: Dict[str, AbstractDataset]
+    partitioned_dataset: Dict[str, AbstractDataset],
+    n_jobs: int = 8
 ) -> pd.DataFrame:
     """
     Combine partitioned KeyBERT results into a single dataset.
@@ -215,6 +216,7 @@ def concatenate_partitions(
 
     Args:
         partitioned_dataset: Dictionary mapping partition IDs to datasets
+        n_jobs: Number of parallel jobs for loading datasets. Defaults to 8.
 
     Returns:
         DataFrame containing combined and deduplicated results
@@ -224,7 +226,7 @@ def concatenate_partitions(
         return dataset()
 
     datasets = []
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=n_jobs) as executor:
         future_to_dataset = {
             executor.submit(load_dataset, dataset): i
             for i, dataset in enumerate(partitioned_dataset.values())
