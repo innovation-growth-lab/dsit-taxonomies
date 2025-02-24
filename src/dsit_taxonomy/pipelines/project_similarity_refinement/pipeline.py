@@ -53,6 +53,7 @@ def create_pipeline(**kwargs) -> Pipeline:  # pylint: disable=C0116,W0613
                         "global_q3_threshold": "params:similarity_refinement.binning.global_q3",
                         "local_q2_threshold": "params:similarity_refinement.binning.local_q2",
                         "local_q3_threshold": "params:similarity_refinement.binning.local_q3",
+                        "n_jobs": "params:similarity_refinement.n_jobs",
                     },
                     outputs=f"projects.gtr_data.{taxonomy_name}_scores.aggregated",
                     name=f"aggregate_scores_to_labels_{taxonomy_name}",

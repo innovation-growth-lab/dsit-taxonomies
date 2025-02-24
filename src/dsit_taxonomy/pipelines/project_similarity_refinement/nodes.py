@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def aggregate_scores_to_labels(
-    granular_scores: pd.DataFrame, normalise_by_matches: bool = False, **binning_params
+    granular_scores: pd.DataFrame, normalise_by_matches: bool = False, n_jobs: int = 8, **binning_params
 ) -> pd.DataFrame:
     """
     Aggregate sentence-level scores to project-label pairs.
@@ -120,7 +120,7 @@ def aggregate_scores_to_labels(
     )
 
     # Complete binning with local thresholds only
-    return assign_local_bins(aggregated, **binning_params)
+    return assign_local_bins(aggregated, n_jobs=n_jobs, **binning_params)
 
 
 def prune_global_matches(

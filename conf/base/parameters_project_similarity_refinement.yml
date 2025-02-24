@@ -1,4 +1,6 @@
 similarity_refinement:
+  n_jobs: 8
+  
   # Binning parameters
   binning:
     global_q2: 0.5  # Medium confidence threshold
@@ -6,7 +8,7 @@ similarity_refinement:
     local_q2: 0.5   # Project-level medium threshold
     local_q3: 0.75  # Project-level high threshold
   
-  # Score normalization
+  # Score normalisation
   normalise_by_matches: False
 
   # Zero-shot validation
