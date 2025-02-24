@@ -11,11 +11,11 @@ pandas~=2.2.2
 numpy~=1.26.4
 spacy~=3.7.5
 rake-nltk~=1.0.6
-git+https://github.com/LIAAD/yake
+yake~=0.4.8
 keybert~=0.8.5
 transformers~=4.48.3
 sentence-transformers~=3.4.1
 accelerate~=1.2.1
 langchain-openai # comment out if not planning to validate with LLM
 langchain-community # comment out if not planning to validate with LLM
-streamlit~=1.42.1
+streamlit~=1.42.1 # comment out if not planning to run the app
