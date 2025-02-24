@@ -1,20 +1,57 @@
-# Keyword processing GtR pipeline
+# Keyword extraction and processing GtR pipeline
 
-The **Keyword processing GtR pipeline** combines and processes keywords extracted by multiple methods into a unified set of project descriptors. It aggregates keywords based on extractor agreement and generates semantic embeddings for downstream matching.
+This pipeline extracts and processes keywords from Gateway to Research (GtR) project descriptions in two stages:
+
+1. **Data annotation**: Extracts keywords using multiple methods
+2. **Keyword processing**: Combines and processes extracted keywords for downstream matching
 
 ## Features
-- Keyword aggregation across multiple extractors:
-  - DBpedia Spotlight
-  - RAKE
-  - YAKE
-  - KeyBERT
+
+### Annotation features
+- Multiple extraction methods:
+  - **DBpedia Spotlight**: Links text to knowledge base concepts
+  - **RAKE**: Statistical keyword extraction using word co-occurrence
+  - **YAKE**: Unsupervised keyword extraction with text features
+  - **KeyBERT**: Transformer-based semantic keyword extraction
+- Incremental processing with oracle tracking
+- Parallel processing for performance
+- Batched processing for memory efficiency
+
+### Processing features
+- Keyword aggregation across extractors
 - Consensus-based filtering
 - Semantic embedding generation
 - Project-keyword mapping preservation
 
 ## Pipeline components
 
-### Nodes
+### Annotation nodes
+1. **`dbp_keywords`**
+   - Links text to DBpedia concepts
+   - Uses confidence and support thresholds
+   - Handles API rate limiting and retries
+
+2. **`rake_keywords`**
+   - Statistical keyword extraction
+   - Focuses on multi-word phrases
+   - Fast processing for large datasets
+
+3. **`yake_keywords`**
+   - Feature-based keyword extraction
+   - Handles domain-specific terminology
+   - Configurable n-gram size
+
+4. **`keybert_keywords`**
+   - Semantic keyword extraction
+   - Processes in memory-efficient batches
+   - Includes timestamp-based partitioning
+
+5. **`concatenate_partitions`**
+   - Combines KeyBERT results
+   - Handles parallel loading
+   - Deduplicates results
+
+### Processing nodes
 
 1. **`aggregate_keyword_annotators`**
    - Combines keywords from all extractors
@@ -29,108 +66,16 @@ The **Keyword processing GtR pipeline** combines and processes keywords extracte
    - Enables semantic similarity matching
    - Optimises for memory efficiency
 
-### Processing steps
+## Incremental processing
 
-1. **Keyword aggregation**
-   - Processes each extractor's output
-   - Standardises keyword format
-   - Tracks extractor agreement
-   - Maintains project linkages
-   - Filters based on consensus (>1 extractor)
+### Oracle catalogs and Kedro's pipeline resolution
+The annotation pipeline uses oracle catalogs to enable incremental processing, working around Kedro's default pipeline resolution behaviour. Here's how:
 
-2. **Embedding generation**
-   - Converts keywords to vectors
-   - Uses all-MiniLM-L6-v2 model
-   - Generates 384-dimensional embeddings
-   - Stores as float32 arrays
+Kedro normally resolves datasets in a forward-only manner - a node can't know about the state of its outputs before running. This makes incremental processing challenging, as you can't easily skip already-processed items.
 
-## Usage
+The oracle catalog solves this by:
+1. Providing a "peek" at the output state before processing
+2. Using a custom dataset type (`DefaultableParquetDataset`) that returns an empty DataFrame if the file doesn't exist
+3. Allowing nodes to compare input data against previously processed items
 
-### Running the full pipeline
-```bash
-kedro run --pipeline keyword_processing_gtr
-```
-
-### Running individual nodes
-```bash
-kedro run --pipeline keyword_processing_gtr --nodes aggregate_keyword_annotators
-kedro run --pipeline keyword_processing_gtr --nodes generate_keyword_embeddings
-```
-
-## Data flow
-
-### Inputs
-```yaml
-# Keyword extraction results
-dbp.gtr_data.annotated:
-  type: pandas.ParquetDataset
-  filepath: .../annotations/dbp.parquet
-
-rake.gtr_data.annotated:
-  type: pandas.ParquetDataset
-  filepath: .../annotations/rake.parquet
-
-yake.gtr_data.annotated:
-  type: pandas.ParquetDataset
-  filepath: .../annotations/yake.parquet
-
-keybert.gtr_data.annotated:
-  type: pandas.ParquetDataset
-  filepath: .../annotations/keybert.parquet
-```
-
-### Outputs
-```yaml
-# Aggregated keywords
-keywords.gtr_data.db:
-  type: pandas.ParquetDataset
-  filepath: .../keywords/preprocessed.parquet
-
-# Keyword embeddings
-keywords.gtr_data.embeddings:
-  type: pandas.ParquetDataset
-  filepath: .../keywords/embeddings.parquet
-```
-
-## Output structure
-
-### Aggregated keywords
-```python
-{
-    'keyword': 'machine learning',
-    'num_annotators': 3,
-    'project_ids': ['PRJ123', 'PRJ456'],
-    'uuid': '550e8400-e29b-41d4-a716-446655440000'
-}
-```
-
-### Keyword embeddings
-```python
-{
-    'keyword': 'machine learning',
-    'embedding': [0.123, -0.456, ...] # 384-dimensional vector
-}
-```
-
-## Implementation details
-
-### Keyword aggregation
-- Case-insensitive matching
-- Whitespace normalisation
-- Minimum 2-extractor agreement
-- UUID generation for tracking
-- Project linkage preservation
-
-### Embedding generation
-- Batched processing
-- Progress tracking
-- Memory-efficient storage
-- float32 precision
-
-## Dependencies
-- **Core libraries**:
-  - `pandas`
-  - `numpy`
-  - `sentence-transformers`
-  - `uuid`
-- **Models**: all-MiniLM-L6-v2 
+Example oracle catalog:
