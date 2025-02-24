@@ -159,3 +159,5 @@ mlruns/*
 
 .vscode/
 .viz
+
+notebooks_local/
