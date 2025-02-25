@@ -1,10 +1,14 @@
-# DSIT Taxonomy Project
+# Project Source Structure
 
-A Kedro project for analysing and classifying research projects using multiple taxonomies.
+This directory contains the core source code for the taxonomy classification project. The code is structured as a Kedro project, which provides a standardised way to build modular data pipelines.
 
-## Project Structure
+The project processes research project data through multiple stages:
+1. Collecting data from the Gateway to Research (GtR) API
+2. Processing and analysing project descriptions
+3. Matching projects against multiple taxonomies
+4. Scoring and implementing decision rules for final label assignment
 
-### Directories
+## Directories
 
 - **apps/** - Streamlit applications for visualising and exploring the data
   - Contains an app for interactive exploration of taxonomy assignments
@@ -16,7 +20,7 @@ A Kedro project for analysing and classifying research projects using multiple t
   - Contains modular pipelines for each taxonomy
   - Includes data preparation, matching, and scoring logic
 
-### Core Kedro Files
+## Core Kedro Files
 
 - **hooks.py** - Project-specific [Kedro hooks](https://docs.kedro.org/en/stable/hooks/introduction.html)
   - Computes vector embeddings after data loading and before node run 
@@ -29,7 +33,7 @@ A Kedro project for analysing and classifying research projects using multiple t
   - Registers all project pipelines
   - Defines pipeline dependencies and execution order
 
-## Getting Started
+# Getting Started
 
 1. Install dependencies:
 ```bash
