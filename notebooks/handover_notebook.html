@@ -234,25 +234,29 @@ window.Quarto = {
 <section id="key-components" class="level3">
 <h3 class="anchored" data-anchor-id="key-components">Key Components</h3>
 <ol type="1">
-<li><strong>Taxonomy Processing</strong>:
+<li><strong>Taxonomy Processing</strong>:</li>
+</ol>
 <ul>
 <li>Standardisation of multiple research taxonomies (CWTS, GOScience, OpenAlex)</li>
 <li>Hierarchical relationship preservation</li>
 <li>Generation of both full and bottom-level taxonomies</li>
-</ul></li>
-<li><strong>Project Similarity Matching</strong>:
+</ul>
+<ol start="2" type="1">
+<li><strong>Project Similarity Matching</strong>:</li>
+</ol>
 <ul>
 <li>Multi-level semantic matching (global, sentence, keyword)</li>
 <li>Weighted score combination</li>
 <li>Pruning of low-confidence matches</li>
-</ul></li>
-<li><strong>Classification Refinement</strong>:
+</ul>
+<ol start="3" type="1">
+<li><strong>Classification Refinement</strong>:</li>
+</ol>
 <ul>
 <li>Score aggregation and confidence binning</li>
 <li>Zero-shot validation using NLI</li>
 <li>Multiple confidence scoring approaches</li>
-</ul></li>
-</ol>
+</ul>
 </section>
 <section id="current-performance" class="level3">
 <h3 class="anchored" data-anchor-id="current-performance">Current Performance</h3>
@@ -940,25 +944,29 @@ Sentence 1: Terrestrial experiments focus efforts on Weakly Interacting Massive 
 <h3 class="anchored" data-anchor-id="multi-level-matching">3.2 Multi-Level Matching</h3>
 <p>The system computes similarities at three levels:</p>
 <ol type="1">
-<li><strong>Global Project Matching</strong>:
+<li><strong>Global Project Matching</strong>:</li>
+</ol>
 <ul>
 <li>Compares full project text to taxonomy labels</li>
 <li>Captures overall thematic alignment</li>
 <li>Uses cosine similarity with normalised vectors</li>
-</ul></li>
-<li><strong>Sentence-Level Matching</strong>:
+</ul>
+<ol start="2" type="1">
+<li><strong>Sentence-Level Matching</strong>:</li>
+</ol>
 <ul>
 <li>Identifies specific relevant passages</li>
 <li>Provides granular evidence for assignments</li>
 <li>Enables traceability of matches</li>
-</ul></li>
-<li><strong>Keyword-Level Matching</strong>:
+</ul>
+<ol start="3" type="1">
+<li><strong>Keyword-Level Matching</strong>:</li>
+</ol>
 <ul>
 <li>Leverages extracted and validated keywords</li>
 <li>Boosts scores based on terminology overlap</li>
 <li>Helps with technical term matching</li>
-</ul></li>
-</ol>
+</ul>
 <div id="cell-26" class="cell" data-execution_count="88">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_matching_levels(text, taxonomy_label):</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show similarity computation at different levels."""</span></span>
@@ -1123,10 +1131,10 @@ Q_2(s) &amp; \text{for medium confidence}
 <span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
 <span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
 <span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co">        tuple: (original_df, pruned_sent, pruned_global, pruned_key)</span></span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">            - original_df: Original DataFrame with matches</span></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_sent: DataFrame after sentence-level pruning</span></span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_global: DataFrame after global pruning</span></span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">            - pruned_key: DataFrame after keyword pruning</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">         - original_df: Original DataFrame with matches</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">         - pruned_sent: DataFrame after sentence-level pruning</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">         - pruned_global: DataFrame after global pruning</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co">         - pruned_key: DataFrame after keyword pruning</span></span>
 <span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
 <span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_matching.nodes <span class="im">import</span> prune_raw_matches</span>
 <span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -1173,13 +1181,13 @@ After pruning:
 <h3 class="anchored" data-anchor-id="score-pruning-and-evidence-integration">3.4 Score Pruning and Evidence Integration</h3>
 <p>The pruning process serves multiple purposes beyond simple threshold filtering:</p>
 <ol type="1">
-<li><strong>Context-Rich Evidence</strong>:
+<li><strong>Context-Rich Evidence</strong>:</li>
+</ol>
 <ul>
 <li>Sentence-level matches provide detailed contextual evidence</li>
 <li>Higher-level topics can dominate when specific subtopics lack strong evidence</li>
 <li>Maintains traceability to specific supporting text</li>
-</ul></li>
-</ol>
+</ul>
 <div id="cell-35" class="cell" data-execution_count="102">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1229,13 +1237,13 @@ Supporting Evidence:
 </div>
 </div>
 <ol start="2" type="1">
-<li><strong>Hierarchical Pruning</strong>:
+<li><strong>Hierarchical Pruning</strong>:</li>
+</ol>
 <ul>
 <li>Automatically favours best-fitting taxonomic level</li>
 <li>Prevents redundant assignments at multiple levels</li>
 <li>Preserves broader classifications when specific ones are uncertain</li>
-</ul></li>
-</ol>
+</ul>
 <div id="cell-37" class="cell" data-execution_count="104">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1272,14 +1280,14 @@ After Pruning:
 </div>
 </div>
 <ol start="3" type="1">
-<li><strong>Multi-Source Validation</strong>:
+<li><strong>Multi-Source Validation</strong>:</li>
+</ol>
 <ul>
 <li>Combines evidence from different extraction methods</li>
 <li>Keywords provide traceable domain-specific signals</li>
 <li>Sentence matches offer contextual validation</li>
 <li>Global scores ensure thematic coherence</li>
-</ul></li>
-</ol>
+</ul>
 <div id="cell-39" class="cell" data-execution_count="105">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1372,8 +1380,8 @@ Q_2(s) &amp; \text{for medium confidence}
 <span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
 <span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co">        tuple: (granular_scores, aggregated_scores)</span></span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="co">            - granular_scores: Original granular scores DataFrame</span></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co">            - aggregated_scores: Aggregated scores DataFrame</span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="co">         - granular_scores: Original granular scores DataFrame</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co">         - aggregated_scores: Aggregated scores DataFrame</span></span>
 <span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
 <span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    aggregated <span class="op">=</span> aggregate_scores_to_labels(</span>
@@ -2096,55 +2104,65 @@ Top Parameter Combinations:</code></pre>
 <section id="best-practices" class="level3">
 <h3 class="anchored" data-anchor-id="best-practices">6.3 Best Practices</h3>
 <ol type="1">
-<li><strong>Data Quality</strong>
+<li><strong>Data Quality</strong></li>
+</ol>
 <ul>
 <li>Ensure project descriptions are complete and well-formatted</li>
 <li>Include technical abstracts when available</li>
 <li>Pre-process text to remove formatting artifacts</li>
-</ul></li>
-<li><strong>Taxonomy Management</strong>
+</ul>
+<ol start="2" type="1">
+<li><strong>Taxonomy Management</strong></li>
+</ol>
 <ul>
 <li>Keep taxonomies in standardized format</li>
 <li>Validate hierarchical relationships</li>
 <li>Maintain unique identifiers for all labels</li>
-</ul></li>
-<li><strong>Performance Optimization</strong>
+</ul>
+<ol start="3" type="1">
+<li><strong>Performance Optimization</strong></li>
+</ol>
 <ul>
 <li>Use recommended parameter combinations for your use case</li>
 <li>Monitor precision/recall trade-offs</li>
 <li>Regularly validate against expert assessments</li>
-</ul></li>
-<li><strong>System Maintenance</strong>
+</ul>
+<ol start="4" type="1">
+<li><strong>System Maintenance</strong></li>
+</ol>
 <ul>
 <li>Update model dependencies as needed</li>
 <li>Monitor API usage for external services</li>
 <li>Keep validation sets current</li>
-</ul></li>
-</ol>
+</ul>
 </section>
 <section id="troubleshooting" class="level3">
 <h3 class="anchored" data-anchor-id="troubleshooting">6.4 Troubleshooting</h3>
 <p>Common issues and solutions:</p>
 <ol type="1">
-<li><strong>Low Match Quality</strong>
+<li><strong>Low Match Quality</strong></li>
+</ol>
 <ul>
 <li>Check text preprocessing quality</li>
 <li>Verify taxonomy coverage for domain</li>
 <li>Review confidence thresholds</li>
-</ul></li>
-<li><strong>Performance Issues</strong>
+</ul>
+<ol start="2" type="1">
+<li><strong>Performance Issues</strong></li>
+</ol>
 <ul>
 <li>Use batch processing for large datasets</li>
 <li>Enable caching for embeddings</li>
 <li>Optimize database queries</li>
-</ul></li>
-<li><strong>Integration Problems</strong>
+</ul>
+<ol start="3" type="1">
+<li><strong>Integration Problems</strong></li>
+</ol>
 <ul>
 <li>Verify API credentials</li>
 <li>Check input/output formats</li>
 <li>Monitor service endpoints</li>
-</ul></li>
-</ol>
+</ul>
 </section>
 <section id="monitoring" class="level3">
 <h3 class="anchored" data-anchor-id="monitoring">6.5 Monitoring</h3>
