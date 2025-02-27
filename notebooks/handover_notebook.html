@@ -471,7 +471,13 @@ GOScience Taxonomy Example:</code></pre>
 </div>
 </div>
 </div>
-<p>Each taxonomy is processed to include: - Full hierarchical path (<code>label</code>) - Unique identifier path (<code>id_path</code> or <code>level_path</code>) - Hierarchy level (<code>level</code>) - Unique identifier (<code>uuid</code>)</p>
+<p>Each taxonomy is processed to include:</p>
+<ul>
+<li>Full hierarchical path (<code>label</code>)</li>
+<li>Unique identifier path (<code>id_path</code> or <code>level_path</code>)</li>
+<li>Hierarchy level (<code>level</code>)</li>
+<li>Unique identifier (<code>uuid</code>)</li>
+</ul>
 </section>
 <section id="hierarchical-relationships" class="level3">
 <h3 class="anchored" data-anchor-id="hierarchical-relationships">1.2 Hierarchical Relationships</h3>
@@ -799,7 +805,13 @@ Hierarchical paths: ✗</code></pre>
 ['dark matter sensing', 'sensitivity dark matter', 'elusive dark matter', 'dark matter scattering', 'galactic dark matter']</code></pre>
 </div>
 </div>
-<p>Each method brings different strengths: - <strong>DBpedia</strong>: Links to knowledge base concepts - <strong>RAKE</strong>: Statistical approach using word co-occurrence - <strong>YAKE</strong>: Unsupervised extraction with text features - <strong>KeyBERT</strong>: Transformer-based semantic extraction</p>
+<p>Each method brings different strengths:</p>
+<ul>
+<li><strong>DBpedia</strong>: Links to knowledge base concepts</li>
+<li><strong>RAKE</strong>: Statistical approach using word co-occurrence</li>
+<li><strong>YAKE</strong>: Unsupervised extraction with text features</li>
+<li><strong>KeyBERT</strong>: Transformer-based semantic extraction</li>
+</ul>
 </section>
 <section id="keyword-aggregation" class="level3">
 <h3 class="anchored" data-anchor-id="keyword-aggregation">2.2 Keyword Aggregation</h3>
@@ -887,7 +899,13 @@ Hierarchical paths: ✗</code></pre>
 </div>
 </div>
 </div>
-<p>Key features of the aggregation: - Only keeps keywords found by multiple extractors - Counts extractor agreement for confidence - Maintains project-keyword mappings - Generates unique identifiers for tracking</p>
+<p>Features of the aggregation:</p>
+<ul>
+<li>Only keeps keywords found by multiple extractors</li>
+<li>Counts extractor agreement for confidence</li>
+<li>Maintains project-keyword mappings</li>
+<li>Generates unique identifiers for tracking</li>
+</ul>
 </section>
 </section>
 <section id="similarity-matching" class="level2">
@@ -896,7 +914,7 @@ Hierarchical paths: ✗</code></pre>
 <section id="document-preprocessing" class="level3">
 <h3 class="anchored" data-anchor-id="document-preprocessing">3.1 Document Preprocessing</h3>
 <p>First, projects are preprocessed into different granularity levels:</p>
-<div id="cell-24" class="cell" data-execution_count="83">
+<div id="cell-25" class="cell" data-execution_count="83">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_matching.nodes <span class="im">import</span> (</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    document_preprocessing,</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -967,7 +985,7 @@ Sentence 1: Terrestrial experiments focus efforts on Weakly Interacting Massive 
 <li>Boosts scores based on terminology overlap</li>
 <li>Helps with technical term matching</li>
 </ul>
-<div id="cell-26" class="cell" data-execution_count="88">
+<div id="cell-27" class="cell" data-execution_count="88">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_matching_levels(text, taxonomy_label):</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show similarity computation at different levels."""</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -998,7 +1016,7 @@ Score: 0.250
 Score: 0.241</code></pre>
 </div>
 </div>
-<div id="cell-27" class="cell">
+<div id="cell-28" class="cell">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example taxonomy label</span></span>
@@ -1021,7 +1039,7 @@ Score: 0.241</code></pre>
 <span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>sent_sim<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="cell-28" class="cell" data-execution_count="94">
+<div id="cell-29" class="cell" data-execution_count="94">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example taxonomy label</span></span>
@@ -1062,8 +1080,14 @@ Score: 0.514</code></pre>
 <p><span class="math display">\[
 \text{score}(p,l) = \alpha \cdot s_{\text{sent}}(p,l) + \beta \cdot s_{\text{global}}(p,l) + (1-\alpha-\beta) \cdot s_{\text{key}}(p,l)
 \]</span></p>
-<p>where: - <span class="math inline">\(s_{\text{sent}}(p,l)\)</span>: Sentence-level similarity - <span class="math inline">\(s_{\text{global}}(p,l)\)</span>: Global project similarity - <span class="math inline">\(s_{\text{key}}(p,l)\)</span>: Keyword-based similarity - <span class="math inline">\(\alpha, \beta\)</span>: Weighting parameters (currently <span class="math inline">\(\alpha=0.6, \beta=0.3\)</span>)</p>
-<div id="cell-30" class="cell" data-execution_count="96">
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(s_{\text{sent}}(p,l)\)</span>: Sentence-level similarity</li>
+<li><span class="math inline">\(s_{\text{global}}(p,l)\)</span>: Global project similarity</li>
+<li><span class="math inline">\(s_{\text{key}}(p,l)\)</span>: Keyword-based similarity</li>
+<li><span class="math inline">\(\alpha, \beta\)</span>: Weighting parameters (currently <span class="math inline">\(\alpha=0.6, \beta=0.3\)</span>)</li>
+</ul>
+<div id="cell-31" class="cell" data-execution_count="96">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_score_combination(</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    sentence_score: <span class="bu">float</span>,</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    global_score: <span class="bu">float</span>,</span>
@@ -1121,7 +1145,7 @@ Q_2(s) &amp; \text{for medium confidence}
 \end{cases}
 \]</span></p>
 <p>where <span class="math inline">\(Q_2, Q_3\)</span> are the second and third quartiles of the score distribution.</p>
-<div id="cell-32" class="cell" data-execution_count="100">
+<div id="cell-33" class="cell" data-execution_count="100">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_pruning(scores, use_quantile<span class="op">=</span><span class="va">True</span>):</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show how matches are pruned.</span></span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
@@ -1159,7 +1183,7 @@ Q_2(s) &amp; \text{for medium confidence}
 <span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a>example_scores <span class="op">=</span> [<span class="fl">0.85</span>, <span class="fl">0.75</span>, <span class="fl">0.65</span>, <span class="fl">0.55</span>, <span class="fl">0.45</span>, <span class="fl">0.35</span>]</span>
 <span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>original, sent, glob, key <span class="op">=</span> demonstrate_pruning(example_scores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-33" class="cell" data-execution_count="101">
+<div id="cell-34" class="cell" data-execution_count="101">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Original matches: </span><span class="sc">{</span><span class="bu">len</span>(original)<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -1188,7 +1212,7 @@ After pruning:
 <li>Higher-level topics can dominate when specific subtopics lack strong evidence</li>
 <li>Maintains traceability to specific supporting text</li>
 </ul>
-<div id="cell-35" class="cell" data-execution_count="102">
+<div id="cell-36" class="cell" data-execution_count="102">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_contextual_evidence(matches_df):</span>
@@ -1244,7 +1268,7 @@ Supporting Evidence:
 <li>Prevents redundant assignments at multiple levels</li>
 <li>Preserves broader classifications when specific ones are uncertain</li>
 </ul>
-<div id="cell-37" class="cell" data-execution_count="104">
+<div id="cell-38" class="cell" data-execution_count="104">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_hierarchical_pruning():</span>
@@ -1288,7 +1312,7 @@ After Pruning:
 <li>Sentence matches offer contextual validation</li>
 <li>Global scores ensure thematic coherence</li>
 </ul>
-<div id="cell-39" class="cell" data-execution_count="105">
+<div id="cell-40" class="cell" data-execution_count="105">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_evidence_combination(project_id: <span class="bu">str</span>):</span>
@@ -1356,7 +1380,13 @@ Q_3(s) &amp; \text{for high confidence} \\
 Q_2(s) &amp; \text{for medium confidence}
 \end{cases}
 \]</span></p>
-<p>This approach ensures that: 1. Classifications are supported by multiple evidence types 2. Higher-level topics are preserved when appropriate 3. Confidence scores reflect evidence quality and agreement 4. All assignments remain traceable to source evidence</p>
+<p>This approach helps make sure that:</p>
+<ol type="1">
+<li>Classifications are supported by multiple evidence types</li>
+<li>Higher-level topics are preserved when appropriate</li>
+<li>Confidence scores reflect evidence quality and agreement</li>
+<li>All assignments remain traceable to source evidence</li>
+</ol>
 <p>These pruned scores form the foundation for the final confidence refinement stage.</p>
 </section>
 </section>
@@ -1366,7 +1396,7 @@ Q_2(s) &amp; \text{for medium confidence}
 <section id="score-aggregation" class="level3">
 <h3 class="anchored" data-anchor-id="score-aggregation">4.1 Score Aggregation</h3>
 <p>First, granular scores are aggregated to project-label pairs:</p>
-<div id="cell-42" class="cell" data-execution_count="121">
+<div id="cell-43" class="cell" data-execution_count="121">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dsit_taxonomy.pipelines.project_similarity_refinement.nodes <span class="im">import</span> (</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    aggregate_scores_to_labels,</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -1432,7 +1462,7 @@ Q_2(s) &amp; \text{for medium confidence}
 <span id="cb39-63"><a href="#cb39-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Get results</span></span>
 <span id="cb39-64"><a href="#cb39-64" aria-hidden="true" tabindex="-1"></a>granular, aggregated <span class="op">=</span> demonstrate_aggregation(sample_scores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-43" class="cell" data-execution_count="122">
+<div id="cell-44" class="cell" data-execution_count="122">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Granular Scores:"</span>)</span>
@@ -1618,7 +1648,7 @@ Aggregated Scores:</code></pre>
 <section id="zero-shot-scores" class="level3">
 <h3 class="anchored" data-anchor-id="zero-shot-scores">4.2 Zero-shot Scores</h3>
 <p>The system then validates assignments using zero-shot classification:</p>
-<div id="cell-45" class="cell" data-execution_count="134">
+<div id="cell-46" class="cell" data-execution_count="134">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_zeroshot(project_text, taxonomy_label):</span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Show zero-shot validation process."""</span></span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1642,7 +1672,7 @@ Aggregated Scores:</code></pre>
 <span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>    example_project[<span class="st">"abstract_text"</span>], <span class="st">"Quantum Physics"</span></span>
 <span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-46" class="cell" data-execution_count="137">
+<div id="cell-47" class="cell" data-execution_count="137">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Project Abstract:"</span>)</span>
@@ -1662,7 +1692,7 @@ Confidence: 0.960</code></pre>
 </div>
 </div>
 <p>The zero-shot scores are binned into confidence levels:</p>
-<div id="cell-48" class="cell" data-execution_count="140">
+<div id="cell-49" class="cell" data-execution_count="140">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Bin Thresholds:"</span>)</span>
@@ -1682,7 +1712,12 @@ Bin Thresholds:
 - very low:  &lt; 0.25</code></pre>
 </div>
 </div>
-<p>These zero-shot confidence bins are then combined with the sentence-level confidence bins to produce three different confidence measures: 1. <code>max_confidence</code>: Takes the highest bin between sentence and zero-shot 2. <code>zeroshot_favouring_confidence</code>: Uses zero-shot bin when there’s significant disagreement, selects higher score if minor disagreement. 3. <code>sentence_favouring_confidence</code>: Uses sentence bin when there’s significant disagreement, selects higher score if minor disagreement.</p>
+<p>These zero-shot confidence bins are then combined with the sentence-level confidence bins to produce three different confidence measures:</p>
+<ol type="1">
+<li><code>max_confidence</code>: Takes the highest bin between sentence and zero-shot</li>
+<li><code>zeroshot_favouring_confidence</code>: Uses zero-shot bin when there’s significant disagreement, selects higher score if minor disagreement.</li>
+<li><code>sentence_favouring_confidence</code>: Uses sentence bin when there’s significant disagreement, selects higher score if minor disagreement.</li>
+</ol>
 <p>The choice between these measures depends on the taxonomy and use case:</p>
 </section>
 <section id="cwts-research-topics" class="level3">
@@ -1759,7 +1794,7 @@ Bin Thresholds:
 <section id="sample-selection" class="level3">
 <h3 class="anchored" data-anchor-id="sample-selection">5.1 Sample Selection</h3>
 <p>First, we select a representative sample of projects for validation:</p>
-<div id="cell-51" class="cell" data-execution_count="142">
+<div id="cell-52" class="cell" data-execution_count="142">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_sample_selection(projects_df, sample_size<span class="op">=</span><span class="dv">100</span>):</span>
@@ -1798,7 +1833,7 @@ Sample characteristics:
 <section id="expert-label-generation" class="level3">
 <h3 class="anchored" data-anchor-id="expert-label-generation">5.2 Expert Label Generation</h3>
 <p>The system uses GPT-4 with retrieval-augmented generation to independently identify relevant taxonomy labels:</p>
-<div id="cell-53" class="cell" data-execution_count="144">
+<div id="cell-54" class="cell" data-execution_count="144">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_expert_labeling_process(project_text: <span class="bu">str</span>, taxonomy_df: pd.DataFrame):</span>
@@ -1886,7 +1921,7 @@ Top-3 similar taxonomy labels:
 <section id="expert-validation" class="level3">
 <h3 class="anchored" data-anchor-id="expert-validation">5.3 Expert Validation</h3>
 <p>The system also uses an expert LLM to validate the quality of matches by identifying true and false positives:</p>
-<div id="cell-55" class="cell" data-execution_count="145">
+<div id="cell-56" class="cell" data-execution_count="145">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_expert_validation():</span>
@@ -1966,13 +2001,25 @@ Expert Assessment:
 ]</code></pre>
 </div>
 </div>
-<p>The expert validation: 1. Considers the core focus of the project 2. Evaluates research methods and approaches 3. Assesses intended outcomes and impact 4. Provides explanations for each decision</p>
-<p>This validation helps identify both high-scoring false positives and lower-scoring true positives, which is crucial for: - Validating pruning thresholds - Identifying systematic matching errors - Understanding classification edge cases - Improving overall system accuracy</p>
+<p>The expert validation:</p>
+<ol type="1">
+<li>Considers the core focus of the project</li>
+<li>Evaluates research methods and approaches</li>
+<li>Assesses intended outcomes and impact</li>
+<li>Provides explanations for each decision</li>
+</ol>
+<p>This validation helps identify both high-scoring false positives and lower-scoring true positives, which is crucial for:</p>
+<ul>
+<li>Validating pruning thresholds</li>
+<li>Identifying systematic matching errors</li>
+<li>Understanding classification edge cases</li>
+<li>Improving overall system accuracy</li>
+</ul>
 </section>
 <section id="parameter-optimisation" class="level3">
 <h3 class="anchored" data-anchor-id="parameter-optimisation">5.4 Parameter Optimisation</h3>
 <p>The system performs grid search over parameter combinations to find optimised settings:</p>
-<div id="cell-58" class="cell" data-execution_count="147">
+<div id="cell-59" class="cell" data-execution_count="147">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> demonstrate_parameter_tuning():</span>
@@ -2099,7 +2146,13 @@ Top Parameter Combinations:</code></pre>
 </section>
 <section id="configuration" class="level3">
 <h3 class="anchored" data-anchor-id="configuration">6.2 Configuration</h3>
-<p>Key configuration files: - <code>conf/base/credentials.yml</code>: Main pipeline credentials. Not shared for security reasons. - <code>conf/base/parameters_project_similarity_matching.yml</code>: Matching parameters - <code>conf/base/parameters_project_similarity_refinement.yml</code>: Refinement parameters - <code>conf/base/catalog.yml</code>: Data source configurations</p>
+<p>Key configuration files:</p>
+<ul>
+<li><code>conf/base/credentials.yml</code>: Main pipeline credentials. Not shared for security reasons.</li>
+<li><code>conf/base/parameters_project_similarity_matching.yml</code>: Matching parameters</li>
+<li><code>conf/base/parameters_project_similarity_refinement.yml</code>: Refinement parameters</li>
+<li><code>conf/base/catalog.yml</code>: Data source configurations</li>
+</ul>
 </section>
 <section id="best-practices" class="level3">
 <h3 class="anchored" data-anchor-id="best-practices">6.3 Best Practices</h3>
@@ -2166,7 +2219,14 @@ Top Parameter Combinations:</code></pre>
 </section>
 <section id="monitoring" class="level3">
 <h3 class="anchored" data-anchor-id="monitoring">6.5 Monitoring</h3>
-<p>Key metrics to track: 1. Classification quality (precision, recall, F1) 2. Processing efficiency 3. Resource utilization 4. API service health 5. Data quality metrics</p>
+<p>Key metrics to track:</p>
+<ol type="1">
+<li>Classification quality (precision, recall, F1)</li>
+<li>Processing efficiency</li>
+<li>Resource utilization</li>
+<li>API service health</li>
+<li>Data quality metrics</li>
+</ol>
 <p>For detailed implementation guidance, refer to the <a href="https://github.com/innovation-growth-lab/dsit-taxonomies/">project documentation</a>.</p>
 </section>
 </section>
