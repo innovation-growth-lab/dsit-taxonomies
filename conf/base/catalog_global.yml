@@ -129,11 +129,11 @@ _dpq: &_dpq
 # -> 1. GTR Data Collection:
 gtr.data_collection.projects.raw:
   <<: *_js_ptd
-  path: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/
+  path: s3://igl-public/01_taxonomies/data/01_raw/gtr/projects/
 
 gtr.data_collection.projects.intermediate: &gtr_input_projects
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/main.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/main.parquet
 
 gtr.projects.documents:
   <<: *gtr_input_projects
@@ -147,16 +147,16 @@ gtr.projects.documents:
 
 projects.gtr_data.db:
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/global/main.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/global/main.parquet
 
 sentences.gtr_data.db:
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/sentences/main.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/sentences/main.parquet
 
 # -> 2. Taxonomies
 taxonomy.cwts.raw:
   <<: *_xlsx
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/cwts.xlsx
+  filepath: s3://igl-public/01_taxonomies/data/01_raw/taxonomies/cwts.xlsx
 
 taxonomy.goscience.raw:
   <<: *_xlsx
@@ -177,108 +177,108 @@ taxonomy.goscience.raw:
       - hidden_labels
       - search_terms
       - extra_column_1
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/goscience.xlsx
+  filepath: s3://igl-public/01_taxonomies/data/01_raw/taxonomies/goscience.xlsx
 
 taxonomy.oa_concepts.raw:
   <<: *_xlsx
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/taxonomies/oa_concepts.xlsx
+  filepath: s3://igl-public/01_taxonomies/data/01_raw/taxonomies/oa_concepts.xlsx
 
 "taxonomy.{taxonomy_name}.full.db":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}.parquet
 
 "taxonomy.{taxonomy_name}.bottom.db":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}_bottom_level.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/taxonomies/{taxonomy_name}_bottom_level.parquet
 
 # -> 3. GTR Data Annotations:
 "{annotator}.gtr_data.annotated":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
 
 keybert.gtr_data.annotated.ptd:
   <<: *_pq_ptd
-  path: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert/
+  path: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/annotations/keybert/
 
 "{annotator}.gtr_data.annotated.oracle":
   <<: *_dpq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/annotations/{annotator}.parquet
   
 # -> 4. GTR Processed Annotations:
 keywords.gtr_data.db:
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/preprocessed.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/keywords/preprocessed.parquet
 
 keywords.gtr_data.embeddings:
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/keywords/embeddings.parquet
 
 # -> 5. Similarity Scores:
 "{group}.gtr_data.{taxonomy_name}_matches.raw":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/01_raw/gtr/projects/{group}/matches/{taxonomy_name}.parquet
+  filepath: s3://igl-public/01_taxonomies/data/01_raw/gtr/projects/{group}/matches/{taxonomy_name}.parquet
 
 "{group}.gtr_data.{taxonomy_name}_matches.intermediate":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/{group}/matches/{taxonomy_name}.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/{group}/matches/{taxonomy_name}.parquet
 
 # Pruned matches
 "{group}.gtr_data.{taxonomy_name}_matches.pruned":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/02_intermediate/gtr/projects/{group}/matches/{taxonomy_name}_pruned.parquet
+  filepath: s3://igl-public/01_taxonomies/data/02_intermediate/gtr/projects/{group}/matches/{taxonomy_name}_pruned.parquet
 
 # Granular scores
 "projects.gtr_data.{taxonomy_name}_scores.granular":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_granular.parquet
+  filepath: s3://igl-public/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_granular.parquet
 
 # -> 6. Final scores
 "projects.gtr_data.{taxonomy_name}_scores.aggregated":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_aggregated.parquet
+  filepath: s3://igl-public/01_taxonomies/data/03_primary/gtr/projects/scores/{taxonomy_name}_aggregated.parquet
 
 "projects.gtr_data.{taxonomy_name}_scores.zeroshot":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_zeroshot.parquet
+  filepath: s3://igl-public/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_zeroshot.parquet
 
 "projects.gtr_data.{taxonomy_name}_scores.final":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_final.parquet
+  filepath: s3://igl-public/01_taxonomies/data/04_output/gtr/projects/scores/{taxonomy_name}_final.parquet
 
 # # -> 7. Validation Data:
 gtr.projects.sample:
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/projects/sample.parquet
 
 "sample_data.{taxonomy_name}_scores.aggregated":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_scores/{taxonomy_name}_aggregated.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/projects/sample_scores/{taxonomy_name}_aggregated.parquet
 
 "gtr.projects.sample.expert_labels.{taxonomy_name}":
   <<: *_js_ptd
-  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_labels/{taxonomy_name}/
+  path: s3://igl-public/01_taxonomies/data/05_validation/projects/sample_expert_labels/{taxonomy_name}/
 
 "gtr.projects.sample.expert_assessment.{taxonomy_name}":
   <<: *_js_ptd
-  path: s3://igl-dsit-impact/01_taxonomies/data/05_validation/projects/sample_expert_assessment/{taxonomy_name}/
+  path: s3://igl-public/01_taxonomies/data/05_validation/projects/sample_expert_assessment/{taxonomy_name}/
 
 # # tuning outputs
 "tuning.{taxonomy_name}.expert_labels.processed":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/expert_labels_processed.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/{taxonomy_name}/expert_labels_processed.parquet
 
 "tuning.{taxonomy_name}.expert_assessment.processed":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/expert_assessment_processed.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/{taxonomy_name}/expert_assessment_processed.parquet
 
 "tuning.{taxonomy_name}.parameter_tuning_results":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/parameter_tuning_results.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/{taxonomy_name}/parameter_tuning_results.parquet
 
 "tuning.{taxonomy_name}.project_results":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/project_results.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/{taxonomy_name}/project_results.parquet
 
 "validate.{taxonomy_name}.score_quality_metrics":
   <<: *_pq
-  filepath: s3://igl-dsit-impact/01_taxonomies/data/05_validation/{taxonomy_name}/score_quality_metrics.parquet
+  filepath: s3://igl-public/01_taxonomies/data/05_validation/{taxonomy_name}/score_quality_metrics.parquet
