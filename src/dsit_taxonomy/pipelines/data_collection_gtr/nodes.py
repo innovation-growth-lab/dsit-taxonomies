@@ -167,7 +167,7 @@ class GtRDataPreprocessor:
                 "leadOrganisationDepartment": "lead_org_department",
                 "researchTopics": "research_topics",
                 "researchSubjects": "research_subjects",
-                "id": "project_id",
+                "gtr_id": "project_id",
             }
         )
 
@@ -179,6 +179,20 @@ class GtRDataPreprocessor:
                 for item in x["link"]
                 if item["rel"] == "PUBLICATION"
             ]
+        )
+
+        # get project id
+        multiple_identifiers_mask = projects_df["identifiers"].apply(
+            lambda x: len(x) > 1
+        )
+        if multiple_identifiers_mask.any():
+            logging.warning(
+                "Found %s projects with multiple identifiers. Using first identifier for each.",
+                multiple_identifiers_mask.sum(),
+            )
+
+        projects_df["project_id"] = projects_df["identifiers"].apply(
+            lambda x: x[0]["value"]
         )
 
         return projects_df[
@@ -286,7 +300,7 @@ def _json_obj(dataframe: pd.DataFrame) -> Dict[str, Dict[str, pd.DataFrame]]:
 
 
 def concatenate_endpoint(
-    abstract_dict: Union[AbstractDataset, Dict[str, Dict[str, str]]]
+    abstract_dict: Union[AbstractDataset, Dict[str, Dict[str, str]]],
 ) -> pd.DataFrame:
     """
     Concatenate DataFrames from a single endpoint into a single DataFrame.
