@@ -138,9 +138,6 @@ The classification process involves several sequential pipelines:
 # Process taxonomies into standard format
 kedro run --pipeline data_processing_taxonomies
 
-# Extract keywords from project descriptions
-kedro run --pipeline data_annotation_gtr
-
 # Generate embeddings for keywords
 kedro run --pipeline keyword_processing_gtr
 ```
