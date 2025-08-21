@@ -32,7 +32,7 @@ This project helps classify UKRI-funded research projects into standardised taxo
 
 2. **Set up Python environment**:
    ```bash
-   conda create -n dsit_taxonomy python=3.10
+   conda create -n dsit_taxonomy python=3.12
    conda activate dsit_taxonomy
    ```
 
@@ -133,7 +133,13 @@ python -c "import nltk; nltk.download('punkt')"
 
 The classification process involves several sequential pipelines:
 
-### 1. Data Processing
+### 1. Data Collection
+```bash
+# Collect data from Gateway to Research
+kedro run --pipeline data_collection_gtr
+```
+
+### 2. Data Processing
 ```bash
 # Process taxonomies into standard format
 kedro run --pipeline data_processing_taxonomies
@@ -142,7 +148,7 @@ kedro run --pipeline data_processing_taxonomies
 kedro run --pipeline keyword_processing_gtr
 ```
 
-### 2. Similarity Matching
+### 3. Similarity Matching
 ```bash
 # Compute similarity scores
 kedro run --pipeline project_similarity_matching
@@ -151,7 +157,7 @@ kedro run --pipeline project_similarity_matching
 kedro run --pipeline project_similarity_refinement
 ```
 
-### 3. Optional Validation
+### 4. Optional Validation
 ```bash
 # Only if you want to tune parameters or validate results
 kedro run --pipeline project_similarity_tune_and_validate
