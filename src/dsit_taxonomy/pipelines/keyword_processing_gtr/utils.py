@@ -7,6 +7,7 @@ from requests.adapters import HTTPAdapter, Retry
 import spacy
 from rake_nltk import Rake
 import yake
+from keybert import KeyBERT
 
 # TMP: disable SSL warnings due to DBpedia API expired certificate
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -127,5 +128,25 @@ def get_keybert_keywords(text: str, extractor: object) -> list:
         list: A list of keywords extracted from the text.
 
     """
+    keywords = extractor.extract_keywords(text, keyphrase_ngram_range=(1, 3))
+    return [keyword for keyword, _ in keywords]
+
+
+def get_keybert_keywords_standalone(
+    text: str, model_name: str = "all-MiniLM-L6-v2"
+) -> list:
+    """
+    Extracts keywords from the given text using KeyBERT.
+    Creates the extractor inside the worker to avoid serialization issues.
+
+    Args:
+        text (str): The input text to extract keywords from.
+        model_name (str): The model name to use for KeyBERT.
+
+    Returns:
+        list: A list of keywords extracted from the text.
+
+    """
+    extractor = KeyBERT(model_name)
     keywords = extractor.extract_keywords(text, keyphrase_ngram_range=(1, 3))
     return [keyword for keyword, _ in keywords]

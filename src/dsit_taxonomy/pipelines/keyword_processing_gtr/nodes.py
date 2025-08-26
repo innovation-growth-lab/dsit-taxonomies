@@ -14,15 +14,16 @@ from typing import Generator, Dict
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
-from keybert import KeyBERT
 from kedro.io import AbstractDataset
 from joblib import Parallel, delayed
 from .utils import (
     get_dbp_annotation,
     get_rake_keywords,
     get_yake_keywords,
-    get_keybert_keywords,
+    get_keybert_keywords_standalone,
 )
+import multiprocessing as mp
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ The nodes implement:
 - KeyBERT for transformer-based extraction
 - Utilities for result aggregation and processing
 """
-
 
 
 logger = logging.getLogger(__name__)
@@ -80,9 +80,12 @@ def dbp_keywords(
         + ". "
         + dataframe["potential_impact"].fillna("")
     )
-    dataframe["dbp_keywords"] = Parallel(n_jobs=8, verbose=10)(
-        delayed(get_dbp_annotation)(text) for text in dataframe["input_text"]
-    )
+    dataframe["dbp_keywords"] = Parallel(
+        n_jobs=8,
+        verbose=10,
+        timeout=180,  # 3 minutes timeout for API calls
+        max_nbytes=None,  # Disable memory limit
+    )(delayed(get_dbp_annotation)(text) for text in dataframe["input_text"])
 
     # concatenate the processed projects with the new ones
     output_dataframe = pd.concat(
@@ -117,9 +120,12 @@ def rake_keywords(
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
     dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
-    dataframe["rake_keywords"] = Parallel(n_jobs=8, verbose=10)(
-        delayed(get_rake_keywords)(text) for text in dataframe["input_text"]
-    )
+    dataframe["rake_keywords"] = Parallel(
+        n_jobs=8,
+        verbose=10,
+        timeout=120,  # 2 minutes timeout for RAKE processing
+        max_nbytes=None,  # Disable memory limit
+    )(delayed(get_rake_keywords)(text) for text in dataframe["input_text"])
 
     # concatenate the processed projects with the new ones
     output_dataframe = pd.concat(
@@ -154,9 +160,12 @@ def yake_keywords(
     """
     dataframe = _filter_processed_projects(dataframe, processed_projects)
     dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
-    dataframe["yake_keywords"] = Parallel(n_jobs=8, verbose=10)(
-        delayed(get_yake_keywords)(text) for text in dataframe["input_text"]
-    )
+    dataframe["yake_keywords"] = Parallel(
+        n_jobs=8,
+        verbose=10,
+        timeout=120,  # 2 minutes timeout for YAKE processing
+        max_nbytes=None,  # Disable memory limit
+    )(delayed(get_yake_keywords)(text) for text in dataframe["input_text"])
 
     # concatenate the processed projects with the new ones
     output_dataframe = pd.concat(
@@ -177,7 +186,7 @@ def keybert_keywords(
     Extract keywords using KeyBERT transformer model.
 
     This function:
-    1. Initialises KeyBERT with specified model
+    1. Uses multiprocessing.Pool with spawn method to handle CUDA properly
     2. Processes texts in batches for memory efficiency
     3. Uses semantic similarity for keyword ranking
     4. Yields results incrementally with timestamps
@@ -192,34 +201,65 @@ def keybert_keywords(
             - project_id: Project identifier
             - keybert_keywords: Extracted keywords
     """
-    kw_extractor = KeyBERT("all-MiniLM-L6-v2")
+
+    
     dataframe = _filter_processed_projects(dataframe, processed_projects)
+    dataframe = dataframe.copy()
     dataframe["input_text"] = dataframe["title"] + " " + dataframe["abstract_text"]
     day_timestamp = str(datetime.now().strftime("%y%m%d"))
 
-    for start in range(0, len(dataframe), 100):
+    # Process in batches to manage memory
+    batch_size = 100
+    for start in range(0, len(dataframe), batch_size):
         logger.info(
             "Processing batch %d to %d. This is number: %d / %d",
             start,
-            start + 100,
-            start // 100,
-            len(dataframe) // 100,
+            start + batch_size,
+            start // batch_size,
+            len(dataframe) // batch_size,
         )
-        end = start + 100
+        end = start + batch_size
         batch_df = dataframe.iloc[start:end]
-        batch_df.loc[:, "keybert_keywords"] = Parallel(n_jobs=n_jobs, verbose=10)(
-            delayed(get_keybert_keywords)(text, extractor=kw_extractor)
-            for text in batch_df["input_text"]
-        )
+        batch_df_copy = batch_df.copy()
+        
+        # Use multiprocessing.Pool with spawn method to handle CUDA properly
+        try:
+            # Set start method to spawn to avoid CUDA issues
+            if mp.get_start_method(allow_none=True) != 'spawn':
+                mp.set_start_method('spawn', force=True)
+            
+            with mp.Pool(processes=n_jobs) as pool:
+                # Process texts in parallel
+                results = pool.map(
+                    get_keybert_keywords_standalone, 
+                    batch_df["input_text"].tolist(),
+                    chunksize=max(1, len(batch_df) // n_jobs)
+                )
+                batch_df_copy.loc[:, "keybert_keywords"] = results
+                
+        except Exception as e:
+            logger.error("Multiprocessing failed: %s", e)
+            # Fallback to sequential processing if multiprocessing fails
+            logger.info("Falling back to sequential processing")
+            results = []
+            for text in batch_df["input_text"]:
+                try:
+                    keywords = get_keybert_keywords_standalone(text)
+                    results.append(keywords)
+                except Exception as text_error:
+                    logger.error("Error processing text: %s", text_error)
+                    results.append([])
+            batch_df_copy.loc[:, "keybert_keywords"] = results
+        
         yield {
-            f"{day_timestamp}/s{int(start/100)}": batch_df[
+            f"{day_timestamp}/s{int(start/batch_size)}": batch_df_copy[
                 ["project_id", "keybert_keywords"]
             ]
         }
 
+
 def concatenate_partitions(
-    partitioned_dataset: Dict[str, AbstractDataset],
-    n_jobs: int = 8
+    partitioned_dataset: Dict[str, AbstractDataset], n_jobs: int = 8
 ) -> pd.DataFrame:
     """
     Combine partitioned KeyBERT results into a single dataset.
@@ -354,6 +394,7 @@ def aggregate_keyword_annotators(*dataframes: pd.DataFrame) -> pd.DataFrame:
     return output_df.sort_values(
         by=["num_annotators", "keyword"], ascending=[False, True]
     )
+
 
 def _preprocess_keywords(keywords: pd.Series) -> pd.Series:
     """
