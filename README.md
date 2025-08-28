@@ -45,7 +45,7 @@ This project helps classify UKRI-funded research projects into standardised taxo
 4. **Install NLP dependencies**:
    ```bash
    python -m spacy download en_core_web_sm
-   python -c "import nltk; nltk.download('punkt')"
+   python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('stopwords')"
    ```
 
 ## Project Structure
